@@ -8,8 +8,8 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
+  { to: '/profile', labelKey: 'nav.profile', shortKey: 'nav.profile', symbol: 'compass' },
   { to: '/library', labelKey: 'nav.library', shortKey: 'nav.library', symbol: 'book' },
   { to: '/lore', labelKey: 'nav.lore', shortKey: 'nav.loreShort', symbol: 'atom' },
   { to: '/events', labelKey: 'nav.events', shortKey: 'nav.events', symbol: 'shield' },
-  { to: '/profile', labelKey: 'nav.profile', shortKey: 'nav.profile', symbol: 'compass' },
 ];
