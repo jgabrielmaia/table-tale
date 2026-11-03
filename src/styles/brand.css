@@ -800,6 +800,10 @@ input[aria-invalid="true"] { border-color: #e0604f; }
 }
 .auth-seal .emblem { width: 52px; height: 52px; }
 .auth-form { display: grid; gap: 1rem; text-align: left; margin-top: 1.5rem; }
+.auth-providers { display: grid; gap: .6rem; }
+.auth-btn-label { display: grid; justify-items: center; gap: .1rem; }
+.auth-off { font-size: .72rem; font-weight: 400; opacity: .85; }
+.auth-switch { text-align: center; margin: 0; }
 .auth-actions { display: flex; flex-direction: column; gap: .5rem; margin-top: 1.25rem; }
 .auth-confirm { animation: unfold .35s var(--ease); }
 

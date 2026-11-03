@@ -40,6 +40,7 @@ function ShellRoutes() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<LoginPage mode="register" />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/library" element={<LibraryPage />} />
           <Route path="/games/:slug" element={<GameDetailPage />} />

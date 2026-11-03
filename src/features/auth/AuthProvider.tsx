@@ -3,15 +3,16 @@ import type { Session, User } from '@supabase/supabase-js';
 import { useQueryClient } from '@tanstack/react-query';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import * as authApi from './api';
+import type { OAuthProvider } from './providers';
 
 export interface AuthContextValue {
   session: Session | null;
   user: User | null;
   isLoading: boolean;
   providers: string[];
-  signInWithGoogle: (next?: string) => Promise<void>;
+  signInWithProvider: (provider: OAuthProvider, next?: string) => Promise<void>;
   signInWithMagicLink: (email: string, next?: string) => Promise<void>;
-  linkGoogle: () => Promise<void>;
+  linkProvider: (provider: OAuthProvider) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -56,9 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       isLoading,
       providers: (user?.identities ?? []).map((i) => i.provider),
-      signInWithGoogle: authApi.signInWithGoogle,
+      signInWithProvider: authApi.signInWithProvider,
       signInWithMagicLink: authApi.signInWithMagicLink,
-      linkGoogle: authApi.linkGoogleIdentity,
+      linkProvider: authApi.linkProviderIdentity,
       signOut,
     };
   }, [session, isLoading, signOut]);

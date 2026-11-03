@@ -17,10 +17,11 @@ import { errorMessage } from '@/lib/errors';
 import { formatDate } from '@/lib/format';
 import { localizeEvent, useI18n } from '@/i18n';
 import { ProfileEditModal } from './ProfileEditModal';
+import { OAUTH_PROVIDERS, PROVIDER_NAMES, providerName, type OAuthProvider } from '@/features/auth/providers';
 
 export function ProfilePage() {
   const { t } = useI18n();
-  const { providers, linkGoogle } = useAuth();
+  const { providers, linkProvider } = useAuth();
   const { profile, stats, activity, update, providerAvatar } = useProfile();
   const achievements = useAchievements();
   const { events } = useEvents();
@@ -48,7 +49,7 @@ export function ProfilePage() {
   const faction = factions.find((f) => f.id === p.factionId) ?? null;
   const attended = events.filter((e) => e.isParticipating).map(localizeEvent);
   const achievementList = achievements.data ?? [];
-  const hasGoogle = providers.includes('google');
+  const unlinked = OAUTH_PROVIDERS.filter((pr) => !providers.includes(pr));
 
   // TEMPORARY (dev builds only): clears this season's card and goes back to the draw.
   const resetCard = async () => {
@@ -70,9 +71,9 @@ export function ProfilePage() {
     }
   };
 
-  const onLinkGoogle = async () => {
+  const onLink = async (provider: OAuthProvider) => {
     try {
-      await linkGoogle();
+      await linkProvider(provider);
     } catch (e) {
       notify(errorMessage(e), { tone: 'error' });
     }
@@ -88,7 +89,9 @@ export function ProfilePage() {
           actions={
             <>
               <Button variant="secondary" icon={<Icon name="edit" />} onClick={() => setEditing(true)}>{t('profile.edit')}</Button>
-              {!hasGoogle && <Button variant="ghost" icon={<Icon name="google" />} onClick={onLinkGoogle}>{t('profile.linkGoogle')}</Button>}
+              {unlinked.map((pr) => (
+                <Button key={pr} variant="ghost" icon={<Icon name={pr} />} onClick={() => void onLink(pr)}>{t('profile.link', { provider: PROVIDER_NAMES[pr] })}</Button>
+              ))}
             </>
           }
         />
@@ -163,7 +166,7 @@ export function ProfilePage() {
         </Card>
 
         <p className="mt-6 text-sm text-muted">
-          {t('profile.loginMethods', { list: providers.length ? providers.map((pr) => (pr === 'email' ? t('profile.methodEmail') : pr === 'google' ? 'Google' : pr)).join(', ') : '—' })}
+          {t('profile.loginMethods', { list: providers.length ? providers.map((pr) => (pr === 'email' ? t('profile.methodEmail') : providerName(pr))).join(', ') : '—' })}
         </p>
       </div>
 

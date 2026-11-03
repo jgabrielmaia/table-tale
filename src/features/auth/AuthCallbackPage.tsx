@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import { safeNextPath } from './api';
+import { callbackErrorKey, readCallbackError } from './providers';
 
 /** OAuth / magic-link landing page (/table-tale/auth/callback). Supabase exchanges the PKCE code on load. */
 export function AuthCallbackPage() {
@@ -13,33 +14,34 @@ export function AuthCallbackPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const next = safeNextPath(params.get('next'));
-  const providerError = params.get('error_description') || new URLSearchParams(window.location.hash.slice(1)).get('error_description');
+  const providerError = readCallbackError(window.location.search, window.location.hash);
   const [timedOut, setTimedOut] = useState(false);
+  const [exchangeFailed, setExchangeFailed] = useState(false);
 
   useEffect(() => {
-    if (user) navigate(next, { replace: true });
-  }, [user, next, navigate]);
+    if (user && !providerError) navigate(next, { replace: true });
+  }, [user, providerError, next, navigate]);
 
   useEffect(() => {
     if (providerError || user) return;
     const code = params.get('code');
     // Fallback in case automatic detection did not run (e.g. the page was restored from cache).
     if (code && !isLoading) {
-      supabase.auth.exchangeCodeForSession(code).catch(() => undefined);
+      supabase.auth.exchangeCodeForSession(code).catch(() => setExchangeFailed(true));
     }
-    const t = window.setTimeout(() => setTimedOut(true), 12_000);
-    return () => window.clearTimeout(t);
+    const timer = window.setTimeout(() => setTimedOut(true), 12_000);
+    return () => window.clearTimeout(timer);
   }, [providerError, user, isLoading, params]);
 
-  if (providerError || timedOut) {
+  if (providerError || timedOut || exchangeFailed) {
+    const key = providerError ? callbackErrorKey(providerError.code, providerError.description) : 'auth.cb.expired';
     return (
       <div className="container section">
-        <ErrorState
-          title={t('auth.callbackErrorTitle')}
-          message={providerError ?? t('auth.callbackExpired')}
-        />
+        <ErrorState title={t('auth.callbackErrorTitle')} message={t(key)} />
         <div className="mt-6 flex justify-center">
-          <ButtonLink to="/login" variant="primary">{t('auth.backToLogin')}</ButtonLink>
+          <ButtonLink to={user ? '/profile' : '/login'} state={user ? undefined : { from: next }} variant="primary">
+            {user ? t('nav.profile') : t('auth.backToLogin')}
+          </ButtonLink>
         </div>
       </div>
     );

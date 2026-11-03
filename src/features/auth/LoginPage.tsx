@@ -5,24 +5,33 @@ import { Link, Navigate, useLocation } from 'react-router-dom';
 import { Button, ButtonLink, Icon, Input } from '@/components/ui';
 import { Emblem, Scenery } from '@/components/layout/Brand';
 import { useAuth } from '@/hooks/useAuth';
+import { useEnabledProviders } from '@/hooks/useEnabledProviders';
 import { useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { emailSchema, type EmailFormValues } from './schemas';
 import { safeNextPath } from './api';
+import { OAUTH_PROVIDERS, PROVIDER_NAMES, type OAuthProvider } from './providers';
 
-export function LoginPage() {
+export function LoginPage({ mode = 'login' }: { mode?: 'login' | 'register' }) {
   const { t } = useI18n();
-  const { user, isLoading, signInWithGoogle, signInWithMagicLink } = useAuth();
+  const { user, isLoading, signInWithProvider, signInWithMagicLink } = useAuth();
+  const enabledProviders = useEnabledProviders();
   const location = useLocation();
-  const next = safeNextPath((location.state as { from?: string } | null)?.from);
+  const from = (location.state as { from?: string } | null)?.from;
+  const next = safeNextPath(from);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [googleLoading, setGoogleLoading] = useState(false);
+  const [pending, setPending] = useState<OAuthProvider | null>(null);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<EmailFormValues>({ resolver: zodResolver(emailSchema) });
 
   if (!isLoading && user) return <Navigate to={next} replace />;
+
+  const isRegister = mode === 'register';
+  const enabled = enabledProviders.data;
+  const isOff = (p: OAuthProvider) => !isSupabaseConfigured || enabled?.[p] === false;
+  const someOff = OAUTH_PROVIDERS.some((p) => enabled?.[p] === false);
 
   const onEmail = handleSubmit(async ({ email }) => {
     setFormError(null);
@@ -34,14 +43,14 @@ export function LoginPage() {
     }
   });
 
-  const onGoogle = async () => {
+  const onProvider = async (provider: OAuthProvider) => {
     setFormError(null);
-    setGoogleLoading(true);
+    setPending(provider);
     try {
-      await signInWithGoogle(next);
+      await signInWithProvider(provider, next);
     } catch (e) {
       setFormError(errorMessage(e));
-      setGoogleLoading(false);
+      setPending(null);
     }
   };
 
@@ -61,13 +70,30 @@ export function LoginPage() {
           </div>
         ) : (
           <>
-            <h1>{t('login.title')}</h1>
-            <p className="muted">{t('login.sub')}</p>
+            <h1>{isRegister ? t('register.title') : t('login.title')}</h1>
+            <p className="muted">{isRegister ? t('register.sub') : t('login.sub')}</p>
             {formError && <p className="field-error mt-3" role="alert">{formError}</p>}
             <div className="auth-form">
-              <Button variant="gold" block onClick={onGoogle} loading={googleLoading} loadingText={t('login.redirecting')} disabled={!isSupabaseConfigured} icon={<Icon name="google" />}>
-                {t('login.google')}
-              </Button>
+              <div className="auth-providers">
+                {OAUTH_PROVIDERS.map((p) => (
+                  <Button
+                    key={p}
+                    variant={p === 'google' ? 'gold' : 'secondary'}
+                    block
+                    onClick={() => void onProvider(p)}
+                    loading={pending === p}
+                    loadingText={t('login.redirecting')}
+                    disabled={isOff(p) || (pending !== null && pending !== p)}
+                    icon={<Icon name={p} />}
+                  >
+                    <span className="auth-btn-label">
+                      {t('login.withProvider', { provider: PROVIDER_NAMES[p] })}
+                      {enabled?.[p] === false && <small className="auth-off">{t('login.unavailable')}</small>}
+                    </span>
+                  </Button>
+                ))}
+              </div>
+              {someOff && <p className="muted small" role="note">{t('login.providersNote')}</p>}
               <p className="auth-divider" aria-hidden="true"><span>{t('login.or')}</span></p>
               <form onSubmit={onEmail} noValidate className="grid gap-4">
                 <Input
@@ -83,6 +109,12 @@ export function LoginPage() {
                   {t('login.continue')}
                 </Button>
               </form>
+              <p className="muted small auth-switch">
+                {isRegister ? t('register.haveAccount') : t('login.noAccount')}{' '}
+                <Link to={isRegister ? '/login' : '/register'} state={from ? { from } : undefined}>
+                  {isRegister ? t('common.signIn') : t('register.cta')}
+                </Link>
+              </p>
             </div>
           </>
         )}
