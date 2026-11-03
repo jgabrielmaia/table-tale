@@ -793,6 +793,8 @@ input[aria-invalid="true"] { border-color: #e0604f; }
 .auth-form { display: grid; gap: 1rem; text-align: left; margin-top: 1.5rem; }
 .auth-providers { display: grid; gap: .6rem; }
 .auth-btn-label { display: grid; justify-items: center; gap: .1rem; }
+.auth-divider { display: flex; align-items: center; gap: .9rem; margin: 1.1rem 0 0; color: var(--text-2); font-size: .8rem; text-transform: uppercase; letter-spacing: .12em; }
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .auth-off { font-size: .72rem; font-weight: 400; opacity: .85; }
 .auth-switch { text-align: center; margin: 0; }
 .auth-actions { display: flex; flex-direction: column; gap: .5rem; margin-top: 1.25rem; }
