@@ -37,11 +37,6 @@
 
 /* ---------- shared ---------- */
 .fate-screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; }
-.fate-sound {
-  position: absolute; top: 1rem; right: 1rem; z-index: 60;
-  padding: 0.5rem 0.9rem; border-radius: 999px; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
-  color: #cfd6e6; background: rgba(10, 12, 20, 0.6); border: 1px solid rgba(255, 255, 255, 0.18); backdrop-filter: blur(8px); cursor: pointer;
-}
 .fate-lang { position: absolute; top: 1rem; left: 1rem; z-index: 60; background: rgba(10, 12, 20, 0.6); color: #cfd6e6; backdrop-filter: blur(8px); }
 .fate :focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
 

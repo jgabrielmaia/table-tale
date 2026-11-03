@@ -230,7 +230,8 @@ test.describe('Perfil', () => {
   });
 
   test.describe('métodos de login', () => {
-    test('lista os métodos associados e permite associar outro fornecedor', async ({ page }) => {
+    test('lista os métodos associados e permite associar outro fornecedor', async ({ page, backend }) => {
+      backend.giveCard();
       const profile = new ProfilePage(page);
       await profile.goto();
       await expect(page.getByText('Métodos de login associados: E-mail (magic link).')).toBeVisible();

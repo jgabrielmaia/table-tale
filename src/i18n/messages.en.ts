@@ -333,8 +333,6 @@ export const en: Record<MessageKey, string> = {
   'idp.pastSeason': 'Past season',
 
   // fate draw
-  'fate.soundOn': 'Sound on',
-  'fate.soundOff': 'Sound off',
   'fate.introTitle': 'The Fate Draw',
   'fate.introKicker': 'Your story starts here.',
   'fate.introQuote': '“Nine cards. Two factions. One destiny.”',

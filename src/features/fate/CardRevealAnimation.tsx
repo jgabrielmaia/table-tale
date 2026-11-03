@@ -4,7 +4,6 @@ import { Avatar } from '@/components/ui';
 import { PlayerIdentityFrame } from '@/components/identity/PlayerIdentityFrame';
 import { cardTitle, getFaction, type FateCardData } from './cards';
 import { useI18n } from '@/i18n';
-import type { FateAudio } from './audio';
 import { Burst, EnergyField } from './EnergyField';
 import { FactionReveal } from './FactionReveal';
 import { FateCard } from './FateCard';
@@ -21,7 +20,6 @@ interface CardRevealAnimationProps {
   card: FateCardData;
   /** Where the chosen card was on screen. */
   origin: RevealOrigin;
-  audio: FateAudio;
   reduced: boolean;
   player: { name: string; avatarUrl: string | null };
   seasonName: string;
@@ -36,7 +34,7 @@ const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 const NEUTRAL = '#f3ead4';
 
 /** Screens 03-05: reveal sequence, faction/card identity and welcome. The card is fixed before this mounts. */
-export function CardRevealAnimation({ card, origin, audio, reduced, player, seasonName, discoveredAt, onEnter }: CardRevealAnimationProps) {
+export function CardRevealAnimation({ card, origin, reduced, player, seasonName, discoveredAt, onEnter }: CardRevealAnimationProps) {
   const { t } = useI18n();
   const faction = getFaction(card.faction);
   const [stage, setStage] = useState<Stage>('revealing');
@@ -90,8 +88,6 @@ export function CardRevealAnimation({ card, origin, audio, reduced, player, seas
     const fire = () => {
       setAccent(card.glow);
       setBurstKey((n) => n + 1);
-      audio.stop('charge');
-      audio.play('impact');
       go(flash, [0, 1, 0], { duration: 1.1 * k, times: [0, 0.12, 1], ease: 'easeOut' });
       go(tint, 1, { duration: 1.6 * k });
       go(pop, [1, 1.06, 1], { duration: 0.9 * k, ease: 'easeOut' });
@@ -114,7 +110,6 @@ export function CardRevealAnimation({ card, origin, audio, reduced, player, seas
       go(flyRotate, 0, fly);
       await wait(1.1);
       if (!alive) return;
-      audio.play('charge');
       go(charge, 1, { duration: 1.8 * k, ease: 'easeIn' });
       go(lift, -12, { duration: 1.8 * k, ease: 'easeInOut' });
       await wait(1.3);
@@ -133,7 +128,6 @@ export function CardRevealAnimation({ card, origin, audio, reduced, player, seas
       alive = false;
       off();
       stops.forEach((s) => s());
-      audio.stop('charge');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

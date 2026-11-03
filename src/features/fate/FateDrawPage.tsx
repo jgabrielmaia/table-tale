@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/brand/Logo';
 import { LanguageSelector } from '@/components/layout/LanguageSelector';
@@ -9,7 +9,6 @@ import { useProfile } from '@/hooks/useProfile';
 import { useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { isSupabaseConfigured } from '@/lib/supabase';
-import { createFateAudio } from './audio';
 import { CardRevealAnimation, type RevealOrigin } from './CardRevealAnimation';
 import { CardSelectionGrid, type PickInfo } from './CardSelectionGrid';
 import { FATE_CARDS, getFateCard, type FateCardData } from './cards';
@@ -31,30 +30,18 @@ export function FateDrawPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const reduced = useReducedMotion() ?? false;
-  const audio = useMemo(() => createFateAudio(), []);
   const { user } = useAuth();
   const { profile } = useProfile();
   const fate = useFate();
-  const [soundOn, setSoundOn] = useState(false);
   const [phase, setPhase] = useState<Phase>('invitation');
   const [pickedIndex, setPickedIndex] = useState<number | null>(null);
   const [chosen, setChosen] = useState<Chosen | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => () => audio.dispose(), [audio]);
-
-  const toggleSound = () => {
-    const next = !soundOn;
-    setSoundOn(next);
-    audio.setEnabled(next);
-    if (next) audio.play('ambient');
-  };
-
   const pick = async (info: PickInfo) => {
     if (pickedIndex !== null) return;
     setPickedIndex(info.index);
     setError(null);
-    audio.play('select');
     try {
       // The server picks the card; the face-down slot the player clicked has no influence on it.
       const { identity, alreadyDrawn } = await fate.draw.mutateAsync();
@@ -105,9 +92,6 @@ export function FateDrawPage() {
     <main className="fate">
       <FateBackdrop />
 
-      <button type="button" className="fate-sound" aria-pressed={soundOn} onClick={toggleSound}>
-        <span aria-hidden>{soundOn ? '♪' : '✕'}</span> {soundOn ? t('fate.soundOn') : t('fate.soundOff')}
-      </button>
       <LanguageSelector className="fate-lang" />
 
       <AnimatePresence mode="wait">
@@ -138,7 +122,6 @@ export function FateDrawPage() {
         <CardRevealAnimation
           card={chosen.card}
           origin={chosen.origin}
-          audio={audio}
           reduced={reduced}
           player={{ name: profile.data?.displayName || user?.email?.split('@')[0] || t('common.player'), avatarUrl: profile.data?.avatarUrl ?? null }}
           seasonName={fate.season.data?.name ?? t('idp.currentSeason')}

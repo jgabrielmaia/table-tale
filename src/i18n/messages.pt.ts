@@ -332,8 +332,6 @@ export const pt = {
   'idp.pastSeason': 'Temporada anterior',
 
   // fate draw
-  'fate.soundOn': 'Som ligado',
-  'fate.soundOff': 'Som desligado',
   'fate.introTitle': 'O Sorteio do Destino',
   'fate.introKicker': 'A tua história começa aqui.',
   'fate.introQuote': '«Nove cartas. Duas facções. Um destino.»',
