@@ -79,7 +79,7 @@ export function LoginPage({ mode = 'login' }: { mode?: 'login' | 'register' }) {
                 {OAUTH_PROVIDERS.map((p) => (
                   <Button
                     key={p}
-                    variant={p === 'google' ? 'gold' : 'secondary'}
+                    variant="gold"
                     block
                     onClick={() => void onProvider(p)}
                     loading={pending === p}
