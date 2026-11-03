@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Table Tale — Biblioteca viva de jogos e histórias</title>
+  <meta name="description" content="Table Tale: biblioteca pessoal e comunidade de jogos de tabuleiro com temática de fantasia, Arcanos e Elementais.">
+  <meta name="theme-color" content="#0B1E2D">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B1E2D'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%23D4A85A' stroke-width='2.5'/%3E%3Cpath d='M32 5 L36 28 L59 32 L36 36 L32 59 L28 36 L5 32 L28 28 Z' fill='%23D4A85A'/%3E%3Cpath d='M32 20 L35 32 L32 44 L29 32 Z' fill='%23E76F3C'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/table-tale.css">
+</head>
+<body>
+  <svg class="svg-defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="tt-gold" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#f3d9a0"/>
+        <stop offset=".5" stop-color="#D4A85A"/>
+        <stop offset="1" stop-color="#a8742f"/>
+      </linearGradient>
+      <radialGradient id="tt-core" cx=".5" cy=".5" r=".5">
+        <stop offset="0" stop-color="#ffd9a8"/>
+        <stop offset=".6" stop-color="#E76F3C"/>
+        <stop offset="1" stop-color="#B23A2E"/>
+      </radialGradient>
+    </defs>
+  </svg>
+  <a class="skip-link" href="#main">Saltar para o conteúdo</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#/biblioteca" aria-label="Table Tale — ir para a biblioteca">
+        <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
+          <circle cx="32" cy="32" r="20" fill="none" stroke="url(#tt-gold)" stroke-width="2.4"/>
+          <path d="M32 2 L36.5 27.5 L62 32 L36.5 36.5 L32 62 L27.5 36.5 L2 32 L27.5 27.5 Z" fill="url(#tt-gold)"/>
+          <path d="M32 17 C30 26 26 30 17 32 C26 34 30 38 32 47 C34 38 38 34 47 32 C38 30 34 26 32 17 Z" fill="#0B1E2D"/>
+          <path d="M32 23 L35 32 L32 41 L29 32 Z" fill="url(#tt-core)"/>
+        </svg>
+        <span class="brand-name">Table<span class="brand-dot" aria-hidden="true">✦</span>Tale</span>
+      </a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-action="toggle-nav">
+        <span class="sr-only">Abrir menu</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+
+      <nav id="site-nav" class="site-nav" aria-label="Principal">
+        <ul>
+          <li><a href="#/biblioteca" data-nav="biblioteca">Biblioteca</a></li>
+          <li><a href="#/arcanos" data-nav="arcanos">Arcanos &amp; Elementais</a></li>
+          <li><a href="#/perfil" data-nav="perfil">Perfil</a></li>
+        </ul>
+        <div class="auth-slot" id="auth-slot"></div>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1"></main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p><span class="footer-brand">Table Tale</span> — Make stories. Play them.</p>
+      <p class="footer-note">Protótipo com dados simulados guardados apenas neste navegador.
+        <button type="button" class="btn-link btn-link-light" data-action="reset-demo">Repor dados de demonstração</button>
+      </p>
+    </div>
+  </footer>
+
+  <div class="toast-region" id="toasts" role="status" aria-live="polite"></div>
+
+  <dialog id="profile-dialog" class="dialog" aria-labelledby="profile-dialog-title"></dialog>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

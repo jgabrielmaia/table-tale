@@ -1,0 +1,29 @@
+# Dependências e builds
+node_modules/
+dist/
+build/
+.cache/
+coverage/
+
+# Ambiente e segredos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+client_secret*.json
+token*.json
+secrets/
+
+# Logs e ficheiros do sistema
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
