@@ -17,9 +17,22 @@ const GameDetailPage = lazy(() => import('@/features/games/GameDetailPage').then
 const LorePage = lazy(() => import('@/features/lore/LorePage').then((m) => ({ default: m.LorePage })));
 const ProfilePage = lazy(() => import('@/features/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })));
 const EventsPage = lazy(() => import('@/features/events/EventsPage').then((m) => ({ default: m.EventsPage })));
+const FateDrawPage = lazy(() => import('@/features/fate/FateDrawPage').then((m) => ({ default: m.FateDrawPage })));
 const ComponentsPage = lazy(() => import('@/features/docs/ComponentsPage').then((m) => ({ default: m.ComponentsPage })));
 
 export function AppRoutes() {
+  return (
+    <Routes>
+      <Route
+        path="/fate"
+        element={<Suspense fallback={<div className="container section"><LoadingState /></div>}><FateDrawPage /></Suspense>}
+      />
+      <Route path="*" element={<ShellRoutes />} />
+    </Routes>
+  );
+}
+
+function ShellRoutes() {
   return (
     <AppShell>
       <Suspense fallback={<div className="container section"><LoadingState /></div>}>
