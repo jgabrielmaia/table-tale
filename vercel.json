@@ -4,7 +4,7 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "trailingSlash": false,
+  "trailingSlash": true,
   "rewrites": [
     { "source": "/table-tale", "destination": "/table-tale/index.html" },
     { "source": "/table-tale/:path*", "destination": "/table-tale/index.html" }

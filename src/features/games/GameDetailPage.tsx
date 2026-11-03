@@ -11,7 +11,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useGame } from '@/hooks/useGame';
 import { useGameSessions } from '@/hooks/useGameSessions';
 import { useUpdateGameState } from '@/hooks/useGames';
-import { complexityLabel, genreLabel, localizeGame, useI18n } from '@/i18n';
+import { complexityLabel, genreLabel, getLang, localizeGame, useI18n } from '@/i18n';
+import { gameSeo, NOT_FOUND_SEO } from '@/seo/pages';
+import { usePageSeo } from '@/seo/RouteSeo';
 import { gameStyle } from '@/lib/cover';
 import { errorMessage } from '@/lib/errors';
 import { statusLabel, formatDate, playersLabel, todayIso } from '@/lib/format';
@@ -25,6 +27,13 @@ export function GameDetailPage() {
   const { user } = useAuth();
   const { game: rawGame, allGames, isLoading, isError, error, notFound } = useGame(slug);
   const game = rawGame ? localizeGame(rawGame) : rawGame;
+  const lang = getLang();
+  usePageSeo(game
+    ? {
+        ...gameSeo({ title: game.title, genre: genreLabel(game.genre), minPlayers: game.minPlayers, maxPlayers: game.maxPlayers, durationMinutes: game.durationMinutes, complexity: complexityLabel(game.complexity), description: game.description }, lang),
+        path: `/games/${game.slug}`,
+      }
+    : { title: NOT_FOUND_SEO.title[lang], description: NOT_FOUND_SEO.description[lang], path: `/games/${slug}`, noindex: !isLoading });
   const { sessions, query: sessionsQuery, create, remove } = useGameSessions(game?.id);
   const updateState = useUpdateGameState();
   const { notify } = useToast();

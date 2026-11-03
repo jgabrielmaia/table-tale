@@ -8,6 +8,7 @@ import { RequireAuth } from '@/features/auth/RequireAuth';
 import { HomePage } from '@/features/home/HomePage';
 import { NotFoundPage } from '@/features/home/NotFoundPage';
 import { basePath } from '@/lib/env';
+import { RouteSeo } from '@/seo/RouteSeo';
 import { I18nProvider, LangBoundary } from '@/i18n';
 import { createQueryClient } from '@/lib/queryClient';
 
@@ -65,6 +66,7 @@ export function App() {
           <ToastProvider>
             <LangBoundary>
               <BrowserRouter basename={basePath}>
+                <RouteSeo />
                 <AppRoutes />
               </BrowserRouter>
             </LangBoundary>
