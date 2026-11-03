@@ -50,6 +50,7 @@ describe('editorial content', () => {
 
   it('keeps the lore structure aligned', () => {
     expect(contentEn.lore.premise).toHaveLength(contentPt.lore.premise.length);
+    expect(contentEn.lore.choice.destiny).toHaveLength(contentPt.lore.choice.destiny.length);
     expect(contentEn.lore.tension.rows).toHaveLength(contentPt.lore.tension.rows.length);
     expect(contentEn.lore.timeline).toHaveLength(contentPt.lore.timeline.length);
     expect(contentEn.lore.chapters.map((c) => c.id)).toEqual(contentPt.lore.chapters.map((c) => c.id));

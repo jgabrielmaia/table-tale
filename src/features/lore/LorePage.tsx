@@ -97,6 +97,7 @@ export function LorePage() {
               <h2 id="identidade-title">{t('lore.identityTitle')}</h2>
               <p className="section-intro">{L.choice.intro}</p>
               <blockquote className="central-question"><p>{L.choice.question}</p></blockquote>
+              <div className="prose">{L.choice.destiny.map((p) => <p key={p}>{p}</p>)}</div>
               <div className="choice-grid">
                 {[arcanos, elementais].map((f) => (
                   <article key={f.slug} className="choice-card" style={{ '--c': f.color } as CSSProperties} aria-labelledby={`choice-${f.slug}`}>
@@ -108,6 +109,7 @@ export function LorePage() {
                 ))}
               </div>
               <p className="muted center">{L.choice.answer}</p>
+              <p className="section-intro">{L.choice.express}</p>
 
               {fate.state === 'loading' ? (
                 <LoadingState label={t('common.loading')} />

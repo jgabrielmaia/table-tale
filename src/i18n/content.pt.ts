@@ -5,8 +5,8 @@ export const contentPt: Content = {
   lore: {
     intro: {
       title: 'Duas visões do mundo. Dois caminhos para o poder.',
-      text: 'Os Arcanos acreditam que compreender a realidade é a melhor forma de transformá-la. Os Elementais acreditam que a força das fundações sustenta tudo aquilo que merece existir.',
-      note: 'Nenhuma das facções está certa por definição. A escolha revela aquilo em que cada jogador acredita.',
+      text: 'Para os Arcanos, o conhecimento é poder: compreender a realidade é a melhor forma de transformá-la. Para os Elementais, a força é poder: são as fundações que sustentam tudo aquilo que merece existir.',
+      note: 'Nenhuma das facções está certa por definição, e ninguém escolhe a sua: a carta que recebes revela onde pertences.',
     },
     premise: [
       'No universo de Table Tale, Arcanos e Elementais representam duas filosofias fundamentais sobre como o mundo deve ser compreendido, protegido e transformado.',
@@ -39,9 +39,14 @@ export const contentPt: Content = {
       closing: 'O equilíbrio nasce dessa interdependência, não de tornar as facções idênticas.',
     },
     choice: {
-      intro: 'Cada jogador descobre a sua carta através do Sorteio do Destino. Antes de a revelares, lê o que cada facção defende e pergunta-te o que realmente te move.',
-      question: 'Quando o mundo precisa de mudar, preferes descobrir aquilo que ele ainda pode ser ou proteger aquilo que o mantém de pé?',
-      answer: 'Não existe resposta correta. A carta revela uma identidade dentro do universo Table Tale, e nenhuma facção é superior à outra.',
+      intro: 'As cartas decidem o teu destino. Nove cartas aguardam cada jogador, e é o Sorteio do Destino que revela aquela que lhe pertence.',
+      question: 'Não escolhes a tua facção. A tua carta revela onde pertences.',
+      destiny: [
+        'Em Table Tale, as cartas não são apenas retratos das facções: são o instrumento através do qual o destino se manifesta. Cada uma tem identidade, simbolismo e significado próprios, e o sentido da carta influencia a forma como a tua identidade é interpretada.',
+        'A carta que recebes determina se pertences aos Arcanos ou aos Elementais e estabelece a tua identidade individual durante a temporada. O sorteio é uma revelação, não uma preferência: por isso, conhecer aquilo em que cada facção acredita não serve para escolher um lado, mas para compreender o que o destino te pode trazer.',
+      ],
+      express: 'Cada carta expressa uma faceta da sua facção. Entre os Arcanos, o Mago acende a primeira descoberta, a Sacerdotisa guarda o que fica por dizer, a Estrela orienta, o Mundo completa o círculo e a Temperança equilibra forças opostas. Entre os Elementais, a Terra dá raiz, a Água adapta-se e persiste, o Fogo move com coragem e o Ar leva as ideias mais longe.',
+      answer: 'Nenhuma facção é superior, boa ou má por natureza: ambas representam forças essenciais, ainda que por vezes em conflito.',
     },
     neutral: 'O verso partilhado representa o universo Table Tale como um todo, e não uma facção. Pertence igualmente a Arcanos e Elementais.',
     outro: {
@@ -56,7 +61,7 @@ export const contentPt: Content = {
       { id: 'tensao', label: 'Ponto de tensão' },
     ],
     timeline: [
-      { marker: 'I', title: 'A tua identidade', text: 'Descobre a carta e a facção que te representam nesta temporada.', symbol: 'compass' },
+      { marker: 'I', title: 'A tua identidade', text: 'Revela a carta que o destino te reservou e a facção a que pertences nesta temporada.', symbol: 'compass' },
       { marker: 'II', title: 'Duas filosofias', text: 'Conhecimento e fundamento: duas formas legítimas de ver o mundo.', symbol: 'scroll' },
       { marker: 'III · IV', title: 'Arcanos e Elementais', text: 'Valores, virtudes, riscos e a expressão visual de cada facção.', symbol: 'constellation' },
       { marker: 'V', title: 'O ponto de tensão', text: 'Onde as prioridades se cruzam — e porque cada lado precisa do outro.', symbol: 'shield' },

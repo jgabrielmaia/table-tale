@@ -6,7 +6,7 @@ export interface LoreContent {
   premise: string[];
   tension: { intro: string[]; rows: [string, string, string][]; outro: string };
   balance: { lead: string; without: { arcanos: string; elementais: string }; warning: string; closing: string };
-  choice: { intro: string; question: string; answer: string };
+  choice: { intro: string; question: string; destiny: string[]; express: string; answer: string };
   neutral: string;
   outro: { title: string; text: string };
   chapters: { id: string; label: string }[];

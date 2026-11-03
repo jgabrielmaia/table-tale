@@ -4,8 +4,8 @@ export const contentEn: Content = {
   lore: {
     intro: {
       title: 'Two views of the world. Two paths to power.',
-      text: 'The Arcanos believe that understanding reality is the best way to transform it. The Elementais believe that the strength of foundations sustains everything that deserves to exist.',
-      note: 'Neither faction is right by definition. The choice reveals what each player believes in.',
+      text: 'For the Arcanos, knowledge is power: understanding reality is the best way to transform it. For the Elementais, strength is power: it is the foundations that sustain everything that deserves to exist.',
+      note: 'Neither faction is right by definition, and no one chooses theirs: the card you receive reveals where you belong.',
     },
     premise: [
       'In the Table Tale universe, the Arcanos and the Elementais represent two fundamental philosophies about how the world should be understood, protected and transformed.',
@@ -38,9 +38,14 @@ export const contentEn: Content = {
       closing: 'Balance is born from this interdependence, not from making the factions identical.',
     },
     choice: {
-      intro: 'Every player discovers their card through the Fate Draw. Before you reveal yours, read what each faction stands for and ask yourself what truly moves you.',
-      question: 'When the world needs to change, do you prefer to discover what it can still become, or to protect what keeps it standing?',
-      answer: 'There is no right answer. The card reveals an identity within the Table Tale universe, and neither faction is superior to the other.',
+      intro: 'The cards decide your destiny. Nine cards await every player, and it is the Fate Draw that reveals the one that belongs to them.',
+      question: 'You do not choose your faction. Your card reveals where you belong.',
+      destiny: [
+        'In Table Tale the cards are not merely portraits of the factions: they are the instruments through which destiny manifests itself. Each has its own identity, symbolism and meaning, and the meaning of the card shapes how your identity is read.',
+        'The card you receive determines whether you belong to the Arcanos or the Elementais and establishes your individual identity for the season. The draw is a revelation, not a preference: learning what each faction believes is not about picking a side, but about understanding what fate may bring you.',
+      ],
+      express: 'Each card expresses one facet of its faction. Among the Arcanos, the Magician sparks the first discovery, the High Priestess keeps what is left unspoken, the Star guides, the World completes the circle and Temperance balances opposing forces. Among the Elementais, Earth gives roots, Water adapts and endures, Fire moves with courage and Air carries ideas further.',
+      answer: 'Neither faction is superior, good or evil by nature: both represent essential forces, even if they sometimes conflict.',
     },
     neutral: 'The shared back represents the Table Tale universe as a whole, not a faction. It belongs equally to the Arcanos and the Elementais.',
     outro: {
@@ -55,7 +60,7 @@ export const contentEn: Content = {
       { id: 'tensao', label: 'Point of tension' },
     ],
     timeline: [
-      { marker: 'I', title: 'Your identity', text: 'Discover the card and faction that represent you this season.', symbol: 'compass' },
+      { marker: 'I', title: 'Your identity', text: 'Reveal the card destiny holds for you and the faction you belong to this season.', symbol: 'compass' },
       { marker: 'II', title: 'Two philosophies', text: 'Knowledge and foundation: two legitimate ways of seeing the world.', symbol: 'scroll' },
       { marker: 'III · IV', title: 'Arcanos and Elementais', text: 'Values, virtues, risks and the visual expression of each faction.', symbol: 'constellation' },
       { marker: 'V', title: 'The point of tension', text: 'Where priorities cross — and why each side needs the other.', symbol: 'shield' },
