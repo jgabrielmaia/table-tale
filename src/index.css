@@ -42,7 +42,7 @@
 .rating label { position: relative; display: grid; place-items: center; cursor: pointer; border-radius: 4px; background: rgba(75, 85, 99, .35); color: #9ca3af; font-size: .8rem; font-weight: 600; line-height: 1; transition: background-color .15s, color .15s; }
 .rating label:hover { background: rgba(212, 168, 90, .35); color: var(--creme); }
 .rating label.on { background: linear-gradient(180deg, #e9c27a, var(--dourado)); color: #1a0e08; }
-.rating input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.rating input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
 .rating label:has(input:focus-visible) { outline: 2px solid var(--teal); outline-offset: 1px; }
 
 .error-state { border-color: rgba(224, 96, 79, .5) !important; }
