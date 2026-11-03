@@ -262,11 +262,8 @@ export interface SeedEvent {
   event_date: string;
 }
 
-export const events: SeedEvent[] = [
-  { slug: 'noite-dos-mapas-perdidos', name: 'Noite dos Mapas Perdidos', location: 'Lisboa · Taberna do Compasso', event_date: '2026-09-14T19:00:00Z', description: 'Maratona de jogos de exploração e cartografia.' },
-  { slug: 'torneio-de-outono', name: 'Torneio de Outono: Arcanos vs Elementais', location: 'Porto · Salão das Marés', event_date: '2026-10-12T15:00:00Z', description: 'Torneio amigável em que cada jogador representa a facção que escolheu. Nenhum lado parte com vantagem.' },
-  { slug: 'two-paths-one-table', name: 'Two Paths, One Table', location: 'Braga · Observatório Velho', event_date: '2026-11-21T20:00:00Z', description: 'Noite de jogos cooperativos com equipas mistas de Arcanos e Elementais. Lugares limitados.' },
-];
+// Sem eventos por agora; os anteriores estão no histórico do git.
+export const events: SeedEvent[] = [];
 
 export const ownerSetup: { factionSlug: string; baseExperiencePoints: number; condition: OwnershipCondition } = {
   factionSlug: 'arcanos',

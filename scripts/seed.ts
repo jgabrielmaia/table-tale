@@ -61,7 +61,7 @@ async function main() {
   console.log(`✓ ${games.length} jogos (com capas no storage)`);
 
   check('achievements', await db.from('achievements').upsert(data.achievements, { onConflict: 'slug' }));
-  check('events', await db.from('events').upsert(data.events, { onConflict: 'slug' }));
+  if (data.events.length) check('events', await db.from('events').upsert(data.events, { onConflict: 'slug' }));
   console.log(`✓ ${data.achievements.length} conquistas, ${data.events.length} eventos`);
 
   // Inventário do dono (aplicado quando a conta existir)
