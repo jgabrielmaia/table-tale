@@ -302,6 +302,8 @@ export const pt = {
   'activity.achievement': 'Conquista: {name}',
   'activity.achievementUnlocked': 'Conquista desbloqueada',
   'ach.unlocked': 'Desbloqueada',
+  'ach.groupFound': 'Descobertas',
+  'ach.groupHidden': 'Por descobrir',
   'ach.progressOf': 'Progresso de {name}',
   'ach.progressText': '{a} de {b}',
   'profile.err.load': 'Não foi possível carregar o perfil',

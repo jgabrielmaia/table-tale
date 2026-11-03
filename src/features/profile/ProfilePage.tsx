@@ -50,6 +50,9 @@ export function ProfilePage() {
   const faction = factions.find((f) => f.slug === fate.active?.faction) ?? null;
   const attended = events.filter((e) => e.isParticipating).map(localizeEvent);
   const achievementList = achievements.data ?? [];
+  // Discovered first (newest on top), then the ones still to discover (closest to done first).
+  const found = achievementList.filter((a) => a.unlockedAt).sort((a, b) => String(b.unlockedAt).localeCompare(String(a.unlockedAt)));
+  const hidden = achievementList.filter((a) => !a.unlockedAt).sort((a, b) => b.progress / b.requirementValue - a.progress / a.requirementValue);
   const unlinked = OAUTH_PROVIDERS.filter((pr) => !providers.includes(pr));
 
   // TEMPORARY (dev builds only): clears this season's card and goes back to the draw.
@@ -160,9 +163,19 @@ export function ProfilePage() {
           ) : achievements.isError ? (
             <ErrorState compact message={errorMessage(achievements.error)} onRetry={() => void achievements.refetch()} />
           ) : (
-            <ul className="medal-grid" role="list">
-              {achievementList.map((a) => <AchievementCard key={a.id} achievement={a} />)}
-            </ul>
+            <>
+              {[
+                { key: 'found', title: t('ach.groupFound'), items: found },
+                { key: 'hidden', title: t('ach.groupHidden'), items: hidden },
+              ].filter((g) => g.items.length).map((g) => (
+                <section key={g.key} aria-label={g.title}>
+                  <h3 className="medal-group">{g.title} <span>{g.items.length}</span></h3>
+                  <ul className="medal-grid" role="list">
+                    {g.items.map((a) => <AchievementCard key={a.id} achievement={a} />)}
+                  </ul>
+                </section>
+              ))}
+            </>
           )}
         </Card>
 

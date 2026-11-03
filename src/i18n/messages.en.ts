@@ -303,6 +303,8 @@ export const en: Record<MessageKey, string> = {
   'activity.achievement': 'Achievement: {name}',
   'activity.achievementUnlocked': 'Achievement unlocked',
   'ach.unlocked': 'Unlocked',
+  'ach.groupFound': 'Discovered',
+  'ach.groupHidden': 'Yet to discover',
   'ach.progressOf': 'Progress of {name}',
   'ach.progressText': '{a} of {b}',
   'profile.err.load': 'Could not load the profile',
