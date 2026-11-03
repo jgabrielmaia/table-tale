@@ -17,7 +17,8 @@ test.describe('Eventos', () => {
     await expect(future.locator('time')).toHaveAttribute('datetime', '2099-10-12T15:00:00.000Z');
   });
 
-  test('um visitante vê "Entrar para participar" e regressa aos eventos depois de entrar', async ({ page }) => {
+  test('um visitante vê "Entrar para participar" e regressa aos eventos depois de entrar', async ({ page, backend }) => {
+    backend.giveCard();
     await page.goto('events');
     const join = page.getByRole('link', { name: 'Entrar para participar' });
     await expect(join).toHaveCount(3);

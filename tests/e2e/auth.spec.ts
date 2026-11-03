@@ -60,7 +60,8 @@ test.describe('Autenticação', () => {
       await expect(login.email()).toBeVisible();
     });
 
-    test('conclui o acesso ao abrir o link recebido e regressa ao destino pedido', async ({ page }) => {
+    test('conclui o acesso ao abrir o link recebido e regressa ao destino pedido', async ({ page, backend }) => {
+      backend.giveCard(); // jogador que já descobriu o destino
       const login = new LoginPage(page);
       await login.goto();
       await login.requestMagicLink(EMAIL);
@@ -114,7 +115,8 @@ test.describe('Autenticação', () => {
   });
 
   test.describe('Google e GitHub', () => {
-    test('entrar com Google leva à biblioteca com a sessão iniciada @smoke', async ({ page }) => {
+    test('entrar com Google leva à biblioteca com a sessão iniciada @smoke', async ({ page, backend }) => {
+      backend.giveCard();
       const login = new LoginPage(page);
       await login.goto();
       await login.google().click();
@@ -122,7 +124,32 @@ test.describe('Autenticação', () => {
       await new AppShell(page).expectSignedIn();
     });
 
-    test('entrar com GitHub também funciona', async ({ page }) => {
+    test('a primeira entrada leva ao Sorteio do Destino @smoke', async ({ page }) => {
+      const login = new LoginPage(page);
+      await login.goto();
+      await login.google().click();
+      await expect(page).toHaveURL(/\/fate$/);
+      await expect(page.getByRole('heading', { level: 1, name: 'O Sorteio do Destino' })).toBeVisible();
+    });
+
+    test('a primeira entrada por link mágico também leva ao Sorteio, mesmo com outro destino pedido', async ({ page }) => {
+      const login = new LoginPage(page);
+      await login.goto();
+      await login.requestMagicLink(EMAIL);
+      await page.goto('auth/callback?code=e2e-magic&next=%2Fevents');
+      await expect(page).toHaveURL(/\/fate$/);
+    });
+
+    test('quem já tem carta não volta ao Sorteio ao entrar @smoke', async ({ page, backend }) => {
+      backend.giveCard();
+      const login = new LoginPage(page);
+      await login.goto();
+      await login.google().click();
+      await expect(page).toHaveURL(/\/library$/);
+    });
+
+    test('entrar com GitHub também funciona', async ({ page, backend }) => {
+      backend.giveCard();
       const login = new LoginPage(page);
       await login.goto();
       await login.github().click();
@@ -131,6 +158,7 @@ test.describe('Autenticação', () => {
     });
 
     test('mostra o estado de redirecionamento enquanto o fornecedor responde', async ({ page, backend }) => {
+      backend.giveCard();
       const release = backend.hold(/GET \/auth\/v1\/authorize/);
       const login = new LoginPage(page);
       await login.goto();
@@ -140,7 +168,8 @@ test.describe('Autenticação', () => {
       await expect(page).toHaveURL(/\/library$/);
     });
 
-    test('depois de entrar, regressa à página protegida que o utilizador queria @smoke', async ({ page }) => {
+    test('depois de entrar, regressa à página protegida que o utilizador queria @smoke', async ({ page, backend }) => {
+      backend.giveCard();
       await page.goto('profile');
       await expect(page).toHaveURL(/\/login$/);
       await new LoginPage(page).google().click();
@@ -181,7 +210,8 @@ test.describe('Autenticação', () => {
       await expect(page.getByText('O link pode ter expirado ou já ter sido usado.')).toBeVisible();
     });
 
-    test('um destino externo no parâmetro next nunca é seguido (redirecionamento aberto)', async ({ page, signIn }) => {
+    test('um destino externo no parâmetro next nunca é seguido (redirecionamento aberto)', async ({ page, signIn, backend }) => {
+      backend.giveCard();
       await signIn();
       for (const next of ['//evil.example.test', 'https://evil.example.test', '/\\evil.example.test']) {
         await page.goto(`auth/callback?next=${encodeURIComponent(next)}`);

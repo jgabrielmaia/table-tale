@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ButtonLink, ErrorState, LoadingState } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
+import { useFate } from '@/hooks/useFate';
 import { useI18n } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import { safeNextPath } from './api';
@@ -11,6 +12,7 @@ import { callbackErrorKey, readCallbackError } from './providers';
 export function AuthCallbackPage() {
   const { t } = useI18n();
   const { user, isLoading } = useAuth();
+  const fate = useFate();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const next = safeNextPath(params.get('next'));
@@ -19,8 +21,13 @@ export function AuthCallbackPage() {
   const [exchangeFailed, setExchangeFailed] = useState(false);
 
   useEffect(() => {
-    if (user && !providerError) navigate(next, { replace: true });
-  }, [user, providerError, next, navigate]);
+    if (!user || providerError) return;
+    // Wait until we know whether this player has ever drawn a card.
+    if (!fate.identities.isError && (fate.state === 'loading' || fate.season.isLoading)) return;
+    // A first-time player goes straight to discover their destiny.
+    const firstTime = !fate.identities.isError && fate.state === 'uninitiated' && fate.canDraw;
+    navigate(firstTime ? '/fate' : next, { replace: true });
+  }, [user, providerError, next, navigate, fate.state, fate.canDraw, fate.season.isLoading, fate.identities.isError]);
 
   useEffect(() => {
     if (providerError || user) return;
