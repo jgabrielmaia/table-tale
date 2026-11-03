@@ -1,0 +1,8 @@
+.lang-switch { display: inline-flex; border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 999px; overflow: hidden; }
+.lang-switch__btn {
+  min-width: 2.4rem; padding: 0.3rem 0.65rem; border: 0; background: transparent; color: inherit; cursor: pointer;
+  font: 700 0.72rem/1 var(--font-sans, sans-serif); letter-spacing: 0.1em; opacity: 0.7;
+}
+.lang-switch__btn:hover { opacity: 1; }
+.lang-switch__btn[aria-pressed='true'] { background: rgba(255, 255, 255, 0.18); opacity: 1; }
+.lang-switch__btn:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }

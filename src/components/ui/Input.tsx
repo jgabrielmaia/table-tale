@@ -1,5 +1,6 @@
 import { forwardRef, useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
 import { cn } from '@/lib/format';
+import { t } from '@/i18n';
 
 interface FieldWrapperProps {
   id: string;
@@ -19,7 +20,7 @@ export function Field({ id, label, error, hint, optional, className, children }:
   return (
     <div className={cn('field', className)}>
       <label htmlFor={id}>
-        {label} {optional && <span className="optional">(opcional)</span>}
+        {label} {optional && <span className="optional">{t('common.optional')}</span>}
       </label>
       {children(describedBy)}
       {hint && <p className="field-hint" id={hintId}>{hint}</p>}

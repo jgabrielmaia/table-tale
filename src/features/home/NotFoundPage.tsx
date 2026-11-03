@@ -1,14 +1,16 @@
 import { ButtonLink, EmptyState } from '@/components/ui';
+import { useI18n } from '@/i18n';
 
 export function NotFoundPage() {
+  const { t } = useI18n();
   return (
     <div className="container section">
-      <h1 className="sr-only">Página não encontrada</h1>
+      <h1 className="sr-only">{t('notFound.srTitle')}</h1>
       <EmptyState
         headingLevel={2}
-        title="Esta página não consta do mapa"
-        description="O caminho que seguiste perdeu-se no Véu. Regressa à biblioteca para continuar a explorar."
-        action={<ButtonLink to="/library" variant="primary">Voltar à biblioteca</ButtonLink>}
+        title={t('notFound.title')}
+        description={t('notFound.text')}
+        action={<ButtonLink to="/library" variant="primary">{t('common.backToLibrary')}</ButtonLink>}
       />
     </div>
   );

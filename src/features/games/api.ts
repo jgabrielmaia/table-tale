@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { unwrap } from '@/lib/errors';
+import { t } from '@/i18n';
 import type { GameRow, GameSessionRow, OwnershipCondition, UserGameStatusRow } from '@/types/database';
 import type { Game, GameOwner, GameSession, GameStatus, GameUserState } from '@/types/domain';
 
@@ -24,7 +25,7 @@ export function mapGame(row: GameQueryRow): Game {
     else
       owners.set(o.user_id, {
         userId: o.user_id,
-        displayName: o.profiles?.display_name || 'Jogador',
+        displayName: o.profiles?.display_name || t('common.player'),
         avatarUrl: o.profiles?.avatar_url ?? null,
         copies: 1,
         condition: o.condition,
@@ -58,14 +59,14 @@ export const mapSession = (r: GameSessionRow): GameSession => ({
 });
 
 export async function fetchGames(): Promise<Game[]> {
-  const rows = unwrap(await supabase.from('games').select(GAME_SELECT).order('title'), 'Não foi possível carregar a biblioteca');
+  const rows = unwrap(await supabase.from('games').select(GAME_SELECT).order('title'), t('games.err.load'));
   return (rows as unknown as GameQueryRow[]).map(mapGame);
 }
 
 export async function fetchGameBySlug(slug: string): Promise<Game | null> {
   const row = unwrap(
     await supabase.from('games').select(GAME_SELECT).eq('slug', slug).maybeSingle(),
-    'Não foi possível carregar o jogo',
+    t('games.err.game'),
   );
   return row ? mapGame(row as unknown as GameQueryRow) : null;
 }
@@ -73,7 +74,7 @@ export async function fetchGameBySlug(slug: string): Promise<Game | null> {
 export async function fetchGameStates(userId: string): Promise<GameUserState[]> {
   const rows = unwrap(
     await supabase.from('user_game_status').select('game_id,status,is_favorite').eq('user_id', userId),
-    'Não foi possível carregar o estado dos jogos',
+    t('games.err.states'),
   ) as Pick<UserGameStatusRow, 'game_id' | 'status' | 'is_favorite'>[];
   return rows.map((r) => ({ gameId: r.game_id, status: r.status, isFavorite: r.is_favorite }));
 }
@@ -92,7 +93,7 @@ export async function saveGameState(
       .upsert(payload, { onConflict: 'user_id,game_id' })
       .select('game_id,status,is_favorite')
       .single(),
-    'Não foi possível guardar o estado',
+    t('games.err.save'),
   ) as Pick<UserGameStatusRow, 'game_id' | 'status' | 'is_favorite'>;
   return { gameId: row.game_id, status: row.status, isFavorite: row.is_favorite };
 }
@@ -102,7 +103,7 @@ export async function fetchSessions(userId: string, gameId?: string): Promise<Ga
   if (gameId) query = query.eq('game_id', gameId);
   const rows = unwrap(
     await query.order('played_at', { ascending: false }).order('created_at', { ascending: false }),
-    'Não foi possível carregar as sessões',
+    t('games.err.sessions'),
   ) as GameSessionRow[];
   return rows.map(mapSession);
 }
@@ -131,11 +132,11 @@ export async function createSession(userId: string, input: NewSession): Promise<
       })
       .select('*')
       .single(),
-    'Não foi possível registar a sessão',
+    t('games.err.createSession'),
   ) as GameSessionRow;
   return mapSession(row);
 }
 
 export async function deleteSession(sessionId: string): Promise<void> {
-  unwrap(await supabase.from('game_sessions').delete().eq('id', sessionId), 'Não foi possível remover a sessão');
+  unwrap(await supabase.from('game_sessions').delete().eq('id', sessionId), t('games.err.deleteSession'));
 }

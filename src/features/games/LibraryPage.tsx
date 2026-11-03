@@ -6,12 +6,14 @@ import { Button, EmptyState, ErrorState, LoadingState, useToast } from '@/compon
 import { LoginRequiredNotice } from '@/features/auth/LoginPage';
 import { useAuth } from '@/hooks/useAuth';
 import { useGames, useUpdateGameState } from '@/hooks/useGames';
+import { genreLabel, getLocale, useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
-import { STATUS_LABELS } from '@/lib/format';
+import { statusLabel } from '@/lib/format';
 import type { GameStatus, LibraryGame } from '@/types/domain';
 import { EMPTY_FILTERS, filterGames, hasActiveFilters, type GameFilterValues } from './filters';
 
 export function LibraryPage() {
+  const { t, tn } = useI18n();
   const { user } = useAuth();
   const { games, isLoading, isError, error, refetch } = useGames();
   const updateState = useUpdateGameState();
@@ -19,7 +21,7 @@ export function LibraryPage() {
   const [params, setParams] = useSearchParams();
   const [filters, setFilters] = useState<GameFilterValues>({ ...EMPTY_FILTERS, query: params.get('q') ?? '' });
 
-  const genres = useMemo(() => [...new Set(games.map((g) => g.genre))].sort((a, b) => a.localeCompare(b, 'pt')), [games]);
+  const genres = useMemo(() => [...new Set(games.map((g) => g.genre))].sort((a, b) => genreLabel(a).localeCompare(genreLabel(b), getLocale())), [games]);
   const visible = useMemo(() => filterGames(games, filters), [games, filters]);
 
   const changeFilters = (next: GameFilterValues) => {
@@ -32,7 +34,7 @@ export function LibraryPage() {
     updateState.mutate(
       { gameId: game.id, isFavorite: !game.isFavorite },
       {
-        onSuccess: () => notify(game.isFavorite ? 'Removido dos favoritos' : 'Adicionado aos favoritos', { icon: 'heart' }),
+        onSuccess: () => notify(game.isFavorite ? t('library.favRemoved') : t('library.favAdded'), { icon: 'heart' }),
         onError: (e) => notify(errorMessage(e), { tone: 'error' }),
       },
     );
@@ -41,7 +43,7 @@ export function LibraryPage() {
     updateState.mutate(
       { gameId: game.id, status },
       {
-        onSuccess: () => notify(`${game.title}: ${STATUS_LABELS[status]}`),
+        onSuccess: () => notify(`${game.title}: ${statusLabel(status)}`),
         onError: (e) => notify(errorMessage(e), { tone: 'error' }),
       },
     );
@@ -50,41 +52,41 @@ export function LibraryPage() {
     <div className="container section">
       <div className="section-head">
         <div>
-          <p className="eyebrow">A estante da comunidade</p>
-          <h1>Biblioteca</h1>
+          <p className="eyebrow">{t('library.eyebrow')}</p>
+          <h1>{t('library.title')}</h1>
         </div>
         {!isLoading && !isError && (
           <p className="results-count" aria-live="polite">
-            {visible.length === 1 ? '1 jogo encontrado' : `${visible.length} jogos encontrados`}
+            {tn('library.found', visible.length)}
           </p>
         )}
       </div>
 
-      {!user && <LoginRequiredNotice message="Entra para marcar favoritos, alterar estados e registar sessões." />}
+      {!user && <LoginRequiredNotice message={t('library.loginNotice')} />}
 
       <GameFilters values={filters} genres={genres} onChange={changeFilters} onReset={reset} showPersonalFilters={Boolean(user)} />
 
       {isLoading ? (
-        <LoadingState variant="cards" label="A carregar a coleção…" />
+        <LoadingState variant="cards" label={t('library.loading')} />
       ) : isError ? (
         <ErrorState message={errorMessage(error)} onRetry={() => void refetch()} />
       ) : !games.length ? (
-        <EmptyState title="A estante está vazia" description="Ainda não existem jogos na biblioteca. Corre o seed da base de dados para carregar a coleção inicial." />
+        <EmptyState title={t('library.emptyTitle')} description={t('library.emptyText')} />
       ) : !visible.length ? (
         <EmptyState
-          title="Nenhum jogo encontrado nesta estante"
+          title={t('library.noResultsTitle')}
           description={
             <>
-              {filters.query && <>Não encontrámos nada para «{filters.query}». </>}
-              Nenhum caminho encontrado com estes filtros. Experimenta outra pesquisa ou limpa os filtros.
+              {filters.query && <>{t('library.noResultsFor', { query: filters.query })}</>}
+              {t('library.noResultsText')}
             </>
           }
-          action={hasActiveFilters(filters) && <Button variant="secondary" onClick={reset}>Limpar filtros</Button>}
+          action={hasActiveFilters(filters) && <Button variant="secondary" onClick={reset}>{t('library.clearFilters')}</Button>}
         />
       ) : (
         <GameGrid
           games={visible}
-          label="Jogos"
+          label={t('library.gamesLabel')}
           onToggleFavorite={user ? toggleFavorite : undefined}
           onStatusChange={user ? changeStatus : undefined}
           busyId={updateState.isPending ? updateState.variables?.gameId : null}
@@ -92,7 +94,7 @@ export function LibraryPage() {
       )}
 
       <p className="mt-10 text-center text-sm text-muted">
-        Queres conhecer o universo por trás da mesa? <Link to="/lore">Arcanos &amp; Elementais</Link>
+        {t('library.loreCta')} <Link to="/lore">{t('nav.lore')}</Link>
       </p>
     </div>
   );

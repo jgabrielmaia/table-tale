@@ -1,22 +1,30 @@
 import { z } from 'zod';
+import { t, type MessageKey } from '@/i18n';
 import { todayIso } from '@/lib/format';
 
-const optionalInt = (min: number, max: number, label: string) =>
+const optionalInt = (min: number, max: number, labelKey: MessageKey) =>
   z
-    .union([z.literal(''), z.coerce.number().int(`${label} tem de ser um número inteiro.`).min(min, `${label}: mínimo ${min}.`).max(max, `${label}: máximo ${max}.`)])
+    .union([
+      z.literal(''),
+      z.coerce
+        .number()
+        .int({ error: () => t('val.int', { label: t(labelKey) }) })
+        .min(min, { error: () => t('val.min', { label: t(labelKey), min }) })
+        .max(max, { error: () => t('val.max', { label: t(labelKey), max }) }),
+    ])
     .optional()
     .transform((v) => (v === '' || v === undefined ? null : v));
 
 export const sessionSchema = z.object({
   playedAt: z
     .string()
-    .min(1, 'Indica a data da sessão.')
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida.')
-    .refine((v) => v <= todayIso(), 'A data não pode ser no futuro.'),
-  durationMinutes: optionalInt(1, 1440, 'Duração'),
-  playersCount: optionalInt(1, 99, 'Jogadores'),
-  rating: optionalInt(1, 5, 'Avaliação'),
-  notes: z.string().max(1000, 'As notas não podem exceder 1000 caracteres.').optional().default(''),
+    .min(1, { error: () => t('val.dateRequired') })
+    .regex(/^\d{4}-\d{2}-\d{2}$/, { error: () => t('val.dateInvalid') })
+    .refine((v) => v <= todayIso(), { error: () => t('val.dateFuture') }),
+  durationMinutes: optionalInt(1, 1440, 'val.durationLabel'),
+  playersCount: optionalInt(1, 99, 'val.playersLabel'),
+  rating: optionalInt(1, 5, 'val.ratingLabel'),
+  notes: z.string().max(1000, { error: () => t('val.notesMax') }).optional().default(''),
 });
 
 export type SessionFormInput = z.input<typeof sessionSchema>;

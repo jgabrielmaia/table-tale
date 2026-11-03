@@ -4,9 +4,11 @@ import { Emblem, Scenery } from '@/components/layout/Brand';
 import { ButtonLink, ErrorState, LoadingState } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useGames } from '@/hooks/useGames';
+import { useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 
 export function HomePage() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const { games, isLoading, isError, error } = useGames();
   const favourites = games.filter((g) => g.isFavorite).length;
@@ -18,24 +20,21 @@ export function HomePage() {
         <Scenery />
         <div className="container hero-inner">
           <div className="hero-copy">
-            <p className="eyebrow eyebrow-light">Make stories. Play them.</p>
-            <h1>Cada jogo guarda uma história. Cada partida escreve outra.</h1>
-            <p className="lead">
-              A Table Tale é uma biblioteca viva de jogos e histórias — um portal entre a mesa e o mundo. Explora a coleção, regista as tuas sessões e
-              descobre as duas filosofias — Arcanos e Elementais — que dividem o mundo de Table Tale.
-            </p>
+            <p className="eyebrow eyebrow-light">{t('home.eyebrow')}</p>
+            <h1>{t('home.title')}</h1>
+            <p className="lead">{t('home.lead')}</p>
             <div className="hero-actions">
-              <ButtonLink to="/library" variant="primary">Explorar a coleção</ButtonLink>
-              <ButtonLink to="/lore" variant="outline-light">Conhecer o universo</ButtonLink>
-              {!user && <ButtonLink to="/login" variant="gold">Entrar</ButtonLink>}
+              <ButtonLink to="/library" variant="primary">{t('home.ctaExplore')}</ButtonLink>
+              <ButtonLink to="/lore" variant="outline-light">{t('home.ctaLore')}</ButtonLink>
+              {!user && <ButtonLink to="/login" variant="gold">{t('common.signIn')}</ButtonLink>}
             </div>
           </div>
           <div className="hero-art">
             <div className="hero-emblem"><Emblem /></div>
-            <dl className="hero-stats" aria-label="A biblioteca em números">
-              <div><dt>Jogos na estante</dt><dd>{isLoading ? '…' : games.length}</dd></div>
-              <div><dt>Géneros</dt><dd>{isLoading ? '…' : new Set(games.map((g) => g.genre)).size}</dd></div>
-              <div><dt>{user ? 'Os teus favoritos' : 'Facções'}</dt><dd>{user ? favourites : 2}</dd></div>
+            <dl className="hero-stats" aria-label={t('home.statsAria')}>
+              <div><dt>{t('home.statGames')}</dt><dd>{isLoading ? '…' : games.length}</dd></div>
+              <div><dt>{t('home.statGenres')}</dt><dd>{isLoading ? '…' : new Set(games.map((g) => g.genre)).size}</dd></div>
+              <div><dt>{user ? t('home.statFavorites') : t('home.statFactions')}</dt><dd>{user ? favourites : 2}</dd></div>
             </dl>
           </div>
         </div>
@@ -44,17 +43,17 @@ export function HomePage() {
       <section className="container section" aria-labelledby="destaques-title">
         <div className="section-head">
           <div>
-            <p className="eyebrow">Na mesa esta semana</p>
-            <h2 id="destaques-title">Destaques da estante</h2>
+            <p className="eyebrow">{t('home.weekEyebrow')}</p>
+            <h2 id="destaques-title">{t('home.highlights')}</h2>
           </div>
-          <Link to="/library">Ver todos os jogos →</Link>
+          <Link to="/library">{t('home.seeAll')}</Link>
         </div>
         {isLoading ? (
           <LoadingState variant="cards" count={3} />
         ) : isError ? (
           <ErrorState message={errorMessage(error)} />
         ) : (
-          <GameGrid games={highlights} label="Destaques" />
+          <GameGrid games={highlights} label={t('home.highlightsLabel')} />
         )}
       </section>
     </>

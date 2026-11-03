@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import type { CSSProperties } from 'react';
 import { FateCard } from './FateCard';
+import { useI18n } from '@/i18n';
 
 export interface PickInfo {
   index: number;
@@ -22,9 +23,10 @@ const MID = 4;
 
 /** Nine identical face-down cards. They carry no identity: the server decides the card after the click. */
 export function CardSelectionGrid({ count, pickedIndex, hidePicked, onPick }: CardSelectionGridProps) {
+  const { t } = useI18n();
   const picked = pickedIndex !== null;
   return (
-    <div className="deck" role="group" aria-label="Nine face-down cards">
+    <div className="deck" role="group" aria-label={t('fate.deckAria')}>
       {Array.from({ length: count }, (_, i) => {
         const c = i - MID;
         const rot = c * 7;
@@ -47,7 +49,7 @@ export function CardSelectionGrid({ count, pickedIndex, hidePicked, onPick }: Ca
                   type="button"
                   className="deck__btn"
                   disabled={picked}
-                  aria-label={`Face-down card ${i + 1} of ${count}`}
+                  aria-label={t('fate.cardAria', { n: i + 1, total: count })}
                   onClick={(e) => {
                     const r = e.currentTarget.getBoundingClientRect();
                     onPick({ index: i, cx: r.left + r.width / 2, cy: r.top + r.height / 2, width: e.currentTarget.offsetWidth, rotate: rot });

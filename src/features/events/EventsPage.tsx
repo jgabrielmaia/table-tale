@@ -1,12 +1,15 @@
 import { Button, ButtonLink, EmptyState, ErrorState, Icon, LoadingState, useToast } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useEvents } from '@/hooks/useEvents';
+import { localizeEvent, useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { formatDate } from '@/lib/format';
 
 export function EventsPage() {
+  const { t } = useI18n();
   const { user } = useAuth();
-  const { events, query, toggle } = useEvents();
+  const { events: rawEvents, query, toggle } = useEvents();
+  const events = rawEvents.map(localizeEvent);
   const { notify } = useToast();
   const now = Date.now();
 
@@ -14,18 +17,18 @@ export function EventsPage() {
     <div className="container section">
       <div className="section-head">
         <div>
-          <p className="eyebrow">Comunidade</p>
-          <h1>Eventos</h1>
+          <p className="eyebrow">{t('events.eyebrow')}</p>
+          <h1>{t('events.title')}</h1>
         </div>
-        <p className="results-count">Torneios, noites temáticas e encontros à volta da mesa.</p>
+        <p className="results-count">{t('events.subtitle')}</p>
       </div>
 
       {query.isLoading ? (
-        <LoadingState label="A carregar eventos…" />
+        <LoadingState label={t('events.loading')} />
       ) : query.isError ? (
         <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />
       ) : !events.length ? (
-        <EmptyState symbol="shield" title="Sem eventos agendados" description="Volta em breve — a próxima mesa está a ser preparada." />
+        <EmptyState symbol="shield" title={t('events.emptyTitle')} description={t('events.emptyText')} />
       ) : (
         <ul className="event-list panel" role="list">
           {events.map((e) => {
@@ -57,16 +60,16 @@ export function EventsPage() {
                       toggle.mutate(
                         { eventId: e.id, participate: !e.isParticipating },
                         {
-                          onSuccess: () => notify(e.isParticipating ? 'Presença removida' : 'Presença registada', { icon: e.isParticipating ? 'calendar' : 'check' }),
+                          onSuccess: () => notify(e.isParticipating ? t('events.left') : t('events.joined'), { icon: e.isParticipating ? 'calendar' : 'check' }),
                           onError: (err) => notify(errorMessage(err), { tone: 'error' }),
                         },
                       )
                     }
                   >
-                    {future ? (e.isParticipating ? 'Inscrito' : 'Vou participar') : e.isParticipating ? 'Participei' : 'Marcar presença'}
+                    {future ? (e.isParticipating ? t('events.registered') : t('events.willJoin')) : e.isParticipating ? t('events.attended') : t('events.markAttendance')}
                   </Button>
                 ) : (
-                  <ButtonLink size="sm" variant="ghost" to="/login" state={{ from: '/events' }}>Entrar para participar</ButtonLink>
+                  <ButtonLink size="sm" variant="ghost" to="/login" state={{ from: '/events' }}>{t('events.signInToJoin')}</ButtonLink>
                 )}
               </li>
             );

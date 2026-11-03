@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createSession, deleteSession, fetchSessions, type NewSession } from '@/features/games/api';
 import { progressKeys, queryKeys } from '@/lib/queryKeys';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { t } from '@/i18n';
 import { useAuth } from './useAuth';
 
 export function useGameSessions(gameId?: string) {
@@ -23,7 +24,7 @@ export function useGameSessions(gameId?: string) {
 
   const create = useMutation({
     mutationFn: (input: NewSession) => {
-      if (!userId) throw new Error('Inicia sessão para registar sessões.');
+      if (!userId) throw new Error(t('auth.needLoginSessions'));
       return createSession(userId, input);
     },
     onSuccess: refreshAll,

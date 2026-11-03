@@ -8,6 +8,7 @@ import { RequireAuth } from '@/features/auth/RequireAuth';
 import { HomePage } from '@/features/home/HomePage';
 import { NotFoundPage } from '@/features/home/NotFoundPage';
 import { basePath } from '@/lib/env';
+import { I18nProvider, LangBoundary } from '@/i18n';
 import { createQueryClient } from '@/lib/queryClient';
 
 const LoginPage = lazy(() => import('@/features/auth/LoginPage').then((m) => ({ default: m.LoginPage })));
@@ -45,7 +46,7 @@ function ShellRoutes() {
           <Route path="/lore" element={<LorePage />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
-          <Route path="/ui" element={<ComponentsPage />} />
+          {import.meta.env.DEV && <Route path="/ui" element={<ComponentsPage />} />}
           <Route path="/biblioteca" element={<Navigate to="/library" replace />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
@@ -57,14 +58,18 @@ function ShellRoutes() {
 export function App() {
   const [queryClient] = useState(createQueryClient);
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ToastProvider>
-          <BrowserRouter basename={basePath}>
-            <AppRoutes />
-          </BrowserRouter>
-        </ToastProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <I18nProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <ToastProvider>
+            <LangBoundary>
+              <BrowserRouter basename={basePath}>
+                <AppRoutes />
+              </BrowserRouter>
+            </LangBoundary>
+          </ToastProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </I18nProvider>
   );
 }

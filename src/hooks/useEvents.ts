@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchEvents, setParticipation } from '@/features/events/api';
 import { progressKeys, queryKeys } from '@/lib/queryKeys';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { t } from '@/i18n';
 import type { EventItem } from '@/types/domain';
 import { useAuth } from './useAuth';
 
@@ -15,7 +16,7 @@ export function useEvents() {
 
   const toggle = useMutation({
     mutationFn: ({ eventId, participate }: { eventId: string; participate: boolean }) => {
-      if (!userId) throw new Error('Inicia sessão para participar em eventos.');
+      if (!userId) throw new Error(t('auth.needLoginEvents'));
       return setParticipation(userId, eventId, participate);
     },
     onMutate: async ({ eventId, participate }) => {

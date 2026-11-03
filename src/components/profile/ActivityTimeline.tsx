@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { BrandSymbol, EmptyState, ButtonLink } from '@/components/ui';
 import { formatDate } from '@/lib/format';
+import { t } from '@/i18n';
 import type { ActivityItem } from '@/types/domain';
 
 const SYMBOL: Record<ActivityItem['type'], string> = { session: 'dice', event: 'shield', achievement: 'trophy' };
@@ -11,9 +12,9 @@ export function ActivityTimeline({ items }: { items: ActivityItem[] }) {
       <EmptyState
         compact
         symbol="dice"
-        title="Ainda sem atividade"
-        description="Escolhe um jogo na biblioteca e regista a tua primeira sessão."
-        action={<ButtonLink to="/library" variant="secondary">Ir para a biblioteca</ButtonLink>}
+        title={t('activity.emptyTitle')}
+        description={t('activity.emptyText')}
+        action={<ButtonLink to="/library" variant="secondary">{t('activity.toLibrary')}</ButtonLink>}
       />
     );
   }

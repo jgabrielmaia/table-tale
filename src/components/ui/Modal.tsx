@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { t } from '@/i18n';
 import { Icon } from './Icon';
 
 export interface ModalProps {
@@ -43,7 +44,7 @@ export function Modal({ open, title, onClose, children, footer }: ModalProps) {
         <div className="dialog-form">
           <div className="dialog-head">
             <h2 id={titleId}>{title}</h2>
-            <button type="button" className="icon-btn" onClick={onClose} aria-label="Fechar">
+            <button type="button" className="icon-btn" onClick={onClose} aria-label={t('common.close')}>
               <Icon name="close" />
             </button>
           </div>

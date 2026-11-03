@@ -1,6 +1,7 @@
 import { Button, ButtonLink } from '@/components/ui';
 import type { PlayerIdentity } from '@/features/fate/api';
-import { FACTIONS, getFateCard } from '@/features/fate/cards';
+import { cardDescription, getFaction, getFateCard } from '@/features/fate/cards';
+import { useI18n } from '@/i18n';
 import { formatDate } from '@/lib/format';
 import type { Profile } from '@/types/domain';
 import { PlayerAvatar } from './PlayerAvatar';
@@ -19,14 +20,15 @@ interface SeasonalIdentityProfileProps {
 }
 
 export function SeasonalIdentityProfile({ profile, active, history, seasonOpen, onDevReset }: SeasonalIdentityProfileProps) {
+  const { t } = useI18n();
   const card = active ? getFateCard(active.cardId) : undefined;
-  const faction = card ? FACTIONS[card.faction] : null;
+  const faction = card ? getFaction(card.faction) : null;
   const theme = card ? FRAME_THEMES[card.id as CardArtKey] : null;
-  const name = profile.displayName || 'Jogador';
+  const name = profile.displayName || t('common.player');
 
   return (
     <section className="my-8" aria-labelledby="identity-title">
-      <h2 id="identity-title" className="fate-profile-heading">My Table Tale Identity</h2>
+      <h2 id="identity-title" className="fate-profile-heading">{t('idp.title')}</h2>
       {card && faction && theme && active ? (
         <div className="sid" data-has-card="true" style={{ '--a': theme.a } as CSSProperties}>
           <div className="sid__card"><img src={card.image} alt={card.numeral ? `${card.numeral} — ${card.title}` : card.title} /></div>
@@ -39,12 +41,12 @@ export function SeasonalIdentityProfile({ profile, active, history, seasonOpen, 
               </div>
             </div>
             <p className="sid__motto">{faction.motto}</p>
-            <p className="sid__desc">{card.description}</p>
+            <p className="sid__desc">{cardDescription(card.id)}</p>
             <ul className="sid__meta">
-              <li>Active season: <strong>{active.season?.name ?? 'Current season'}</strong></li>
-              <li>Discovered on <time dateTime={active.selectedAt}>{formatDate(active.selectedAt)}</time></li>
+              <li>{t('idp.season', { name: active.season?.name ?? t('idp.currentSeason') })}</li>
+              <li>{t('idp.discovered', { date: '' })}<time dateTime={active.selectedAt}>{formatDate(active.selectedAt)}</time></li>
             </ul>
-            {onDevReset && <Button variant="ghost" size="sm" onClick={onDevReset}>Choose again (temporary)</Button>}
+            {onDevReset && <Button variant="ghost" size="sm" onClick={onDevReset}>{t('idp.devReset')}</Button>}
           </div>
         </div>
       ) : (
@@ -55,14 +57,12 @@ export function SeasonalIdentityProfile({ profile, active, history, seasonOpen, 
           {seasonOpen ? (
             <>
               <p className="sid__desc">
-                {history.length
-                  ? 'A new season has begun. Your previous card is kept in your history; draw your next one to earn a new frame.'
-                  : 'You have not drawn a card this season. One player, one card, one season.'}
+                {history.length ? t('idp.newSeason') : t('idp.none')}
               </p>
-              <ButtonLink to="/fate" variant="gold">Discover your fate</ButtonLink>
+              <ButtonLink to="/fate" variant="gold">{t('idp.cta')}</ButtonLink>
             </>
           ) : (
-            <p className="sid__desc">No season is open right now. Your next draw will be available when the next season begins.</p>
+            <p className="sid__desc">{t('idp.noSeason')}</p>
           )}
         </div>
       )}

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { COVER_TONES, coverSvg, gameStyle, svgToDataUri } from '@/lib/cover';
+import { t } from '@/i18n';
 import { cn } from '@/lib/format';
 
 export interface GameCoverProps {
@@ -20,7 +21,7 @@ export function GameCover({ slug, title, genre, coverUrl, className, loading = '
   return (
     <img
       src={src}
-      alt={`Capa ilustrada de ${title}: símbolo dourado sobre fundo ${COVER_TONES[style.tone].name}`}
+      alt={t('cover.alt', { title, tone: t(`tone.${style.tone}`) })}
       width={600}
       height={400}
       loading={loading}

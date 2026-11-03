@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchGameStates, fetchGames, saveGameState } from '@/features/games/api';
 import { progressKeys, queryKeys } from '@/lib/queryKeys';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { t } from '@/i18n';
 import type { GameStatus, GameUserState, LibraryGame } from '@/types/domain';
 import { useAuth } from './useAuth';
 
@@ -45,7 +46,7 @@ export function useUpdateGameState() {
 
   return useMutation({
     mutationFn: (vars: { gameId: string; status?: GameStatus; isFavorite?: boolean }) => {
-      if (!userId) throw new Error('Inicia sessão para guardar o teu progresso.');
+      if (!userId) throw new Error(t('auth.needLoginProgress'));
       return saveGameState(userId, vars.gameId, vars);
     },
     onMutate: async (vars) => {

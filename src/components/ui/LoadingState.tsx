@@ -1,4 +1,5 @@
 import { cn } from '@/lib/format';
+import { t } from '@/i18n';
 
 export interface LoadingStateProps {
   label?: string;
@@ -8,7 +9,7 @@ export interface LoadingStateProps {
 }
 
 /** Accessible loading placeholder (announced once via aria-live, skeletons hidden from AT). */
-export function LoadingState({ label = 'A carregar…', variant = 'spinner', count = 6, className }: LoadingStateProps) {
+export function LoadingState({ label = t('common.loading'), variant = 'spinner', count = 6, className }: LoadingStateProps) {
   if (variant === 'cards') {
     return (
       <div className={className} aria-busy="true">

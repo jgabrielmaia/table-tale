@@ -1,5 +1,6 @@
 import { useId, useState, type CSSProperties } from 'react';
 import { BrandSymbol } from '@/components/ui';
+import { t } from '@/i18n';
 import type { LoreEntity } from '@/types/domain';
 
 export interface LoreEntityCardProps {
@@ -16,7 +17,7 @@ export function LoreEntityCard({ entity, kicker, headingLevel = 4 }: LoreEntityC
   return (
     <li className="lore-card element-card" style={{ '--c': entity.color } as CSSProperties}>
       {entity.imageUrl ? (
-        <img src={entity.imageUrl} alt={`Ilustração de ${entity.name}`} className="mb-3 h-24 w-24 rounded-full object-cover" loading="lazy" />
+        <img src={entity.imageUrl} alt={entity.name} className="mb-3 h-24 w-24 rounded-full object-cover" loading="lazy" />
       ) : (
         <span className="lore-symbol"><BrandSymbol name={entity.symbol} /></span>
       )}
@@ -27,7 +28,7 @@ export function LoreEntityCard({ entity, kicker, headingLevel = 4 }: LoreEntityC
       {entity.longDescription && (
         <>
           <button type="button" className="btn-link mt-2" aria-expanded={open} aria-controls={storyId} onClick={() => setOpen((v) => !v)}>
-            {open ? 'Recolher' : 'Ler mais'}
+            {open ? t('lore.collapse') : t('lore.readMore')}
           </button>
           <div id={storyId} className="lore-story text-left" hidden={!open}>
             <p>{entity.longDescription}</p>

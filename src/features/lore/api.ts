@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { unwrap } from '@/lib/errors';
+import { t } from '@/i18n';
 import type { FactionRow, LoreEntityRow } from '@/types/database';
 import type { Arcana, Elemental, Faction, FactionLore, LoreEntity, LoreLink } from '@/types/domain';
 
@@ -38,7 +39,7 @@ export interface LoreData {
 }
 
 export async function fetchFactions(): Promise<Faction[]> {
-  const rows = unwrap(await supabase.from('factions').select('*').order('slug'), 'Não foi possível carregar as facções') as FactionRow[];
+  const rows = unwrap(await supabase.from('factions').select('*').order('slug'), t('lore.err.factions')) as FactionRow[];
   return rows.map(mapFaction);
 }
 
@@ -51,9 +52,9 @@ export async function fetchLore(): Promise<LoreData> {
   ]);
   return {
     factions,
-    arcanas: (unwrap(arcanas, 'Não foi possível carregar os Arcanos') as LoreEntityRow[]).map(mapEntity),
-    elementals: (unwrap(elementals, 'Não foi possível carregar os Elementais') as LoreEntityRow[]).map(mapEntity),
-    links: (unwrap(links, 'Não foi possível carregar as relações') as { arcana_id: string; elemental_id: string; relation: LoreLink['relation']; description: string }[]).map(
+    arcanas: (unwrap(arcanas, t('lore.err.arcanas')) as LoreEntityRow[]).map(mapEntity),
+    elementals: (unwrap(elementals, t('lore.err.elementals')) as LoreEntityRow[]).map(mapEntity),
+    links: (unwrap(links, t('lore.err.links')) as { arcana_id: string; elemental_id: string; relation: LoreLink['relation']; description: string }[]).map(
       (l) => ({ arcanaId: l.arcana_id, elementalId: l.elemental_id, relation: l.relation, description: l.description }),
     ),
   };

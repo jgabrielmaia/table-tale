@@ -1,4 +1,5 @@
 import { useEffect, useState, type MouseEvent } from 'react';
+import { useI18n } from '@/i18n';
 import { cn } from '@/lib/format';
 
 export interface SidebarItem {
@@ -13,7 +14,8 @@ export interface SidebarProps {
 }
 
 /** Sticky in-page navigation with scroll-spy (becomes a horizontal chip bar on small screens). */
-export function Sidebar({ items, label, title = 'Nesta página' }: SidebarProps) {
+export function Sidebar({ items, label, title }: SidebarProps) {
+  const { t } = useI18n();
   const [active, setActive] = useState(items[0]?.id ?? '');
 
   useEffect(() => {
@@ -42,7 +44,7 @@ export function Sidebar({ items, label, title = 'Nesta página' }: SidebarProps)
 
   return (
     <nav className="lore-toc" aria-label={label}>
-      <p className="lore-toc-title">{title}</p>
+      <p className="lore-toc-title">{title ?? t('sidebar.title')}</p>
       <ol>
         {items.map((item) => (
           <li key={item.id}>

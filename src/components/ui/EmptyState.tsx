@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { t } from '@/i18n';
 import { cn } from '@/lib/format';
 import { BrandSymbol } from './Icon';
 import { Button } from './Button';
@@ -32,16 +33,16 @@ export interface ErrorStateProps {
   compact?: boolean;
 }
 
-export function ErrorState({ title = 'Algo correu mal', message, onRetry, compact }: ErrorStateProps) {
+export function ErrorState({ title, message, onRetry, compact }: ErrorStateProps) {
   return (
     <div role="alert">
       <EmptyState
         className="error-state"
         compact={compact}
         symbol="shield"
-        title={title}
+        title={title ?? t('common.errorTitle')}
         description={message}
-        action={onRetry && <Button variant="secondary" onClick={onRetry}>Tentar novamente</Button>}
+        action={onRetry && <Button variant="secondary" onClick={onRetry}>{t('common.retry')}</Button>}
       />
     </div>
   );

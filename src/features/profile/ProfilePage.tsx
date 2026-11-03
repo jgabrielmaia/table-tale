@@ -15,9 +15,11 @@ import { useLore } from '@/hooks/useLore';
 import { useProfile } from '@/hooks/useProfile';
 import { errorMessage } from '@/lib/errors';
 import { formatDate } from '@/lib/format';
+import { localizeEvent, useI18n } from '@/i18n';
 import { ProfileEditModal } from './ProfileEditModal';
 
 export function ProfilePage() {
+  const { t } = useI18n();
   const { providers, linkGoogle } = useAuth();
   const { profile, stats, activity, update, providerAvatar } = useProfile();
   const achievements = useAchievements();
@@ -29,12 +31,12 @@ export function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [tab, setTab] = useState('activity');
 
-  if (profile.isLoading) return <div className="container section"><LoadingState label="A carregar o perfil…" /></div>;
+  if (profile.isLoading) return <div className="container section"><LoadingState label={t('profile.loading')} /></div>;
   if (profile.isError || !profile.data) {
     return (
       <div className="container section">
         <ErrorState
-          message={profile.isError ? errorMessage(profile.error) : 'O teu perfil ainda está a ser criado. Atualiza a página dentro de instantes.'}
+          message={profile.isError ? errorMessage(profile.error) : t('profile.creating')}
           onRetry={() => void profile.refetch()}
         />
       </div>
@@ -44,7 +46,7 @@ export function ProfilePage() {
   const p = profile.data;
   const factions = lore.data?.factions ?? [];
   const faction = factions.find((f) => f.id === p.factionId) ?? null;
-  const attended = events.filter((e) => e.isParticipating);
+  const attended = events.filter((e) => e.isParticipating).map(localizeEvent);
   const achievementList = achievements.data ?? [];
   const hasGoogle = providers.includes('google');
 
@@ -61,7 +63,7 @@ export function ProfilePage() {
   const save = async (values: Parameters<typeof update.mutateAsync>[0]) => {
     try {
       await update.mutateAsync(values);
-      notify('Perfil atualizado');
+      notify(t('profile.updated'));
     } catch (e) {
       notify(errorMessage(e), { tone: 'error' });
       throw e;
@@ -85,8 +87,8 @@ export function ProfilePage() {
           faction={faction}
           actions={
             <>
-              <Button variant="secondary" icon={<Icon name="edit" />} onClick={() => setEditing(true)}>Editar perfil</Button>
-              {!hasGoogle && <Button variant="ghost" icon={<Icon name="google" />} onClick={onLinkGoogle}>Associar Google</Button>}
+              <Button variant="secondary" icon={<Icon name="edit" />} onClick={() => setEditing(true)}>{t('profile.edit')}</Button>
+              {!hasGoogle && <Button variant="ghost" icon={<Icon name="google" />} onClick={onLinkGoogle}>{t('profile.linkGoogle')}</Button>}
             </>
           }
         />
@@ -98,22 +100,22 @@ export function ProfilePage() {
         )}
 
         {stats.isLoading ? (
-          <LoadingState variant="lines" count={2} label="A calcular estatísticas…" className="my-6" />
+          <LoadingState variant="lines" count={2} label={t('profile.statsLoading')} className="my-6" />
         ) : stats.isError || !stats.data ? (
           <ErrorState compact message={errorMessage(stats.error)} onRetry={() => void stats.refetch()} />
         ) : (
           <ProfileStats stats={stats.data} achievementsTotal={achievementList.length} />
         )}
 
-        <Card title="O teu diário" titleId="diary-title" className="mb-6">
+        <Card title={t('profile.diary')} titleId="diary-title" className="mb-6">
           <Tabs
-            label="Atividades"
+            label={t('profile.tabsLabel')}
             value={tab}
             onChange={setTab}
             items={[
               {
                 id: 'activity',
-                label: 'Atividade recente',
+                label: t('profile.tabActivity'),
                 content: activity.isLoading ? (
                   <LoadingState variant="lines" count={4} />
                 ) : activity.isError ? (
@@ -124,7 +126,7 @@ export function ProfilePage() {
               },
               {
                 id: 'events',
-                label: `Eventos (${attended.length})`,
+                label: t('profile.tabEvents', { count: attended.length }),
                 content: attended.length ? (
                   <ul className="event-list" role="list">
                     {attended.map((e) => (
@@ -141,14 +143,14 @@ export function ProfilePage() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="muted">Ainda não participaste em eventos. Vê a agenda em <Link to="/events">Eventos</Link>.</p>
+                  <p className="muted">{t('profile.noEventsBefore')}<Link to="/events">{t('nav.events')}</Link>.</p>
                 ),
               },
             ]}
           />
         </Card>
 
-        <Card title="Medalhas & conquistas" titleId="ach-title" description={`${stats.data?.achievementsUnlocked ?? 0} de ${achievementList.length} desbloqueadas`} className="achievements">
+        <Card title={t('profile.achievements')} titleId="ach-title" description={t('profile.achievementsDesc', { done: stats.data?.achievementsUnlocked ?? 0, total: achievementList.length })} className="achievements">
           {achievements.isLoading ? (
             <LoadingState variant="lines" count={3} />
           ) : achievements.isError ? (
@@ -161,7 +163,7 @@ export function ProfilePage() {
         </Card>
 
         <p className="mt-6 text-sm text-muted">
-          Métodos de login associados: {providers.length ? providers.map((pr) => (pr === 'email' ? 'E-mail (magic link)' : pr === 'google' ? 'Google' : pr)).join(', ') : '—'}.
+          {t('profile.loginMethods', { list: providers.length ? providers.map((pr) => (pr === 'email' ? t('profile.methodEmail') : pr === 'google' ? 'Google' : pr)).join(', ') : '—' })}
         </p>
       </div>
 

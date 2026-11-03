@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { GameCover, coverAccent } from '@/components/games/GameCover';
 import { GameGrid } from '@/components/games/GameGrid';
 import { GameSessionForm } from '@/components/games/GameSessionForm';
-import { STATUS_OPTIONS } from '@/components/games/GameStatusBadge';
+import { statusOptions } from '@/components/games/GameStatusBadge';
 import { Badge, BrandSymbol, Button, Card, EmptyState, ErrorState, Icon, LoadingState, useToast } from '@/components/ui';
 import { PlayerAvatar } from '@/components/identity/PlayerAvatar';
 import { LoginRequiredNotice } from '@/features/auth/LoginPage';
@@ -11,29 +11,30 @@ import { useAuth } from '@/hooks/useAuth';
 import { useGame } from '@/hooks/useGame';
 import { useGameSessions } from '@/hooks/useGameSessions';
 import { useUpdateGameState } from '@/hooks/useGames';
+import { complexityLabel, genreLabel, localizeGame, useI18n } from '@/i18n';
 import { gameStyle } from '@/lib/cover';
 import { errorMessage } from '@/lib/errors';
-import { STATUS_LABELS, formatDate, playersLabel, todayIso } from '@/lib/format';
+import { statusLabel, formatDate, playersLabel, todayIso } from '@/lib/format';
 import type { GameStatus } from '@/types/domain';
 import { relatedGames } from './filters';
 import type { SessionFormValues } from './schemas';
 
-const CONDITION_LABELS = { new: 'Novo', good: 'Bom estado', worn: 'Usado', damaged: 'Danificado' } as const;
-
 export function GameDetailPage() {
+  const { t, tn } = useI18n();
   const { slug = '' } = useParams();
   const { user } = useAuth();
-  const { game, allGames, isLoading, isError, error, notFound } = useGame(slug);
+  const { game: rawGame, allGames, isLoading, isError, error, notFound } = useGame(slug);
+  const game = rawGame ? localizeGame(rawGame) : rawGame;
   const { sessions, query: sessionsQuery, create, remove } = useGameSessions(game?.id);
   const updateState = useUpdateGameState();
   const { notify } = useToast();
 
-  if (isLoading) return <div className="container section"><LoadingState label="A carregar o jogo…" /></div>;
+  if (isLoading) return <div className="container section"><LoadingState label={t('game.loading')} /></div>;
   if (isError) return <div className="container section"><ErrorState message={errorMessage(error)} /></div>;
   if (notFound || !game) {
     return (
       <div className="container section">
-        <EmptyState headingLevel={2} title="Este jogo não consta da estante" description="O jogo pode ter sido removido ou o endereço está incorreto." action={<Link className="btn btn-primary" to="/library">Voltar à biblioteca</Link>} />
+        <EmptyState headingLevel={2} title={t('game.notFoundTitle')} description={t('game.notFoundText')} action={<Link className="btn btn-primary" to="/library">{t('common.backToLibrary')}</Link>} />
       </div>
     );
   }
@@ -45,14 +46,14 @@ export function GameDetailPage() {
   const setStatus = (status: GameStatus) =>
     updateState.mutate(
       { gameId: game.id, status },
-      { onSuccess: () => notify(`Estado atualizado: ${STATUS_LABELS[status]}`), onError: (e) => notify(errorMessage(e), { tone: 'error' }) },
+      { onSuccess: () => notify(t('game.statusUpdated', { status: statusLabel(status) })), onError: (e) => notify(errorMessage(e), { tone: 'error' }) },
     );
 
   const toggleFavorite = () =>
     updateState.mutate(
       { gameId: game.id, isFavorite: !game.isFavorite },
       {
-        onSuccess: () => notify(game.isFavorite ? 'Removido dos favoritos' : 'Adicionado aos favoritos', { icon: 'heart' }),
+        onSuccess: () => notify(game.isFavorite ? t('library.favRemoved') : t('library.favAdded'), { icon: 'heart' }),
         onError: (e) => notify(errorMessage(e), { tone: 'error' }),
       },
     );
@@ -63,7 +64,7 @@ export function GameDetailPage() {
       {
         onSuccess: () => {
           if (game.status === 'unplayed') updateState.mutate({ gameId: game.id, status: 'in_progress' });
-          notify('Sessão de hoje registada');
+          notify(t('game.playedToday'));
         },
         onError: (e) => notify(errorMessage(e), { tone: 'error' }),
       },
@@ -73,7 +74,7 @@ export function GameDetailPage() {
     try {
       await create.mutateAsync({ gameId: game.id, ...values });
       if (game.status === 'unplayed') updateState.mutate({ gameId: game.id, status: 'in_progress' });
-      notify('Sessão registada no diário');
+      notify(t('game.sessionSaved'));
     } catch (e) {
       notify(errorMessage(e), { tone: 'error' });
       throw e;
@@ -84,24 +85,24 @@ export function GameDetailPage() {
     <>
       <div className="detail-backdrop" style={style}>
         <div className="container section">
-          <Link className="back-link" to="/library"><Icon name="back" />Voltar à biblioteca</Link>
+          <Link className="back-link" to="/library"><Icon name="back" />{t('common.backToLibrary')}</Link>
           <article className="detail-grid" aria-labelledby="game-title">
             <figure className="detail-media">
               <GameCover slug={game.slug} title={game.title} genre={game.genre} coverUrl={game.coverUrl} loading="eager" />
               <figcaption>
-                <Badge tone="accent" color={coverAccent(game.slug, game.genre)} icon={<BrandSymbol name={gameStyle(game.slug, game.genre).symbol} />}>{game.genre}</Badge>
+                <Badge tone="accent" color={coverAccent(game.slug, game.genre)} icon={<BrandSymbol name={gameStyle(game.slug, game.genre).symbol} />}>{genreLabel(game.genre)}</Badge>
               </figcaption>
             </figure>
             <div className="detail-info">
-              <p className="eyebrow">{game.genre} · {game.complexity}</p>
+              <p className="eyebrow">{genreLabel(game.genre)} · {complexityLabel(game.complexity)}</p>
               <h1 id="game-title">{game.title}</h1>
               <p className="lead">{game.description}</p>
               <dl className="facts">
-                <div><dt>Jogadores</dt><dd>{playersLabel(game.minPlayers, game.maxPlayers)}</dd></div>
-                <div><dt>Duração média</dt><dd>~{game.durationMinutes} min</dd></div>
-                <div><dt>Complexidade</dt><dd>{game.complexity}</dd></div>
+                <div><dt>{t('game.players')}</dt><dd>{playersLabel(game.minPlayers, game.maxPlayers)}</dd></div>
+                <div><dt>{t('game.avgDuration')}</dt><dd>{t('common.minutesApprox', { n: game.durationMinutes })}</dd></div>
+                <div><dt>{t('game.complexity')}</dt><dd>{complexityLabel(game.complexity)}</dd></div>
                 <div>
-                  <dt>Proprietário</dt>
+                  <dt>{t('game.owner')}</dt>
                   <dd>
                     {game.owners.length ? (
                       game.owners.map((o) => (
@@ -111,20 +112,20 @@ export function GameDetailPage() {
                         </span>
                       ))
                     ) : (
-                      'Sem proprietário'
+                      t('game.noOwner')
                     )}
                   </dd>
                 </div>
-                <div><dt>Exemplares</dt><dd>{copies || '—'}</dd></div>
-                <div><dt>Conservação</dt><dd>{game.owners[0] ? CONDITION_LABELS[game.owners[0].condition] : '—'}</dd></div>
+                <div><dt>{t('game.copies')}</dt><dd>{copies || '—'}</dd></div>
+                <div><dt>{t('game.condition')}</dt><dd>{game.owners[0] ? t(`condition.${game.owners[0].condition}`) : '—'}</dd></div>
               </dl>
 
               {user ? (
                 <>
                   <fieldset className="status-group">
-                    <legend>Estado de jogo</legend>
+                    <legend>{t('game.statusLegend')}</legend>
                     <div className="segmented">
-                      {STATUS_OPTIONS.map((o) => (
+                      {statusOptions().map((o) => (
                         <label key={o.value} className="segment">
                           <input type="radio" name="status" value={o.value} checked={game.status === o.value} onChange={() => setStatus(o.value)} />
                           <span>{o.label}</span>
@@ -134,15 +135,15 @@ export function GameDetailPage() {
                   </fieldset>
                   <div className="detail-actions">
                     <Button variant="primary" onClick={markPlayedToday} loading={create.isPending} icon={<Icon name="check" />}>
-                      Marcar como jogado hoje
+                      {t('game.markToday')}
                     </Button>
                     <Button variant="secondary" className="btn-fav" aria-pressed={game.isFavorite} onClick={toggleFavorite} icon={<Icon name="heart" />}>
-                      {game.isFavorite ? 'Nos favoritos' : 'Adicionar aos favoritos'}
+                      {game.isFavorite ? t('game.inFavorites') : t('game.addFavorites')}
                     </Button>
                   </div>
                 </>
               ) : (
-                <LoginRequiredNotice message="Entra para alterar o estado, marcar favoritos e registar sessões." />
+                <LoginRequiredNotice message={t('game.loginNotice')} />
               )}
             </div>
           </article>
@@ -150,12 +151,12 @@ export function GameDetailPage() {
       </div>
 
       <div className="container section detail-lower">
-        <Card className="sessions" title="Diário de sessões" titleId="sessions-title" description="Cada partida registada acrescenta uma página à tua história.">
+        <Card className="sessions" title={t('game.diaryTitle')} titleId="sessions-title" description={t('game.diaryDesc')}>
           {user ? (
             <>
               <GameSessionForm defaultDuration={game.durationMinutes} onSubmit={submitSession} />
               {sessionsQuery.isLoading ? (
-                <LoadingState variant="lines" count={4} label="A carregar sessões…" />
+                <LoadingState variant="lines" count={4} label={t('game.loadingSessions')} />
               ) : sessionsQuery.isError ? (
                 <ErrorState compact message={errorMessage(sessionsQuery.error)} onRetry={() => void sessionsQuery.refetch()} />
               ) : sessions.length ? (
@@ -164,17 +165,17 @@ export function GameDetailPage() {
                     <li key={s.id} className="session-item">
                       <div className="session-date"><Icon name="calendar" /><time dateTime={s.playedAt}>{formatDate(s.playedAt)}</time></div>
                       <p className="session-people">
-                        {s.playersCount && <><Icon name="users" />{s.playersCount} jogadores</>}
-                        {s.durationMinutes && <><Icon name="clock" />{s.durationMinutes} min</>}
-                        {s.rating && <span className="session-rating" aria-label={`Avaliação: ${s.rating} de 5`}>{'★'.repeat(s.rating)}<span aria-hidden="true" className="opacity-30">{'★'.repeat(5 - s.rating)}</span></span>}
+                        {s.playersCount && <><Icon name="users" />{tn('common.players', s.playersCount)}</>}
+                        {s.durationMinutes && <><Icon name="clock" />{t('common.minutes', { n: s.durationMinutes })}</>}
+                        {s.rating && <span className="session-rating" aria-label={t('game.rating', { n: s.rating })}>{'★'.repeat(s.rating)}<span aria-hidden="true" className="opacity-30">{'★'.repeat(5 - s.rating)}</span></span>}
                       </p>
                       {s.notes && <p className="session-notes">{s.notes}</p>}
                       <button
                         type="button"
                         className="icon-btn"
-                        aria-label={`Remover sessão de ${formatDate(s.playedAt)}`}
+                        aria-label={t('game.removeSession', { date: formatDate(s.playedAt) })}
                         disabled={remove.isPending}
-                        onClick={() => remove.mutate(s.id, { onSuccess: () => notify('Sessão removida', { icon: 'trash' }), onError: (e) => notify(errorMessage(e), { tone: 'error' }) })}
+                        onClick={() => remove.mutate(s.id, { onSuccess: () => notify(t('game.sessionRemoved'), { icon: 'trash' }), onError: (e) => notify(errorMessage(e), { tone: 'error' }) })}
                       >
                         <Icon name="trash" />
                       </button>
@@ -182,17 +183,17 @@ export function GameDetailPage() {
                   ))}
                 </ol>
               ) : (
-                <EmptyState compact symbol="scroll" title="Ainda não há sessões registadas" description="Este jogo espera pela sua primeira história. Regista uma sessão acima ou marca-o como jogado." />
+                <EmptyState compact symbol="scroll" title={t('game.noSessionsTitle')} description={t('game.noSessionsText')} />
               )}
             </>
           ) : (
-            <EmptyState compact symbol="lock" title="O diário é pessoal" description="Inicia sessão para registar e consultar as tuas sessões." action={<Link className="btn btn-primary" to="/login" state={{ from: `/games/${game.slug}` }}>Entrar</Link>} />
+            <EmptyState compact symbol="lock" title={t('game.diaryPrivate')} description={t('game.diaryPrivateText')} action={<Link className="btn btn-primary" to="/login" state={{ from: `/games/${game.slug}` }}>{t('common.signIn')}</Link>} />
           )}
         </Card>
 
         <section className="recs" aria-labelledby="recs-title">
-          <h2 id="recs-title">Jogos relacionados</h2>
-          {related.length ? <GameGrid games={related} compact label="Jogos relacionados" /> : <p className="muted">Ainda não há recomendações para este jogo.</p>}
+          <h2 id="recs-title">{t('game.related')}</h2>
+          {related.length ? <GameGrid games={related} compact label={t('game.related')} /> : <p className="muted">{t('game.noRelated')}</p>}
         </section>
       </div>
     </>

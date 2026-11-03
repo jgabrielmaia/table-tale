@@ -1,6 +1,7 @@
 import { Button, Icon, Input, Select } from '@/components/ui';
 import type { DurationFilter, GameFilterValues, PlayersFilter } from '@/features/games/filters';
-import { STATUS_OPTIONS } from './GameStatusBadge';
+import { genreLabel, t } from '@/i18n';
+import { statusOptions } from './GameStatusBadge';
 
 export interface GameFiltersProps {
   values: GameFilterValues;
@@ -10,31 +11,31 @@ export interface GameFiltersProps {
   showPersonalFilters: boolean;
 }
 
-const PLAYER_OPTIONS: { value: PlayersFilter; label: string }[] = [
-  { value: '', label: 'Qualquer número' },
-  { value: '1', label: 'Solo (1)' },
-  { value: '2', label: '2 jogadores' },
-  { value: '3-4', label: '3–4 jogadores' },
-  { value: '5+', label: '5 ou mais' },
+const playerOptions = (): { value: PlayersFilter; label: string }[] => [
+  { value: '', label: t('filters.playersAny') },
+  { value: '1', label: t('filters.playersSolo') },
+  { value: '2', label: t('filters.playersTwo') },
+  { value: '3-4', label: t('filters.playersThreeFour') },
+  { value: '5+', label: t('filters.playersFivePlus') },
 ];
 
-const DURATION_OPTIONS: { value: DurationFilter; label: string }[] = [
-  { value: '', label: 'Qualquer duração' },
-  { value: 'short', label: 'Até 30 min' },
-  { value: 'medium', label: '31–60 min' },
-  { value: 'long', label: '61–120 min' },
-  { value: 'epic', label: 'Mais de 2 h' },
+const durationOptions = (): { value: DurationFilter; label: string }[] => [
+  { value: '', label: t('filters.durationAny') },
+  { value: 'short', label: t('filters.durationShort') },
+  { value: 'medium', label: t('filters.durationMedium') },
+  { value: 'long', label: t('filters.durationLong') },
+  { value: 'epic', label: t('filters.durationEpic') },
 ];
 
 export function GameFilters({ values, genres, onChange, onReset, showPersonalFilters }: GameFiltersProps) {
   const set = <K extends keyof GameFilterValues>(key: K, value: GameFilterValues[K]) => onChange({ ...values, [key]: value });
 
   return (
-    <form className="filters" role="search" aria-label="Pesquisar e filtrar jogos" onSubmit={(e) => e.preventDefault()}>
+    <form className="filters" role="search" aria-label={t('filters.aria')} onSubmit={(e) => e.preventDefault()}>
       <Input
-        label="Pesquisar por nome"
+        label={t('filters.search')}
         type="search"
-        placeholder="Ex.: Dixit"
+        placeholder={t('filters.searchPlaceholder')}
         autoComplete="off"
         value={values.query}
         onChange={(e) => set('query', e.target.value)}
@@ -42,20 +43,20 @@ export function GameFilters({ values, genres, onChange, onReset, showPersonalFil
         leadingIcon={<Icon name="search" />}
       />
       <Select
-        label="Género"
+        label={t('filters.genre')}
         value={values.genre}
         onChange={(e) => set('genre', e.target.value)}
-        options={[{ value: '', label: 'Todos' }, ...genres.map((g) => ({ value: g, label: g }))]}
+        options={[{ value: '', label: t('filters.all') }, ...genres.map((g) => ({ value: g, label: genreLabel(g) }))]}
       />
-      <Select label="Jogadores" value={values.players} onChange={(e) => set('players', e.target.value as PlayersFilter)} options={PLAYER_OPTIONS} />
-      <Select label="Duração" value={values.duration} onChange={(e) => set('duration', e.target.value as DurationFilter)} options={DURATION_OPTIONS} />
+      <Select label={t('filters.players')} value={values.players} onChange={(e) => set('players', e.target.value as PlayersFilter)} options={playerOptions()} />
+      <Select label={t('filters.duration')} value={values.duration} onChange={(e) => set('duration', e.target.value as DurationFilter)} options={durationOptions()} />
       <Select
-        label="Estado"
+        label={t('filters.status')}
         value={values.status}
         disabled={!showPersonalFilters}
-        hint={showPersonalFilters ? undefined : 'Entra para filtrar pelo teu progresso.'}
+        hint={showPersonalFilters ? undefined : t('filters.statusHint')}
         onChange={(e) => set('status', e.target.value as GameFilterValues['status'])}
-        options={[{ value: '', label: 'Todos os estados' }, ...STATUS_OPTIONS]}
+        options={[{ value: '', label: t('filters.allStatuses') }, ...statusOptions()]}
       />
       <div className="filters-extra">
         <label className="check">
@@ -65,9 +66,9 @@ export function GameFilters({ values, genres, onChange, onReset, showPersonalFil
             disabled={!showPersonalFilters}
             onChange={(e) => set('favoritesOnly', e.target.checked)}
           />
-          <span><Icon name="heart" />Só favoritos</span>
+          <span><Icon name="heart" />{t('filters.favoritesOnly')}</span>
         </label>
-        <Button variant="ghost" size="sm" onClick={onReset}>Limpar filtros</Button>
+        <Button variant="ghost" size="sm" onClick={onReset}>{t('filters.clear')}</Button>
       </div>
     </form>
   );

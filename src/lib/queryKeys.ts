@@ -6,7 +6,7 @@ export const queryKeys = {
   profile: (userId: string | null) => ['profile', userId] as const,
   stats: (userId: string | null) => ['stats', userId] as const,
   achievements: (userId: string | null) => ['achievements', userId] as const,
-  activity: (userId: string | null) => ['activity', userId] as const,
+  activity: (userId: string | null, lang?: string) => (lang ? (['activity', userId, lang] as const) : (['activity', userId] as const)),
   events: (userId: string | null) => ['events', userId] as const,
   lore: ['lore'] as const,
   activeSeason: ['season', 'active'] as const,

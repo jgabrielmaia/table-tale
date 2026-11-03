@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Emblem } from '@/components/layout/Brand';
+import { useI18n } from '@/i18n';
 
 interface FateDrawIntroProps {
   onStart: () => void;
@@ -9,6 +10,7 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 /** Screen 01: the invitation. */
 export function FateDrawIntro({ onStart }: FateDrawIntroProps) {
+  const { t } = useI18n();
   return (
     <>
       <div className="fate-portal" aria-hidden>
@@ -20,11 +22,11 @@ export function FateDrawIntro({ onStart }: FateDrawIntroProps) {
       <motion.div className="fate-invite__body" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2, ease: EASE }}>
         <Emblem className="fate-emblem" />
         <p className="fate-brand">Table Tale</p>
-        <h1 className="fate-title">The Fate Draw</h1>
-        <p className="fate-kicker">Your story starts here.</p>
-        <p className="fate-quote">“Nine cards. Two factions. One destiny.”</p>
+        <h1 className="fate-title">{t('fate.introTitle')}</h1>
+        <p className="fate-kicker">{t('fate.introKicker')}</p>
+        <p className="fate-quote">{t('fate.introQuote')}</p>
         <button type="button" className="fate-btn fate-btn--primary fate-btn--xl" onClick={onStart}>
-          Discover your fate
+          {t('fate.introCta')}
         </button>
       </motion.div>
     </>

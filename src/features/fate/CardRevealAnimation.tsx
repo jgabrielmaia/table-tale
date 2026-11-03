@@ -2,7 +2,8 @@ import { AnimatePresence, animate, motion, useMotionValue, useTransform, type Mo
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar } from '@/components/ui';
 import { PlayerIdentityFrame } from '@/components/identity/PlayerIdentityFrame';
-import { FACTIONS, type FateCardData } from './cards';
+import { getFaction, type FateCardData } from './cards';
+import { useI18n } from '@/i18n';
 import type { FateAudio } from './audio';
 import { Burst, EnergyField } from './EnergyField';
 import { FactionReveal } from './FactionReveal';
@@ -33,7 +34,8 @@ const NEUTRAL = '#f3ead4';
 
 /** Screens 03-05: reveal sequence, faction/card identity and welcome. The card is fixed before this mounts. */
 export function CardRevealAnimation({ card, origin, audio, reduced, player, seasonName, onEnter }: CardRevealAnimationProps) {
-  const faction = FACTIONS[card.faction];
+  const { t } = useI18n();
+  const faction = getFaction(card.faction);
   const [stage, setStage] = useState<Stage>('revealing');
   const [burstKey, setBurstKey] = useState(0);
   const [accent, setAccent] = useState<string | null>(null);
@@ -134,12 +136,12 @@ export function CardRevealAnimation({ card, origin, audio, reduced, player, seas
   }, []);
 
   const share = async () => {
-    const text = `I belong to the ${faction.name} — ${card.title}. Find your card at Table Tale.`;
+    const text = t('fate.shareText', { faction: faction.name, card: card.title });
     const url = `${window.location.origin}${import.meta.env.BASE_URL}`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Table Tale — The Fate Draw', text, url });
-        setStatus('Shared.');
+        await navigator.share({ title: t('fate.shareTitle'), text, url });
+        setStatus(t('fate.shared'));
         return;
       } catch (e) {
         if (e instanceof DOMException && e.name === 'AbortError') return;
@@ -147,9 +149,9 @@ export function CardRevealAnimation({ card, origin, audio, reduced, player, seas
     }
     try {
       await navigator.clipboard.writeText(`${text} ${url}`);
-      setStatus('Your fate was copied to the clipboard.');
+      setStatus(t('fate.copied'));
     } catch {
-      setStatus('Sharing is not available in this browser.');
+      setStatus(t('fate.shareUnavailable'));
     }
   };
 
@@ -185,8 +187,8 @@ export function CardRevealAnimation({ card, origin, audio, reduced, player, seas
           )}
           {stage === 'welcome' && (
             <motion.div key="welcome" {...panelMotion}>
-              <h2 className="fate-welcome">Welcome to Table Tale.</h2>
-              <p className="fate-motto">Your fate has been revealed.</p>
+              <h2 className="fate-welcome">{t('fate.welcome')}</h2>
+              <p className="fate-motto">{t('fate.revealed')}</p>
               <ul className="fate-chips">
                 <li className="fate-chip fate-chip--faction">{faction.name}</li>
                 <li className="fate-chip">{card.numeral ? `${card.numeral} — ` : ''}{card.title}</li>
@@ -195,14 +197,14 @@ export function CardRevealAnimation({ card, origin, audio, reduced, player, seas
                 <PlayerIdentityFrame cardId={card.id} size="xl">
                   <Avatar name={player.name} src={player.avatarUrl} size="xl" decorative />
                 </PlayerIdentityFrame>
-                <p className="fate-preview__label">Your seasonal identity frame<br /><span>{seasonName}</span></p>
+                <p className="fate-preview__label">{t('fate.frameLabel')}<br /><span>{seasonName}</span></p>
               </div>
               <div className="fate-actions">
                 <button type="button" className="fate-btn fate-btn--primary" onClick={onEnter}>
-                  Enter the table
+                  {t('fate.enter')}
                 </button>
                 <button type="button" className="fate-btn" onClick={() => void share()}>
-                  Share your fate
+                  {t('fate.share')}
                 </button>
               </div>
               <p className="fate-status" role="status">{status}</p>

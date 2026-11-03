@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Avatar, Button, Input, Modal, Select, Textarea } from '@/components/ui';
+import { localizeFaction, t } from '@/i18n';
 import { AVATAR_MAX_BYTES } from './api';
 import { profileSchema, type ProfileFormValues } from './schemas';
 import type { Faction, Profile } from '@/types/domain';
@@ -44,8 +45,8 @@ export function ProfileEditModal({ open, profile, factions, saving, providerAvat
   const onFile = (file: File | undefined) => {
     setFileError(null);
     if (!file) return;
-    if (!ACCEPTED.includes(file.type)) return setFileError('Usa uma imagem PNG, JPEG ou WebP.');
-    if (file.size > AVATAR_MAX_BYTES) return setFileError('A imagem não pode exceder 1 MB.');
+    if (!ACCEPTED.includes(file.type)) return setFileError(t('edit.fileType'));
+    if (file.size > AVATAR_MAX_BYTES) return setFileError(t('profile.err.size'));
     setAvatarFile(file);
     setUseProvider(false);
     setPreview(URL.createObjectURL(file));
@@ -63,20 +64,20 @@ export function ProfileEditModal({ open, profile, factions, saving, providerAvat
   return (
     <Modal
       open={open}
-      title="Editar perfil"
+      title={t('edit.title')}
       onClose={onClose}
       footer={
         <>
-          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" type="submit" form="profile-form" loading={saving} loadingText="A guardar…">Guardar alterações</Button>
+          <Button variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
+          <Button variant="primary" type="submit" form="profile-form" loading={saving} loadingText={t('edit.saving')}>{t('edit.save')}</Button>
         </>
       }
     >
       <form id="profile-form" className="grid gap-4" onSubmit={submit} noValidate>
         <div className="flex items-center gap-4">
-          <Avatar name={profile.displayName || 'Jogador'} src={preview ?? (useProvider ? providerAvatar : null) ?? profile.avatarUrl} size="sm" className="!h-16 !w-16 !text-xl" />
+          <Avatar name={profile.displayName || t('common.player')} src={preview ?? (useProvider ? providerAvatar : null) ?? profile.avatarUrl} size="sm" className="!h-16 !w-16 !text-xl" />
           <div className="field">
-            <label htmlFor="avatar-file">Avatar <span className="optional">(PNG, JPEG ou WebP, até 1 MB)</span></label>
+            <label htmlFor="avatar-file">{t('edit.avatar')} <span className="optional">{t('edit.avatarHint')}</span></label>
             <input
               ref={fileRef}
               id="avatar-file"
@@ -87,18 +88,18 @@ export function ProfileEditModal({ open, profile, factions, saving, providerAvat
             />
             {fileError && <p id="avatar-error" className="field-error" role="alert">{fileError}</p>}
             {providerAvatar && providerAvatar !== profile.avatarUrl && !avatarFile && !useProvider && (
-              <Button variant="ghost" size="sm" onClick={() => setUseProvider(true)}>Usar a foto da minha conta</Button>
+              <Button variant="ghost" size="sm" onClick={() => setUseProvider(true)}>{t('edit.useProvider')}</Button>
             )}
           </div>
         </div>
-        <Input label="Nome" autoComplete="name" maxLength={60} error={errors.displayName?.message} {...register('displayName')} />
+        <Input label={t('edit.name')} autoComplete="name" maxLength={60} error={errors.displayName?.message} {...register('displayName')} />
         <Select
-          label="Facção"
-          hint="Nenhuma facção é superior à outra: escolhe a filosofia que mais te representa."
-          options={[{ value: '', label: 'Sem facção' }, ...factions.map((f) => ({ value: f.id, label: `${f.name} — ${f.lore.latin}` }))]}
+          label={t('edit.faction')}
+          hint={t('edit.factionHint')}
+          options={[{ value: '', label: t('edit.noFaction') }, ...factions.map(localizeFaction).map((f) => ({ value: f.id, label: `${f.name} — ${f.lore.latin}` }))]}
           {...register('factionId', { setValueAs: (v: string) => v || null })}
         />
-        <Textarea label="Sobre ti" rows={3} maxLength={280} optional error={errors.bio?.message} {...register('bio')} />
+        <Textarea label={t('edit.bio')} rows={3} maxLength={280} optional error={errors.bio?.message} {...register('bio')} />
       </form>
     </Modal>
   );

@@ -1,8 +1,9 @@
 import { z } from 'zod';
+import { t } from '@/i18n';
 
 export const profileSchema = z.object({
-  displayName: z.string().trim().min(2, 'O nome deve ter pelo menos 2 caracteres.').max(60, 'Máximo de 60 caracteres.'),
-  bio: z.string().trim().max(280, 'Máximo de 280 caracteres.'),
+  displayName: z.string().trim().min(2, { error: () => t('val.nameMin') }).max(60, { error: () => t('val.nameMax') }),
+  bio: z.string().trim().max(280, { error: () => t('val.bioMax') }),
   factionId: z.string().nullable(),
 });
 

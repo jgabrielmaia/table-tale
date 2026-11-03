@@ -4,11 +4,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { ButtonLink, Button, Icon, useToast } from '@/components/ui';
 import { PlayerAvatar } from '@/components/identity/PlayerAvatar';
+import { useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { EmblemPaths } from './Brand';
+import { LanguageSelector } from './LanguageSelector';
 import { NAV_ITEMS } from './navItems';
 
 export function Header() {
+  const { t } = useI18n();
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
   const { notify } = useToast();
@@ -29,7 +32,7 @@ export function Header() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      notify('Sessão terminada.');
+      notify(t('header.signedOut'));
     } catch (e) {
       notify(errorMessage(e), { tone: 'error' });
     }
@@ -38,7 +41,7 @@ export function Header() {
   return (
     <header className="site-header">
       <div className="container header-inner">
-        <Link className="brand" to="/" aria-label="Table Tale — página inicial">
+        <Link className="brand" to="/" aria-label={t('header.homeAria')}>
           <svg className="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
             <EmblemPaths />
           </svg>
@@ -54,32 +57,33 @@ export function Header() {
           aria-controls="site-nav"
           onClick={() => setOpen((v) => !v)}
         >
-          <span className="sr-only">{open ? 'Fechar menu' : 'Abrir menu'}</span>
+          <span className="sr-only">{open ? t('nav.closeMenu') : t('nav.openMenu')}</span>
           <Icon name={open ? 'close' : 'menu'} />
         </button>
 
-        <nav id="site-nav" className={`site-nav${open ? ' open' : ''}`} aria-label="Principal">
+        <nav id="site-nav" className={`site-nav${open ? ' open' : ''}`} aria-label={t('nav.main')}>
           <ul>
             {NAV_ITEMS.map((item) => (
               <li key={item.to}>
-                <NavLink to={item.to}>{item.label}</NavLink>
+                <NavLink to={item.to}>{t(item.labelKey)}</NavLink>
               </li>
             ))}
           </ul>
           <div className="auth-slot">
+            <LanguageSelector />
             {user ? (
               <>
-                <Link className="auth-user" to="/profile" aria-label={`O teu perfil (${displayName})`}>
+                <Link className="auth-user" to="/profile" aria-label={t('header.profileAria', { name: displayName })}>
                   <PlayerAvatar playerId={user.id} name={displayName || '?'} src={profile.data?.avatarUrl} size="sm" decorative />
                   <span className="auth-email">{displayName}</span>
                 </Link>
                 <Button variant="outline-light" size="sm" onClick={handleSignOut} icon={<Icon name="logout" />}>
-                  Sair
+                  {t('common.signOut')}
                 </Button>
               </>
             ) : (
               <ButtonLink to="/login" state={{ from: location.pathname }} variant="gold" size="sm" icon={<Icon name="lock" />}>
-                Entrar
+                {t('common.signIn')}
               </ButtonLink>
             )}
           </div>

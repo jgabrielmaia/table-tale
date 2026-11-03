@@ -2,9 +2,11 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { BrandDefs } from '@/components/layout/Brand';
+import { LanguageSelector } from '@/components/layout/LanguageSelector';
 import { useAuth } from '@/hooks/useAuth';
 import { useFate } from '@/hooks/useFate';
 import { useProfile } from '@/hooks/useProfile';
+import { useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { createFateAudio } from './audio';
@@ -25,6 +27,7 @@ interface Chosen {
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 export function FateDrawPage() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const reduced = useReducedMotion() ?? false;
   const audio = useMemo(() => createFateAudio(), []);
@@ -59,7 +62,7 @@ export function FateDrawPage() {
         return;
       }
       const card = getFateCard(identity.cardId);
-      if (!card) throw new Error('The draw returned an unknown card.');
+      if (!card) throw new Error(t('fate.err.unknownCard'));
       setChosen({ card, origin: { cx: info.cx, cy: info.cy, width: info.width, rotate: info.rotate } });
     } catch (e) {
       setPickedIndex(null);
@@ -71,23 +74,24 @@ export function FateDrawPage() {
     <main className="fate">
       <BrandDefs />
       <FateBackdrop />
+      <LanguageSelector className="fate-lang" />
       <section className="fate-screen">{children}</section>
     </main>
   );
 
   if (!isSupabaseConfigured) {
-    return shell(<p className="fate-support">The Fate Draw needs the Table Tale backend, which is not configured.</p>);
+    return shell(<p className="fate-support">{t('fate.noBackend')}</p>);
   }
   if (fate.state === 'loading' || fate.season.isLoading) {
-    return shell(<p className="fate-support" role="status">Opening the table…</p>);
+    return shell(<p className="fate-support" role="status">{t('fate.opening')}</p>);
   }
   // Players who already hold this season's card never see the draw again.
   if (fate.active && !chosen && pickedIndex === null) return <Navigate to="/profile" replace />;
   if (!fate.season.data && !chosen) {
     return shell(
       <>
-        <p className="fate-support">No season is open right now. Your next draw will be available when the next season begins.</p>
-        <Link className="fate-btn" to="/profile">Back to my profile</Link>
+        <p className="fate-support">{t('fate.noSeason')}</p>
+        <Link className="fate-btn" to="/profile">{t('fate.toProfile')}</Link>
       </>,
     );
   }
@@ -98,8 +102,9 @@ export function FateDrawPage() {
       <FateBackdrop />
 
       <button type="button" className="fate-sound" aria-pressed={soundOn} onClick={toggleSound}>
-        <span aria-hidden>{soundOn ? '♪' : '✕'}</span> Sound {soundOn ? 'on' : 'off'}
+        <span aria-hidden>{soundOn ? '♪' : '✕'}</span> {soundOn ? t('fate.soundOn') : t('fate.soundOff')}
       </button>
+      <LanguageSelector className="fate-lang" />
 
       <AnimatePresence mode="wait">
         {phase === 'invitation' && (
@@ -110,15 +115,15 @@ export function FateDrawPage() {
       </AnimatePresence>
 
       {phase === 'selection' && (
-        <section className="fate-screen fate-select" aria-label="Choose your card">
+        <section className="fate-screen fate-select" aria-label={t('fate.selectTitle')}>
           <motion.header
             className="fate-select__head"
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: pickedIndex !== null ? 0 : 1, y: 0 }}
             transition={{ duration: pickedIndex !== null ? 0.8 : 1, ease: EASE }}
           >
-            <h2 className="fate-select__title">Choose your card</h2>
-            <p className="fate-select__sub">Trust your instinct. Your story awaits.</p>
+            <h2 className="fate-select__title">{t('fate.selectTitle')}</h2>
+            <p className="fate-select__sub">{t('fate.selectSub')}</p>
             {error && <p className="fate-error" role="alert">{error}</p>}
           </motion.header>
           <CardSelectionGrid count={FATE_CARDS.length} pickedIndex={pickedIndex} hidePicked={chosen !== null} onPick={(i) => void pick(i)} />
@@ -131,8 +136,8 @@ export function FateDrawPage() {
           origin={chosen.origin}
           audio={audio}
           reduced={reduced}
-          player={{ name: profile.data?.displayName || user?.email?.split('@')[0] || 'Player', avatarUrl: profile.data?.avatarUrl ?? null }}
-          seasonName={fate.season.data?.name ?? 'This season'}
+          player={{ name: profile.data?.displayName || user?.email?.split('@')[0] || t('common.player'), avatarUrl: profile.data?.avatarUrl ?? null }}
+          seasonName={fate.season.data?.name ?? t('idp.currentSeason')}
           onEnter={() => navigate('/profile')}
         />
       )}

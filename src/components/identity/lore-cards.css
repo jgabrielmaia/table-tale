@@ -1,0 +1,16 @@
+.lore-collection { display: grid; gap: 1.25rem; margin-top: 2.5rem; }
+.lore-group-title { margin: 1.5rem 0 0.75rem; font-family: var(--font-display, serif); font-size: 0.95rem; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.85; }
+.lore-cardgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15.5rem), 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.lore-cardgrid--mine { grid-template-columns: minmax(0, 28rem); }
+.lore-cardtile { display: grid; grid-template-columns: 7rem 1fr; gap: 0.9rem; align-items: start; padding: 0.8rem; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 12px; background: rgba(255, 255, 255, 0.03); }
+.lore-cardtile--mine { border-color: var(--c); box-shadow: 0 0 0 1px var(--c), 0 0 26px color-mix(in srgb, var(--c) 40%, transparent); background: color-mix(in srgb, var(--c) 8%, transparent); }
+.lore-cardtile__art { width: 100%; aspect-ratio: 286 / 443; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--c) 35%, transparent)); }
+.lore-cardtile__art img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.lore-cardtile__body h4 { margin: 0.15rem 0 0.4rem; font-family: var(--font-display, serif); font-size: 1.05rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.lore-cardtile__body p { margin: 0; font-size: 0.88rem; line-height: 1.5; }
+.lore-cardtile__badge { display: inline-block; margin-bottom: 0.4rem !important; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.68rem !important; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #05060a; background: var(--c); }
+.lore-locked { display: grid; gap: 0.9rem; justify-items: start; margin-top: 2.5rem; padding: 1.75rem; border: 1px dashed rgba(255, 255, 255, 0.28); border-radius: 12px; background: rgba(255, 255, 255, 0.03); }
+.lore-locked h3 { margin: 0; font-family: var(--font-display, serif); font-size: 1.4rem; letter-spacing: 0.04em; }
+.lore-locked p { margin: 0; max-width: 40rem; line-height: 1.6; }
+.lore-locked__icon { width: 2.5rem; height: 2.5rem; opacity: 0.8; }
+@media (max-width: 420px) { .lore-cardtile { grid-template-columns: 5.5rem 1fr; } }

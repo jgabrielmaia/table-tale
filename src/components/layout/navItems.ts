@@ -1,12 +1,15 @@
+import type { MessageKey } from '@/i18n';
+
 export interface NavItem {
   to: string;
-  label: string;
+  labelKey: MessageKey;
+  shortKey: MessageKey;
   symbol: string;
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { to: '/library', label: 'Biblioteca', symbol: 'book' },
-  { to: '/lore', label: 'Arcanos & Elementais', symbol: 'atom' },
-  { to: '/events', label: 'Eventos', symbol: 'shield' },
-  { to: '/profile', label: 'Perfil', symbol: 'compass' },
+  { to: '/library', labelKey: 'nav.library', shortKey: 'nav.library', symbol: 'book' },
+  { to: '/lore', labelKey: 'nav.lore', shortKey: 'nav.loreShort', symbol: 'atom' },
+  { to: '/events', labelKey: 'nav.events', shortKey: 'nav.events', symbol: 'shield' },
+  { to: '/profile', labelKey: 'nav.profile', shortKey: 'nav.profile', symbol: 'compass' },
 ];

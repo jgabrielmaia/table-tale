@@ -1,13 +1,14 @@
 import type { PlayerIdentity } from '@/features/fate/api';
-import { FACTIONS, getFateCard } from '@/features/fate/cards';
+import { getFaction, getFateCard } from '@/features/fate/cards';
 import { formatDate } from '@/lib/format';
+import { t } from '@/i18n';
 
 /** Archived seasonal identities. They never affect the current avatar frame. */
 export function SeasonHistory({ items }: { items: PlayerIdentity[] }) {
   if (!items.length) return null;
   return (
     <div className="mt-6">
-      <h3 className="fate-profile-subheading">Season history</h3>
+      <h3 className="fate-profile-subheading">{t('idp.history')}</h3>
       <ul className="shist">
         {items.map((i) => {
           const card = getFateCard(i.cardId);
@@ -18,7 +19,7 @@ export function SeasonHistory({ items }: { items: PlayerIdentity[] }) {
               <div>
                 <p className="shist__title">{card.title}</p>
                 <p className="shist__meta">
-                  {FACTIONS[card.faction].name} · {i.season?.name ?? 'Past season'} · Discovered {formatDate(i.selectedAt)}
+                  {getFaction(card.faction).name} · {i.season?.name ?? t('idp.pastSeason')} · {t('idp.discovered', { date: formatDate(i.selectedAt) })}
                 </p>
               </div>
             </li>
