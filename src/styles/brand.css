@@ -309,7 +309,7 @@ strong { color: var(--creme); }
 .field { display: flex; flex-direction: column; gap: .35rem; min-width: 0; }
 .field label, .field legend { font-size: .82rem; font-weight: 600; color: var(--creme); letter-spacing: .02em; }
 .optional { font-weight: 400; color: var(--text-2); }
-input[type="text"], input[type="search"], input[type="email"], input[type="date"], select, textarea {
+input[type="text"], input[type="search"], input[type="email"], input[type="date"], input[type="number"], input[type="password"], input[type="tel"], input[type="url"], select, textarea {
   width: 100%; min-height: 44px; padding: .6rem .8rem;
   font: inherit; font-size: .95rem; color: var(--creme);
   background: rgba(7, 19, 29, .7); border: 1px solid rgba(212, 168, 90, .3); border-radius: var(--radius-sm);
