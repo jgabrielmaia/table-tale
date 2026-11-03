@@ -31,3 +31,10 @@ Thumbs.db
 
 # Estado local do Supabase CLI
 supabase/.temp/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/dist-e2e/
