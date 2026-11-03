@@ -50,15 +50,17 @@ export function GameSessionForm({ defaultDuration, defaultPlayers, onSubmit }: G
       <fieldset className="field">
         <legend>{t('sf.rating')} <span className="optional">{t('common.optional')}</span></legend>
         <div className="rating">
-          {[1, 2, 3, 4, 5].map((n) => (
-            <label key={n} className={cn(n <= rating && 'on')}>
-              <input type="radio" value={n} checked={rating === n} onChange={() => setValue('rating', n, { shouldValidate: true })} name="rating" />
-              <span aria-hidden="true">★</span>
-              <span className="sr-only">{tn('sf.star', n)}</span>
-            </label>
-          ))}
+          <div className="rating-bar">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <label key={n} className={cn(n <= rating && 'on')}>
+                <input type="radio" value={n} checked={rating === n} onChange={() => setValue('rating', n, { shouldValidate: true })} name="rating" />
+                <span aria-hidden="true">{n}</span>
+                <span className="sr-only">{tn('sf.star', n)}</span>
+              </label>
+            ))}
+          </div>
           {rating > 0 && (
-            <button type="button" className="btn-link ml-2 text-sm" onClick={() => setValue('rating', '')}>{t('sf.clear')}</button>
+            <button type="button" className="btn-link text-sm" onClick={() => setValue('rating', '')}>{t('sf.clear')}</button>
           )}
         </div>
         {errors.rating?.message && <p className="field-error" role="alert">{errors.rating.message}</p>}
