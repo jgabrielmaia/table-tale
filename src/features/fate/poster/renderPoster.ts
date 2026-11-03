@@ -3,7 +3,7 @@ import { LOGOS } from '@/assets/brand';
 import { FRAME_THEMES, type FrameTheme } from '@/components/identity/frameThemes';
 import { getLocale, t } from '@/i18n';
 import { env } from '@/lib/env';
-import { cardLore, getFaction, type FateCardData } from '../cards';
+import { cardLore, cardTitle, getFaction, type FateCardData } from '../cards';
 import { POSTER_FORMATS, type PosterFormat } from './formats';
 
 export interface PosterInput {
@@ -296,7 +296,7 @@ async function drawPortrait(ctx: Ctx, cx: number, cy: number, d: number, avatar:
   ctx.arc(cx, cy, d / 2, 0, Math.PI * 2);
   ctx.stroke();
 
-  return drawPlate(ctx, cx, cy + d / 2 + d * 0.02, card.title, theme, card, d * 0.12);
+  return drawPlate(ctx, cx, cy + d / 2 + d * 0.02, cardTitle(card), theme, card, d * 0.12);
 }
 
 /** Draws the personal identity poster for the signed-in player. Everything shown comes from their real data. */
@@ -406,7 +406,7 @@ export async function renderPoster(input: PosterInput, format: PosterFormat): Pr
   y += L.titleSize + 8;
 
   ctx.fillStyle = '#F4EBD0';
-  const titleText = card.title.toUpperCase();
+  const titleText = cardTitle(card).toUpperCase();
   const titlePx = fit(ctx, titleText, W - 160, L.titleSize, DISPLAY);
   ctx.shadowColor = withAlpha(card.glow, 0.7);
   ctx.shadowBlur = 36;

@@ -3,7 +3,7 @@ import { ButtonLink } from '@/components/ui';
 import { BrandSymbol } from '@/components/ui';
 import { SeasonHistory } from '@/components/identity/SeasonHistory';
 import type { PlayerIdentity } from '@/features/fate/api';
-import { FATE_CARDS, cardDescription, getFaction, getFateCard, type FateCardData, type FactionId } from '@/features/fate/cards';
+import { FATE_CARDS, cardDescription, cardTitle, getFaction, getFateCard, type FateCardData, type FactionId } from '@/features/fate/cards';
 import { useI18n } from '@/i18n';
 import './lore-cards.css';
 
@@ -12,12 +12,12 @@ function LoreCardTile({ card, mine }: { card: FateCardData; mine?: boolean }) {
   return (
     <li className={`lore-cardtile${mine ? ' lore-cardtile--mine' : ''}`} style={{ '--c': card.glow } as CSSProperties}>
       <div className="lore-cardtile__art">
-        <img src={card.image} alt={card.numeral ? `${card.numeral} — ${card.title}` : card.title} loading="lazy" />
+        <img src={card.image} alt={card.numeral ? `${card.numeral} — ${cardTitle(card)}` : cardTitle(card)} loading="lazy" />
       </div>
       <div className="lore-cardtile__body">
         {mine && <p className="lore-cardtile__badge">{t('lore.yourCard')}</p>}
         <p className="lore-kicker">{getFaction(card.faction).name}{card.numeral ? ` · ${card.numeral}` : ''}</p>
-        <h4>{card.title}</h4>
+        <h4>{cardTitle(card)}</h4>
         <p>{cardDescription(card.id)}</p>
       </div>
     </li>

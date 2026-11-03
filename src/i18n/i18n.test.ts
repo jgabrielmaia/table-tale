@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { FATE_CARDS } from '@/features/fate/cards';
+import { FATE_CARDS, cardTitle } from '@/features/fate/cards';
 import { formatDate } from '@/lib/format';
 import { applyLang, getLang, translate, translatePlural } from './core';
 import { contentEn } from './content.en';
@@ -35,6 +35,17 @@ describe('editorial content', () => {
       expect(contentPt.cards[card.id].length).toBeGreaterThan(10);
       expect(contentEn.cards[card.id].length).toBeGreaterThan(10);
     }
+  });
+
+  it('localizes card titles while English keeps the original and ids stay untouched', () => {
+    for (const card of FATE_CARDS) {
+      applyLang('en');
+      expect(cardTitle(card)).toBe(card.title);
+      applyLang('pt');
+      expect(cardTitle(card).length).toBeGreaterThan(0);
+    }
+    expect(cardTitle({ id: 'magician' })).toBe('O Mago');
+    expect(FATE_CARDS.find((c) => c.id === 'magician')?.title).toBe('The Magician');
   });
 
   it('keeps the lore structure aligned', () => {

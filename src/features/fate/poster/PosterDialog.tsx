@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button, Icon, LoadingState, Modal, useToast } from '@/components/ui';
-import { getFaction } from '../cards';
+import { cardTitle, getFaction } from '../cards';
 import { useI18n } from '@/i18n';
 import { POSTER_FORMATS, POSTER_ORDER, type PosterFormat } from './formats';
 import type { PosterInput } from './renderPoster';
@@ -94,7 +94,7 @@ export function PosterDialog({ open, onClose, input }: PosterDialogProps) {
         await navigator.share({
           files: [file],
           title: t('fate.shareTitle'),
-          text: t('fate.shareText', { faction: getFaction(input.card.faction).name, card: input.card.title }),
+          text: t('fate.shareText', { faction: getFaction(input.card.faction).name, card: cardTitle(input.card) }),
         });
         notify(t('poster.shared'));
       } catch (e) {
@@ -140,7 +140,7 @@ export function PosterDialog({ open, onClose, input }: PosterDialogProps) {
               src={current.url}
               width={spec.width}
               height={spec.height}
-              alt={t('poster.alt', { card: input.card.title, faction: getFaction(input.card.faction).name })}
+              alt={t('poster.alt', { card: cardTitle(input.card), faction: getFaction(input.card.faction).name })}
             />
           ) : (
             <LoadingState label={t('poster.generating')} />

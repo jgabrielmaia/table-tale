@@ -2,7 +2,7 @@ import { AnimatePresence, animate, motion, useMotionValue, useTransform, type Mo
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Avatar } from '@/components/ui';
 import { PlayerIdentityFrame } from '@/components/identity/PlayerIdentityFrame';
-import { getFaction, type FateCardData } from './cards';
+import { cardTitle, getFaction, type FateCardData } from './cards';
 import { useI18n } from '@/i18n';
 import type { FateAudio } from './audio';
 import { Burst, EnergyField } from './EnergyField';
@@ -174,7 +174,7 @@ export function CardRevealAnimation({ card, origin, audio, reduced, player, seas
               <p className="fate-motto">{t('fate.revealed')}</p>
               <ul className="fate-chips">
                 <li className="fate-chip fate-chip--faction">{faction.name}</li>
-                <li className="fate-chip">{card.numeral ? `${card.numeral} — ` : ''}{card.title}</li>
+                <li className="fate-chip">{card.numeral ? `${card.numeral} — ` : ''}{cardTitle(card)}</li>
               </ul>
               <div className="fate-preview">
                 <PlayerIdentityFrame cardId={card.id} size="xl">

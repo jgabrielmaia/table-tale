@@ -28,4 +28,4 @@ export const FRAME_THEMES: Record<CardArtKey, FrameTheme> = {
 };
 
 /** Compact label for tiny frames; the full title stays available on hover/tap. */
-export const compactTitle = (title: string) => title.replace(/^The\s+/i, '');
+export const compactTitle = (title: string) => title.replace(/^(The|O|A)\s+/i, '');

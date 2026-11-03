@@ -23,11 +23,11 @@ afterEach(() => applyLang('pt'));
 describe('Lore identity integration', () => {
   it('unlocked: shows all nine cards and highlights only the assigned one', () => {
     wrap(<LoreCollection active={identity('fire', true, 's2')} history={[identity('star', false, 's1')]} />);
-    expect(screen.getAllByRole('img', { name: /The Magician|The High Priestess|The Star|The World|Temperance|Earth|Water|Fire|Air/ }).length).toBeGreaterThanOrEqual(9);
+    expect(screen.getAllByRole('img', { name: /O Mago|A Sacerdotisa|A Estrela|O Mundo|A Temperança|Terra|Água|Fogo|Ar/ }).length).toBeGreaterThanOrEqual(9);
     // The highlighted card appears once on its own and once in the grid, always labelled as the player's identity.
     expect(screen.getAllByText('A tua identidade sazonal')).toHaveLength(2);
     const history = screen.getByText('Histórico de temporadas').closest('div') as HTMLElement;
-    expect(within(history).getByText('The Star')).toBeInTheDocument();
+    expect(within(history).getByText('A Estrela')).toBeInTheDocument();
   });
 
   it('locked: reveals no card artwork and links straight to the Fate Draw', () => {

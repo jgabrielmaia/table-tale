@@ -1,5 +1,5 @@
 import { useI18n } from '@/i18n';
-import { cardDescription, getFaction, type FateCardData } from './cards';
+import { cardDescription, cardTitle, getFaction, type FateCardData } from './cards';
 
 interface PanelProps {
   card: FateCardData;
@@ -12,7 +12,7 @@ export function FactionReveal({ card, onContinue }: PanelProps & { onContinue: (
   return (
     <>
       <p className="fate-eyebrow">{card.numeral ? `${card.numeral} · ` : ''}{faction.name}</p>
-      <h2 className="fate-card-title">{card.title}</h2>
+      <h2 className="fate-card-title">{cardTitle(card)}</h2>
       <h3 className="fate-headline">{faction.headline}</h3>
       <p className="fate-motto">{faction.motto}</p>
       <p className="fate-line">{faction.line}</p>

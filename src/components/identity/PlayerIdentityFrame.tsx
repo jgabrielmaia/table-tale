@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { CardArtKey } from '@/assets/cards';
-import { getFateCard } from '@/features/fate/cards';
+import { cardTitle, getFateCard } from '@/features/fate/cards';
 import { FrameArt } from './frameArt';
 import { FRAME_THEMES, compactTitle } from './frameThemes';
 import './identity.css';
@@ -27,8 +27,9 @@ export function PlayerIdentityFrame({ cardId, size = 'sm', compact, children, cl
 
   const theme = FRAME_THEMES[card.id as CardArtKey];
   const isCompact = compact ?? size !== 'xl';
-  const label = isCompact ? compactTitle(card.title) : card.title;
-  const hasTip = isCompact && label !== card.title;
+  const title = cardTitle(card);
+  const label = isCompact ? compactTitle(title) : title;
+  const hasTip = isCompact && label !== title;
   const vars = { '--a': theme.a, '--b': theme.b } as CSSProperties;
 
   return (
@@ -53,9 +54,9 @@ export function PlayerIdentityFrame({ cardId, size = 'sm', compact, children, cl
       </span>
       <span className="idf__plate">
         <span aria-hidden="true">{label}</span>
-        <span className="sr-only">{card.title}</span>
+        <span className="sr-only">{title}</span>
       </span>
-      {hasTip && <span className="idf__tip" aria-hidden="true">{card.title}</span>}
+      {hasTip && <span className="idf__tip" aria-hidden="true">{title}</span>}
     </span>
   );
 }

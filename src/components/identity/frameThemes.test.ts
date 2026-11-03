@@ -14,5 +14,7 @@ describe('frame themes', () => {
   it('keeps full titles intact and only shortens leading "The"', () => {
     expect(compactTitle('The High Priestess')).toBe('High Priestess');
     expect(compactTitle('Temperance')).toBe('Temperance');
+    expect(compactTitle('A Sacerdotisa')).toBe('Sacerdotisa');
+    expect(compactTitle('Ar')).toBe('Ar');
   });
 });

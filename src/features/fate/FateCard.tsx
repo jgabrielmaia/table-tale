@@ -1,7 +1,7 @@
 import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform, type MotionValue } from 'framer-motion';
 import type { CSSProperties, PointerEvent } from 'react';
 import { CARD_BACK_ART } from '@/assets/cards';
-import type { FateCardData } from './cards';
+import { cardTitle, type FateCardData } from './cards';
 
 interface FateCardProps {
   /** Omit to render the neutral back only; the front art is then not in the DOM at all. */
@@ -60,7 +60,7 @@ export function FateCard({ card, flipY, interactive = true, aura, className }: F
           </div>
           {card && (
             <div className="fcard__face fcard__face--front">
-              <img src={card.image} alt={card.numeral ? `${card.numeral} — ${card.title}` : card.title} draggable={false} />
+              <img src={card.image} alt={card.numeral ? `${card.numeral} — ${cardTitle(card)}` : cardTitle(card)} draggable={false} />
               <motion.span className="fcard__shine" style={{ backgroundImage: shine }} aria-hidden />
             </div>
           )}

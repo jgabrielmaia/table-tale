@@ -17,7 +17,7 @@ export interface FateCardData {
   id: CardArtKey;
   faction: FactionId;
   numeral?: string;
-  /** Exact title as printed on the artwork; identical in every language. */
+  /** Original title as printed on the artwork; stays internal and untranslated. Use `cardTitle` for display. */
   title: string;
   glow: string;
   image: string;
@@ -39,6 +39,9 @@ export function getFaction(id: FactionId): Faction {
     gradient: GRADIENTS[id],
   };
 }
+
+/** Card title in the current language (English keeps the printed title). */
+export const cardTitle = (card: Pick<FateCardData, 'id'>) => t(`card.title.${card.id}`);
 
 /** Short description of what a card means, in the current language. */
 export const cardDescription = (id: CardArtKey) => getContent().cards[id];

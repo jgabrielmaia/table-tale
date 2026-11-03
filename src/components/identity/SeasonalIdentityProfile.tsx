@@ -1,6 +1,6 @@
 import { Button, ButtonLink } from '@/components/ui';
 import type { PlayerIdentity } from '@/features/fate/api';
-import { cardDescription, getFaction, getFateCard } from '@/features/fate/cards';
+import { cardDescription, cardTitle, getFaction, getFateCard } from '@/features/fate/cards';
 import { useI18n } from '@/i18n';
 import { formatDate } from '@/lib/format';
 import type { Profile } from '@/types/domain';
@@ -31,12 +31,12 @@ export function SeasonalIdentityProfile({ profile, active, history, seasonOpen, 
       <h2 id="identity-title" className="fate-profile-heading">{t('idp.title')}</h2>
       {card && faction && theme && active ? (
         <div className="sid" data-has-card="true" style={{ '--a': theme.a } as CSSProperties}>
-          <div className="sid__card"><img src={card.image} alt={card.numeral ? `${card.numeral} — ${card.title}` : card.title} /></div>
+          <div className="sid__card"><img src={card.image} alt={card.numeral ? `${card.numeral} — ${cardTitle(card)}` : cardTitle(card)} /></div>
           <div className="sid__body">
             <div className="sid__who">
               <PlayerAvatar playerId={profile.id} name={name} src={profile.avatarUrl} size="xl" decorative />
               <div>
-                <h3 className="sid__title">{card.title}</h3>
+                <h3 className="sid__title">{cardTitle(card)}</h3>
                 <p className="sid__faction">{faction.name}</p>
               </div>
             </div>
