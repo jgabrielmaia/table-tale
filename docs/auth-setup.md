@@ -1,14 +1,14 @@
 # Configuração de autenticação
 
-A autenticação usa Supabase Auth. A aplicação não guarda passwords nem segredos OAuth: o frontend só conhece o URL e a chave **anon** (pública) do Supabase e delega Google, GitHub e Facebook ao Supabase, ou envia um magic link por e-mail.
+A autenticação usa Supabase Auth. A aplicação não guarda passwords nem segredos OAuth: o frontend só conhece o URL e a chave **anon** (pública) do Supabase e delega Google e GitHub ao Supabase, ou envia um magic link por e-mail.
 
 ## Porque aparecia «Unsupported provider: provider is not enabled»
 
-O erro vem do Supabase, não do código: o fornecedor pedido estava **desativado** no projeto. Os identificadores do frontend (`google`, `github`, `facebook`) coincidem com os do Supabase. Para o confirmar a qualquer momento, o endpoint público de definições lista o que está ativo:
+O erro vem do Supabase, não do código: o fornecedor pedido estava **desativado** no projeto. Os identificadores do frontend (`google`, `github`) coincidem com os do Supabase. Para o confirmar a qualquer momento, o endpoint público de definições lista o que está ativo:
 
 ```
 GET https://<project-ref>.supabase.co/auth/v1/settings   (cabeçalho apikey: <anon key>)
-→ "external": { "google": false, "github": false, "facebook": false, "email": true, ... }
+→ "external": { "google": false, "github": false, "email": true, ... }
 ```
 
 A aplicação lê este endpoint: um fornecedor desativado aparece como «indisponível de momento» e **nunca** envia o utilizador para o fornecedor. Se o endpoint não puder ser lido, o botão fica ativo e um erro «provider is not enabled» é traduzido para uma mensagem localizada.
@@ -21,8 +21,7 @@ Estes passos não podem ser feitos por código nem por scripts: precisam das tua
 
 1. **Google** — Google Cloud Console → *APIs & Services* → *Credentials* → *Create credentials* → *OAuth client ID* (tipo *Web application*). Em *Authorized redirect URIs* acrescenta o callback acima. Configura o *OAuth consent screen* (âmbitos `openid`, `email`, `profile`). Contas Gmail funcionam sem configuração extra.
 2. **GitHub** — GitHub → *Settings* → *Developer settings* → *OAuth Apps* → *New OAuth App*. *Authorization callback URL* = o callback acima. Gera um *Client secret*.
-3. **Facebook** — developers.facebook.com → *Create App* → produto *Facebook Login* → em *Valid OAuth Redirect URIs* acrescenta o callback acima. Pede a permissão `email` (a app pede `email public_profile`). Sem o modo *Live* só os utilizadores de teste conseguem entrar.
-4. **Supabase Dashboard** → *Authentication* → *Providers*: ativa **Google**, **GitHub** e **Facebook** e cola o *Client ID* e o *Client Secret* de cada um. Os segredos ficam apenas aqui.
+4. **Supabase Dashboard** → *Authentication* → *Providers*: ativa **Google** e **GitHub** e cola o *Client ID* e o *Client Secret* de cada um. Os segredos ficam apenas aqui.
 5. **Supabase Dashboard** → *Authentication* → *URL Configuration*:
    - *Site URL* (desenvolvimento): `http://localhost:5173/table-tale`
    - *Redirect URLs*: `http://localhost:5173/table-tale/auth/callback` e `https://jgabrielmaia.com/table-tale/auth/callback`
@@ -32,7 +31,7 @@ Produção: Site URL `https://jgabrielmaia.com/table-tale` e `VITE_SITE_URL` def
 
 ### Supabase CLI (desenvolvimento local)
 
-`supabase/config.toml` lê `GOOGLE_*`, `GITHUB_*` e `FACEBOOK_*` do ambiente (ver `.env.example`). Estas variáveis são só para o CLI local, nunca levam prefixo `VITE_` e nunca vão para o bundle.
+`supabase/config.toml` lê `GOOGLE_*` e `GITHUB_*` do ambiente (ver `.env.example`). Estas variáveis são só para o CLI local, nunca levam prefixo `VITE_` e nunca vão para o bundle.
 
 ## Fluxo OAuth
 
@@ -45,7 +44,7 @@ Produção: Site URL `https://jgabrielmaia.com/table-tale` e `VITE_SITE_URL` def
 ## Contas duplicadas e associação de métodos
 
 - O Supabase associa automaticamente identidades **com o mesmo e-mail verificado**: entrar com Google e mais tarde com GitHub (mesmo e-mail verificado) usa a mesma conta, sem duplicados.
-- Se o e-mail não vier verificado ou não for partilhado, o Supabase não associa nada automaticamente (evita sequestro de contas). Nesse caso entra com o método original e associa o novo no **Perfil** (botões «Associar Google / GitHub / Facebook», que usam `linkIdentity` e exigem a sessão atual).
+- Se o e-mail não vier verificado ou não for partilhado, o Supabase não associa nada automaticamente (evita sequestro de contas). Nesse caso entra com o método original e associa o novo no **Perfil** (botões «Associar Google / GitHub», que usam `linkIdentity` e exigem a sessão atual).
 - Se a identidade já pertencer a outro perfil, o callback mostra «esta conta já está associada a outro perfil».
 
 ## Perfil e avatar

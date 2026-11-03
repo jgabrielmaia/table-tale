@@ -1,10 +1,10 @@
 import type { MessageKey } from '@/i18n';
 
-export const OAUTH_PROVIDERS = ['google', 'github', 'facebook'] as const;
+export const OAUTH_PROVIDERS = ['google', 'github'] as const;
 export type OAuthProvider = (typeof OAUTH_PROVIDERS)[number];
 
 /** Brand names are not translated. */
-export const PROVIDER_NAMES: Record<OAuthProvider, string> = { google: 'Google', github: 'GitHub', facebook: 'Facebook' };
+export const PROVIDER_NAMES: Record<OAuthProvider, string> = { google: 'Google', github: 'GitHub' };
 
 export const isOAuthProvider = (value: string): value is OAuthProvider => (OAUTH_PROVIDERS as readonly string[]).includes(value);
 export const providerName = (id: string) => (isOAuthProvider(id) ? PROVIDER_NAMES[id] : id);

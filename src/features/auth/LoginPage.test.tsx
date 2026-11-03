@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const signInWithOAuth = vi.fn();
-const settings = vi.hoisted(() => ({ external: { google: true, github: true, facebook: true } as Record<string, boolean> }));
+const settings = vi.hoisted(() => ({ external: { google: true, github: true } as Record<string, boolean> }));
 
 vi.mock('@/lib/supabase', () => ({
   isSupabaseConfigured: true,
@@ -51,7 +51,7 @@ const renderLogin = (mode: 'login' | 'register' = 'login') =>
 
 beforeEach(() => {
   signInWithOAuth.mockReset().mockResolvedValue({ error: null });
-  settings.external = { google: true, github: true, facebook: true };
+  settings.external = { google: true, github: true };
   vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => ({ external: settings.external }) })));
 });
 afterEach(() => {
@@ -60,11 +60,12 @@ afterEach(() => {
 });
 
 describe('LoginPage providers', () => {
-  it('shows Google, GitHub and Facebook on sign-in and registration', async () => {
+  it('shows Google and GitHub, and no other provider, on sign-in and registration', async () => {
     const { unmount } = renderLogin();
-    for (const name of ['Google', 'GitHub', 'Facebook']) {
+    for (const name of ['Google', 'GitHub']) {
       expect(await screen.findByRole('button', { name: `Continuar com ${name}` })).toBeEnabled();
     }
+    expect(screen.queryByRole('button', { name: /Facebook/ })).not.toBeInTheDocument();
     unmount();
     renderLogin('register');
     expect(await screen.findByRole('heading', { name: 'Cria a tua conta Table Tale' })).toBeInTheDocument();
@@ -81,7 +82,7 @@ describe('LoginPage providers', () => {
   });
 
   it('never redirects to a provider that is switched off and says so in the user language', async () => {
-    settings.external = { google: false, github: true, facebook: true };
+    settings.external = { google: false, github: true };
     renderLogin();
     const google = await screen.findByRole('button', { name: /Continuar com Google/ });
     await waitFor(() => expect(google).toBeDisabled());
@@ -94,7 +95,7 @@ describe('LoginPage providers', () => {
     applyLang('en');
     renderLogin();
     signInWithOAuth.mockResolvedValue({ error: { message: 'Unsupported provider: provider is not enabled' } });
-    await userEvent.click(await screen.findByRole('button', { name: 'Continue with Facebook' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Facebook is not enabled in this application yet.');
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue with GitHub' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('GitHub is not enabled in this application yet.');
   });
 });

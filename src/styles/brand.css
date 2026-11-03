@@ -757,6 +757,7 @@ input[aria-invalid="true"] { border-color: #e0604f; }
 
 /* ---------- Diálogo ---------- */
 .dialog {
+  margin: auto; max-height: calc(100dvh - 2rem); overflow-y: auto;
   width: min(520px, calc(100% - 2rem)); padding: 0; border: 1px solid var(--line-strong); border-radius: var(--radius-lg);
   background: linear-gradient(180deg, var(--surface-2), var(--surface-3)); color: var(--creme); box-shadow: var(--shadow-lg);
 }

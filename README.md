@@ -32,6 +32,6 @@ O build estático é gerado em `dist/table-tale/`, com assets e router prefixado
 
 ## Estado atual
 
-MVP funcional preparado para Supabase: biblioteca com filtros, detalhes e sessões; login Google, GitHub, Facebook e magic link; perfil protegido com estatísticas e edição; eventos, conquistas e lore. Inclui migrations, RLS, seed idempotente e documentação de configuração.
+MVP funcional preparado para Supabase: biblioteca com filtros, detalhes e sessões; login Google, GitHub e magic link; perfil protegido com estatísticas e edição; eventos, conquistas e lore. Inclui migrations, RLS, seed idempotente e documentação de configuração.
 
 A publicação e o login OAuth em produção dependem de credenciais/configuração do projeto Supabase e acesso ao cPanel/Namecheap; nenhum segredo está incluído no repositório.

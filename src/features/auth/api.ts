@@ -31,7 +31,6 @@ async function assertEnabled(provider: OAuthProvider) {
 const PROVIDER_OPTIONS: Record<OAuthProvider, { scopes?: string; queryParams?: Record<string, string> }> = {
   google: { queryParams: { prompt: 'select_account' } },
   github: { scopes: 'read:user user:email' },
-  facebook: { scopes: 'email public_profile' },
 };
 
 const isDisabledError = (message: string) => /not enabled|unsupported provider/i.test(message);

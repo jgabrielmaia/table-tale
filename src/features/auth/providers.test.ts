@@ -26,7 +26,8 @@ describe('callback errors', () => {
 
 describe('providers', () => {
   it('knows the three supported identifiers', () => {
-    expect(['google', 'github', 'facebook'].every(isOAuthProvider)).toBe(true);
+    expect(['google', 'github'].every(isOAuthProvider)).toBe(true);
+    expect(isOAuthProvider('facebook')).toBe(false);
     expect(isOAuthProvider('twitter')).toBe(false);
     expect(providerName('github')).toBe('GitHub');
   });

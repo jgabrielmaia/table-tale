@@ -9,7 +9,7 @@ function fromMeta(meta: Record<string, unknown> | null | undefined): string | nu
   return asHttps(meta.avatar_url) ?? asHttps(picture) ?? asHttps(nested);
 }
 
-/** Profile picture supplied by the sign-in provider (Google, GitHub, Facebook, ...), if any. */
+/** Profile picture supplied by the sign-in provider (Google, GitHub, ...), if any. */
 export function providerAvatarUrl(user: User | null | undefined): string | null {
   if (!user) return null;
   const fromIdentities = (user.identities ?? []).map((i) => fromMeta(i.identity_data)).find(Boolean) ?? null;
