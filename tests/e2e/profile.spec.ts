@@ -247,10 +247,11 @@ test.describe('Perfil', () => {
       await profile.goto();
       await expect(page.getByText('Métodos de login associados: E-mail (magic link).')).toBeVisible();
       await expect(page.getByRole('button', { name: 'Associar Google' })).toBeVisible();
-      await page.getByRole('button', { name: 'Associar GitHub' }).click();
-      await expect(page).toHaveURL(/\/profile$/);
-      await expect(page.getByText('Métodos de login associados: E-mail (magic link), GitHub.')).toBeVisible();
       await expect(page.getByRole('button', { name: 'Associar GitHub' })).toHaveCount(0);
+      await page.getByRole('button', { name: 'Associar Google' }).click();
+      await expect(page).toHaveURL(/\/profile$/);
+      await expect(page.getByText('Métodos de login associados: E-mail (magic link), Google.')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Associar Google' })).toHaveCount(0);
     });
   });
 });

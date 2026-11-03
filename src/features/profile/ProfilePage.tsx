@@ -53,7 +53,8 @@ export function ProfilePage() {
   // Discovered first (newest on top), then the ones still to discover (closest to done first).
   const found = achievementList.filter((a) => a.unlockedAt).sort((a, b) => String(b.unlockedAt).localeCompare(String(a.unlockedAt)));
   const hidden = achievementList.filter((a) => !a.unlockedAt).sort((a, b) => b.progress / b.requirementValue - a.progress / a.requirementValue);
-  const unlinked = OAUTH_PROVIDERS.filter((pr) => !providers.includes(pr));
+  // GitHub sign-in stays available on the login page, but linking it from the profile is not offered.
+  const unlinked = OAUTH_PROVIDERS.filter((pr) => pr !== 'github' && !providers.includes(pr));
 
   // TEMPORARY (dev builds only): clears this season's card and goes back to the draw.
   const resetCard = async () => {
