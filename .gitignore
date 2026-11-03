@@ -4,6 +4,7 @@ dist/
 build/
 .cache/
 coverage/
+*.tsbuildinfo
 
 # Ambiente e segredos
 .env
@@ -27,3 +28,6 @@ Thumbs.db
 # Editores
 .vscode/
 .idea/
+
+# Estado local do Supabase CLI
+supabase/.temp/

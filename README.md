@@ -2,32 +2,36 @@
 
 > Make stories. Play them.
 
-Protótipo de uma biblioteca pessoal e comunidade de jogos de tabuleiro. Permite explorar a coleção, registar sessões de jogo, descobrir o universo das facções **Arcanos & Elementais** e acompanhar a evolução de um perfil de jogador.
+Aplicação de biblioteca pessoal e comunidade de jogos de tabuleiro. Explora jogos, regista sessões, descobre as filosofias das facções **Arcanos & Elementais** e acompanha perfil, eventos e conquistas.
 
-## Tecnologias
+## Stack
 
-- HTML5, CSS3 e JavaScript (vanilla, sem dependências nem build)
-- Google Fonts (Cinzel, Cinzel Decorative, Cormorant Garamond, Inter)
-- `localStorage` para dados simulados
+- React 19, TypeScript e Vite
+- Tailwind CSS 4 e CSS da identidade Table Tale
+- React Router, TanStack Query, React Hook Form e Zod
+- Supabase PostgreSQL, Auth, Storage e RLS
+- Vitest, Testing Library
 
-## Executar localmente
+## Desenvolvimento local
 
-Abrir `index.html` diretamente no navegador, ou servir a pasta:
+Requer Node.js 22 ou superior. Instala dependências e configura as variáveis públicas Supabase:
 
 ```bash
-npx serve .
-# ou
-python -m http.server 8000
+npm ci
+Copy-Item .env.example .env
+npm run dev
 ```
+
+Sem Supabase configurado, as páginas apresentam estados de configuração/erro; para dados reais, aplica as migrations e executa o seed conforme [docs/auth-setup.md](docs/auth-setup.md).
+
+Comandos úteis: `npm run typecheck`, `npm test`, `npm run build` e `npm run seed`.
+
+## Publicação
+
+O build estático é gerado em `dist/table-tale/`, com assets e router prefixados para `/table-tale`. Para Namecheap/cPanel, publica apenas o conteúdo dessa pasta em `public_html/table-tale/`. O `.htaccess` dá fallback às rotas sem alterar a raiz do domínio. Vê [docs/deployment-namecheap.md](docs/deployment-namecheap.md) e [docs/auth-setup.md](docs/auth-setup.md).
 
 ## Estado atual
 
-Protótipo navegável com dados simulados (sem backend):
+MVP funcional preparado para Supabase: biblioteca com filtros, detalhes e sessões; login Google e magic link; perfil protegido com estatísticas e edição; eventos, conquistas e lore. Inclui migrations, RLS, seed idempotente e documentação de configuração.
 
-- **Biblioteca** — 9 jogos com pesquisa, filtros e estados vazios/carregamento.
-- **Detalhe do jogo** — estado, favoritos, diário de sessões e recomendações.
-- **Arcanos & Elementais** — página narrativa alinhada com a fonte de verdade *S1: Elementais vs Arcanos*.
-- **Login** — autenticação simulada por e-mail.
-- **Perfil** — nível, facção, estatísticas, eventos e conquistas, com edição.
-
-Os dados ficam guardados apenas no navegador; o rodapé tem a opção «Repor dados de demonstração».
+A publicação e o login OAuth em produção dependem de credenciais/configuração do projeto Supabase e acesso ao cPanel/Namecheap; nenhum segredo está incluído no repositório.

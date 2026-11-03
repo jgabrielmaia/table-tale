@@ -1,0 +1,73 @@
+import type { GameStatus, LibraryGame } from '@/types/domain';
+
+export type PlayersFilter = '' | '1' | '2' | '3-4' | '5+';
+export type DurationFilter = '' | 'short' | 'medium' | 'long' | 'epic';
+
+export interface GameFilterValues {
+  query: string;
+  genre: string;
+  players: PlayersFilter;
+  duration: DurationFilter;
+  status: '' | GameStatus;
+  favoritesOnly: boolean;
+}
+
+export const EMPTY_FILTERS: GameFilterValues = {
+  query: '',
+  genre: '',
+  players: '',
+  duration: '',
+  status: '',
+  favoritesOnly: false,
+};
+
+const normalize = (value: string) => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
+export function matchesFilters(game: LibraryGame, f: GameFilterValues): boolean {
+  const q = normalize(f.query.trim());
+  if (q && !normalize(game.title).includes(q)) return false;
+  if (f.genre && game.genre !== f.genre) return false;
+  if (f.status && game.status !== f.status) return false;
+  if (f.favoritesOnly && !game.isFavorite) return false;
+
+  const { minPlayers: min, maxPlayers: max, durationMinutes: d } = game;
+  switch (f.players) {
+    case '1': if (min > 1) return false; break;
+    case '2': if (min > 2 || max < 2) return false; break;
+    case '3-4': if (min > 4 || max < 3) return false; break;
+    case '5+': if (max < 5) return false; break;
+  }
+  switch (f.duration) {
+    case 'short': if (d > 30) return false; break;
+    case 'medium': if (d <= 30 || d > 60) return false; break;
+    case 'long': if (d <= 60 || d > 120) return false; break;
+    case 'epic': if (d <= 120) return false; break;
+  }
+  return true;
+}
+
+export const filterGames = (games: LibraryGame[], filters: GameFilterValues) => games.filter((g) => matchesFilters(g, filters));
+
+export const hasActiveFilters = (f: GameFilterValues) =>
+  Boolean(f.query || f.genre || f.players || f.duration || f.status || f.favoritesOnly);
+
+/** Related games ranked by shared genre, similar complexity and duration. */
+export function relatedGames<T extends { id: string; genre: string; complexity: string; durationMinutes: number }>(
+  game: T,
+  all: T[],
+  limit = 3,
+): T[] {
+  return all
+    .filter((o) => o.id !== game.id)
+    .map((o) => ({
+      o,
+      score:
+        (o.genre === game.genre ? 3 : 0) +
+        (o.complexity === game.complexity ? 1 : 0) +
+        (Math.abs(o.durationMinutes - game.durationMinutes) <= 15 ? 1 : 0),
+    }))
+    .filter((r) => r.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map((r) => r.o);
+}

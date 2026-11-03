@@ -1,0 +1,141 @@
+import { supabase } from '@/lib/supabase';
+import { unwrap } from '@/lib/errors';
+import type { GameRow, GameSessionRow, OwnershipCondition, UserGameStatusRow } from '@/types/database';
+import type { Game, GameOwner, GameSession, GameStatus, GameUserState } from '@/types/domain';
+
+const GAME_SELECT =
+  'id,title,slug,description,cover_url,genre,min_players,max_players,duration_minutes,complexity,' +
+  'game_ownerships(user_id,copy_number,condition,profiles(id,display_name,avatar_url))';
+
+type GameQueryRow = Omit<GameRow, 'created_at' | 'updated_at'> & {
+  game_ownerships: {
+    user_id: string;
+    copy_number: number;
+    condition: OwnershipCondition;
+    profiles: { id: string; display_name: string; avatar_url: string | null } | null;
+  }[] | null;
+};
+
+export function mapGame(row: GameQueryRow): Game {
+  const owners = new Map<string, GameOwner>();
+  for (const o of row.game_ownerships ?? []) {
+    const existing = owners.get(o.user_id);
+    if (existing) existing.copies += 1;
+    else
+      owners.set(o.user_id, {
+        userId: o.user_id,
+        displayName: o.profiles?.display_name || 'Jogador',
+        avatarUrl: o.profiles?.avatar_url ?? null,
+        copies: 1,
+        condition: o.condition,
+      });
+  }
+  return {
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    description: row.description,
+    coverUrl: row.cover_url,
+    genre: row.genre,
+    minPlayers: row.min_players,
+    maxPlayers: row.max_players,
+    durationMinutes: row.duration_minutes,
+    complexity: row.complexity,
+    owners: [...owners.values()],
+  };
+}
+
+export const mapSession = (r: GameSessionRow): GameSession => ({
+  id: r.id,
+  gameId: r.game_id,
+  userId: r.user_id,
+  playedAt: r.played_at,
+  durationMinutes: r.duration_minutes,
+  playersCount: r.players_count,
+  rating: r.rating,
+  notes: r.notes,
+  createdAt: r.created_at,
+});
+
+export async function fetchGames(): Promise<Game[]> {
+  const rows = unwrap(await supabase.from('games').select(GAME_SELECT).order('title'), 'Não foi possível carregar a biblioteca');
+  return (rows as unknown as GameQueryRow[]).map(mapGame);
+}
+
+export async function fetchGameBySlug(slug: string): Promise<Game | null> {
+  const row = unwrap(
+    await supabase.from('games').select(GAME_SELECT).eq('slug', slug).maybeSingle(),
+    'Não foi possível carregar o jogo',
+  );
+  return row ? mapGame(row as unknown as GameQueryRow) : null;
+}
+
+export async function fetchGameStates(userId: string): Promise<GameUserState[]> {
+  const rows = unwrap(
+    await supabase.from('user_game_status').select('game_id,status,is_favorite').eq('user_id', userId),
+    'Não foi possível carregar o estado dos jogos',
+  ) as Pick<UserGameStatusRow, 'game_id' | 'status' | 'is_favorite'>[];
+  return rows.map((r) => ({ gameId: r.game_id, status: r.status, isFavorite: r.is_favorite }));
+}
+
+export async function saveGameState(
+  userId: string,
+  gameId: string,
+  patch: { status?: GameStatus; isFavorite?: boolean },
+): Promise<GameUserState> {
+  const payload: Record<string, unknown> = { user_id: userId, game_id: gameId };
+  if (patch.status !== undefined) payload.status = patch.status;
+  if (patch.isFavorite !== undefined) payload.is_favorite = patch.isFavorite;
+  const row = unwrap(
+    await supabase
+      .from('user_game_status')
+      .upsert(payload, { onConflict: 'user_id,game_id' })
+      .select('game_id,status,is_favorite')
+      .single(),
+    'Não foi possível guardar o estado',
+  ) as Pick<UserGameStatusRow, 'game_id' | 'status' | 'is_favorite'>;
+  return { gameId: row.game_id, status: row.status, isFavorite: row.is_favorite };
+}
+
+export async function fetchSessions(userId: string, gameId?: string): Promise<GameSession[]> {
+  let query = supabase.from('game_sessions').select('*').eq('user_id', userId);
+  if (gameId) query = query.eq('game_id', gameId);
+  const rows = unwrap(
+    await query.order('played_at', { ascending: false }).order('created_at', { ascending: false }),
+    'Não foi possível carregar as sessões',
+  ) as GameSessionRow[];
+  return rows.map(mapSession);
+}
+
+export interface NewSession {
+  gameId: string;
+  playedAt: string;
+  durationMinutes?: number | null;
+  playersCount?: number | null;
+  rating?: number | null;
+  notes?: string | null;
+}
+
+export async function createSession(userId: string, input: NewSession): Promise<GameSession> {
+  const row = unwrap(
+    await supabase
+      .from('game_sessions')
+      .insert({
+        user_id: userId,
+        game_id: input.gameId,
+        played_at: input.playedAt,
+        duration_minutes: input.durationMinutes ?? null,
+        players_count: input.playersCount ?? null,
+        rating: input.rating ?? null,
+        notes: input.notes?.trim() || null,
+      })
+      .select('*')
+      .single(),
+    'Não foi possível registar a sessão',
+  ) as GameSessionRow;
+  return mapSession(row);
+}
+
+export async function deleteSession(sessionId: string): Promise<void> {
+  unwrap(await supabase.from('game_sessions').delete().eq('id', sessionId), 'Não foi possível remover a sessão');
+}
