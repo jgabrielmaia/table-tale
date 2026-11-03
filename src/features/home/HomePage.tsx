@@ -26,7 +26,7 @@ export function HomePage() {
             <p className="lead">{t('home.lead')}</p>
             <div className="hero-actions">
               <ButtonLink to="/library" variant="primary">{t('home.ctaExplore')}</ButtonLink>
-              <ButtonLink to="/lore" variant="outline-light">{t('home.ctaLore')}</ButtonLink>
+              <ButtonLink to="/lore" variant="teal">{t('home.ctaLore')}</ButtonLink>
               {!user && <ButtonLink to="/login" variant="gold">{t('common.signIn')}</ButtonLink>}
             </div>
           </div>

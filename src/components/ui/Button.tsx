@@ -2,7 +2,7 @@ import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Link, type LinkProps } from 'react-router-dom';
 import { cn } from '@/lib/format';
 
-export type ButtonVariant = 'primary' | 'gold' | 'secondary' | 'ghost' | 'outline-light';
+export type ButtonVariant = 'primary' | 'gold' | 'teal' | 'secondary' | 'ghost' | 'outline-light';
 export type ButtonSize = 'sm' | 'md';
 
 const classes = (variant: ButtonVariant, size: ButtonSize, block?: boolean, className?: string) =>
