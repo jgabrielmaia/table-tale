@@ -830,7 +830,7 @@ section + section > .medal-group { margin-top: 1.75rem; }
   .game-grid-compact { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
   .game-grid-compact .game-card-link { flex-direction: column; }
   .game-grid-compact .game-card-media { width: 100%; aspect-ratio: 3 / 2; }
-  .lore-layout { grid-template-columns: 1fr; gap: 1.5rem; }
+  .lore-layout { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
   .lore-toc { top: var(--header-h); z-index: 10; margin-inline: -1.25rem; padding: .5rem 1.25rem; background: rgba(7, 19, 29, .92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
   .lore-toc-title { display: none; }
   .lore-toc ol { display: flex; gap: .25rem; border: 0; overflow-x: auto; scrollbar-width: none; }
@@ -920,3 +920,6 @@ section + section > .medal-group { margin-top: 1.75rem; }
   .hero h1, .hero-lore h1 { -webkit-text-fill-color: CanvasText; }
   :focus-visible { outline: 2px solid Highlight; }
 }
+
+/* Free text (notes, bio, search) must never widen the page. */
+.session-notes, .empty-state, .profile-bio, .event-text, .event-body, .game-card-title, .results-count { overflow-wrap: anywhere; }

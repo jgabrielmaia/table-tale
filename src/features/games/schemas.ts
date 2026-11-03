@@ -2,18 +2,24 @@ import { z } from 'zod';
 import { t, type MessageKey } from '@/i18n';
 import { todayIso } from '@/lib/format';
 
+/** Empty means "not provided". Anything else must be a whole number inside [min, max], with a message in the user's language. */
 const optionalInt = (min: number, max: number, labelKey: MessageKey) =>
   z
-    .union([
-      z.literal(''),
-      z.coerce
-        .number()
-        .int({ error: () => t('val.int', { label: t(labelKey) }) })
-        .min(min, { error: () => t('val.min', { label: t(labelKey), min }) })
-        .max(max, { error: () => t('val.max', { label: t(labelKey), max }) }),
-    ])
+    .union([z.string(), z.number()])
     .optional()
-    .transform((v) => (v === '' || v === undefined ? null : v));
+    .transform((value, ctx) => {
+      if (value === undefined || value === '') return null;
+      const n = Number(value);
+      const label = t(labelKey);
+      const fail = (message: string) => {
+        ctx.issues.push({ code: 'custom', message, input: value });
+        return z.NEVER;
+      };
+      if (!Number.isInteger(n)) return fail(t('val.int', { label }));
+      if (n < min) return fail(t('val.min', { label, min }));
+      if (n > max) return fail(t('val.max', { label, max }));
+      return n;
+    });
 
 export const sessionSchema = z.object({
   playedAt: z
