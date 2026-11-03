@@ -9,6 +9,9 @@ export const queryKeys = {
   activity: (userId: string | null) => ['activity', userId] as const,
   events: (userId: string | null) => ['events', userId] as const,
   lore: ['lore'] as const,
+  activeSeason: ['season', 'active'] as const,
+  myIdentities: (userId: string | null) => ['identities', 'mine', userId] as const,
+  activeIdentities: ['identities', 'active'] as const,
   factions: ['factions'] as const,
 };
 

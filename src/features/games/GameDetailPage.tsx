@@ -4,7 +4,8 @@ import { GameCover, coverAccent } from '@/components/games/GameCover';
 import { GameGrid } from '@/components/games/GameGrid';
 import { GameSessionForm } from '@/components/games/GameSessionForm';
 import { STATUS_OPTIONS } from '@/components/games/GameStatusBadge';
-import { Avatar, Badge, BrandSymbol, Button, Card, EmptyState, ErrorState, Icon, LoadingState, useToast } from '@/components/ui';
+import { Badge, BrandSymbol, Button, Card, EmptyState, ErrorState, Icon, LoadingState, useToast } from '@/components/ui';
+import { PlayerAvatar } from '@/components/identity/PlayerAvatar';
 import { LoginRequiredNotice } from '@/features/auth/LoginPage';
 import { useAuth } from '@/hooks/useAuth';
 import { useGame } from '@/hooks/useGame';
@@ -105,7 +106,7 @@ export function GameDetailPage() {
                     {game.owners.length ? (
                       game.owners.map((o) => (
                         <span key={o.userId} className="inline-flex items-center gap-2">
-                          <Avatar name={o.displayName} src={o.avatarUrl} size="xs" decorative />
+                          <PlayerAvatar playerId={o.userId} name={o.displayName} src={o.avatarUrl} size="xs" decorative />
                           {o.displayName}
                         </span>
                       ))

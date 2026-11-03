@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
-import { Avatar, Icon } from '@/components/ui';
+import { Icon } from '@/components/ui';
+import { PlayerAvatar } from '@/components/identity/PlayerAvatar';
 import { playersLabel } from '@/lib/format';
 import type { GameStatus, LibraryGame } from '@/types/domain';
 import { GameCover, coverAccent } from './GameCover';
@@ -48,7 +49,7 @@ export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact
           </ul>
           {owner && (
             <p className="owner">
-              <Avatar name={owner.displayName} src={owner.avatarUrl} size="xs" decorative />
+              <PlayerAvatar playerId={owner.userId} name={owner.displayName} src={owner.avatarUrl} size="xs" decorative />
               <span>
                 <span className="sr-only">Proprietário: </span>
                 {owner.displayName}

@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { PlayerIdentityFrame } from '@/components/identity/PlayerIdentityFrame';
+import { FATE_CARDS } from '@/features/fate/cards';
 import { GameCard } from '@/components/games/GameCard';
 import { GameStatusBadge } from '@/components/games/GameStatusBadge';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -94,6 +96,16 @@ export function ComponentsPage() {
             <GameStatusBadge status="completed" />
           </div>
           <div className="mt-4 max-w-md"><ProgressBar value={185} max={300} label="Progresso de exemplo" /></div>
+          <h3 className="mt-6">Molduras de identidade sazonal</h3>
+          {(['xl', 'sm', 'xs'] as const).map((size) => (
+            <div className="docs-row mt-3" key={size}>
+              {FATE_CARDS.map((c) => (
+                <PlayerIdentityFrame key={c.id} cardId={c.id} size={size}>
+                  <Avatar name="Gabriel Maia" size={size} decorative />
+                </PlayerIdentityFrame>
+              ))}
+            </div>
+          ))}
           <Card className="mt-4" title="Card" titleId="card-demo" description="Painel com cabeçalho e ações.">Conteúdo do card.</Card>
         </section>
 

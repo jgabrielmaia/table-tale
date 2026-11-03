@@ -25,7 +25,7 @@ export function AppRoutes() {
     <Routes>
       <Route
         path="/fate"
-        element={<Suspense fallback={<div className="container section"><LoadingState /></div>}><FateDrawPage /></Suspense>}
+        element={<RequireAuth><Suspense fallback={<div className="container section"><LoadingState /></div>}><FateDrawPage /></Suspense></RequireAuth>}
       />
       <Route path="*" element={<ShellRoutes />} />
     </Routes>

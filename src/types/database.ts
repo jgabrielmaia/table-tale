@@ -124,6 +124,34 @@ export interface UserAchievementRow {
   unlocked_at: string;
 }
 
+export interface SeasonRow {
+  id: string;
+  slug: string;
+  name: string;
+  starts_at: string;
+  ends_at: string | null;
+  is_active: boolean;
+}
+
+export interface PlayerCardIdentityRow {
+  id: string;
+  player_id: string;
+  season_id: string;
+  card_id: string;
+  faction: 'arcanos' | 'elementais';
+  selected_at: string;
+  is_active: boolean;
+}
+
+export interface DrawFateCardRow {
+  r_season_id: string;
+  r_card_id: string;
+  r_faction: 'arcanos' | 'elementais';
+  r_selected_at: string;
+  r_is_active: boolean;
+  r_already_drawn: boolean;
+}
+
 export interface ProfileStatsRow {
   sessions: number;
   games_played: number;

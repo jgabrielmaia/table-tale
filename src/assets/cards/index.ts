@@ -27,4 +27,4 @@ export const CARD_ART = {
 export type CardArtKey = keyof typeof CARD_ART;
 
 /** Native proportion of the supplied artwork (all ten files share it). */
-export const CARD_ASPECT_RATIO = '282 / 440';
+export const CARD_ASPECT_RATIO = '286 / 443';

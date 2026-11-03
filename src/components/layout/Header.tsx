@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
-import { Avatar, ButtonLink, Button, Icon, useToast } from '@/components/ui';
+import { ButtonLink, Button, Icon, useToast } from '@/components/ui';
+import { PlayerAvatar } from '@/components/identity/PlayerAvatar';
 import { errorMessage } from '@/lib/errors';
 import { EmblemPaths } from './Brand';
 import { NAV_ITEMS } from './navItems';
@@ -69,7 +70,7 @@ export function Header() {
             {user ? (
               <>
                 <Link className="auth-user" to="/profile" aria-label={`O teu perfil (${displayName})`}>
-                  <Avatar name={displayName || '?'} src={profile.data?.avatarUrl} size="sm" decorative />
+                  <PlayerAvatar playerId={user.id} name={displayName || '?'} src={profile.data?.avatarUrl} size="sm" decorative />
                   <span className="auth-email">{displayName}</span>
                 </Link>
                 <Button variant="outline-light" size="sm" onClick={handleSignOut} icon={<Icon name="logout" />}>

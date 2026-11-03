@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { Avatar, BrandSymbol, ProgressBar } from '@/components/ui';
+import { BrandSymbol, ProgressBar } from '@/components/ui';
+import { PlayerAvatar } from '@/components/identity/PlayerAvatar';
 import { levelProgress } from '@/lib/progress';
 import { formatDate } from '@/lib/format';
 import type { Faction, Profile } from '@/types/domain';
@@ -15,7 +16,7 @@ export function ProfileHeader({ profile, faction, actions }: ProfileHeaderProps)
   const factionStyle = faction ? ({ '--c': faction.color } as CSSProperties) : undefined;
   return (
     <section className="profile-card" aria-labelledby="profile-name">
-      <Avatar name={profile.displayName || 'Jogador'} src={profile.avatarUrl} size="xl" />
+      <PlayerAvatar playerId={profile.id} name={profile.displayName || 'Jogador'} src={profile.avatarUrl} size="xl" />
       <div className="profile-id">
         <p className="eyebrow">Membro desde {formatDate(profile.createdAt, { month: 'long', year: 'numeric' })}</p>
         <h1 id="profile-name">{profile.displayName || 'Jogador sem nome'}</h1>

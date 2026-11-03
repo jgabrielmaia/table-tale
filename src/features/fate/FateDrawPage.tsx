@@ -1,17 +1,23 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CardDeck, type PickInfo } from './CardDeck';
-import { FATE_CARDS, shuffle, type FateCardData } from './cards';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { BrandDefs } from '@/components/layout/Brand';
+import { useAuth } from '@/hooks/useAuth';
+import { useFate } from '@/hooks/useFate';
+import { useProfile } from '@/hooks/useProfile';
+import { errorMessage } from '@/lib/errors';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { createFateAudio } from './audio';
+import { CardRevealAnimation, type RevealOrigin } from './CardRevealAnimation';
+import { CardSelectionGrid, type PickInfo } from './CardSelectionGrid';
+import { FATE_CARDS, getFateCard, type FateCardData } from './cards';
 import { FateBackdrop } from './FateBackdrop';
-import { RevealScene, type RevealOrigin } from './RevealScene';
+import { FateDrawIntro } from './FateDrawIntro';
 import './fate.css';
 
-type Phase = 'invitation' | 'selection' | 'reveal';
+type Phase = 'invitation' | 'selection';
 
 interface Chosen {
-  index: number;
   card: FateCardData;
   origin: RevealOrigin;
 }
@@ -22,11 +28,14 @@ export function FateDrawPage() {
   const navigate = useNavigate();
   const reduced = useReducedMotion() ?? false;
   const audio = useMemo(() => createFateAudio(), []);
+  const { user } = useAuth();
+  const { profile } = useProfile();
+  const fate = useFate();
   const [soundOn, setSoundOn] = useState(false);
   const [phase, setPhase] = useState<Phase>('invitation');
-  // The face-down deck is dealt once; a click only reveals what was already assigned to that slot.
-  const [deal] = useState(() => shuffle(FATE_CARDS));
+  const [pickedIndex, setPickedIndex] = useState<number | null>(null);
   const [chosen, setChosen] = useState<Chosen | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => () => audio.dispose(), [audio]);
 
@@ -37,17 +46,55 @@ export function FateDrawPage() {
     if (next) audio.play('ambient');
   };
 
-  const pick = (info: PickInfo) => {
-    if (chosen) return;
-    const card = deal[info.index];
-    if (!card) return;
+  const pick = async (info: PickInfo) => {
+    if (pickedIndex !== null) return;
+    setPickedIndex(info.index);
+    setError(null);
     audio.play('select');
-    setChosen({ index: info.index, card, origin: { cx: info.cx, cy: info.cy, width: info.width, rotate: info.rotate } });
-    setPhase('reveal');
+    try {
+      // The server picks the card; the face-down slot the player clicked has no influence on it.
+      const { identity, alreadyDrawn } = await fate.draw.mutateAsync();
+      if (alreadyDrawn) {
+        navigate('/profile', { replace: true });
+        return;
+      }
+      const card = getFateCard(identity.cardId);
+      if (!card) throw new Error('The draw returned an unknown card.');
+      setChosen({ card, origin: { cx: info.cx, cy: info.cy, width: info.width, rotate: info.rotate } });
+    } catch (e) {
+      setPickedIndex(null);
+      setError(errorMessage(e));
+    }
   };
+
+  const shell = (children: React.ReactNode) => (
+    <main className="fate">
+      <BrandDefs />
+      <FateBackdrop />
+      <section className="fate-screen">{children}</section>
+    </main>
+  );
+
+  if (!isSupabaseConfigured) {
+    return shell(<p className="fate-support">The Fate Draw needs the Table Tale backend, which is not configured.</p>);
+  }
+  if (fate.state === 'loading' || fate.season.isLoading) {
+    return shell(<p className="fate-support" role="status">Opening the table…</p>);
+  }
+  // Players who already hold this season's card never see the draw again.
+  if (fate.active && !chosen && pickedIndex === null) return <Navigate to="/profile" replace />;
+  if (!fate.season.data && !chosen) {
+    return shell(
+      <>
+        <p className="fate-support">No season is open right now. Your next draw will be available when the next season begins.</p>
+        <Link className="fate-btn" to="/profile">Back to my profile</Link>
+      </>,
+    );
+  }
 
   return (
     <main className="fate">
+      <BrandDefs />
       <FateBackdrop />
 
       <button type="button" className="fate-sound" aria-pressed={soundOn} onClick={toggleSound}>
@@ -56,60 +103,37 @@ export function FateDrawPage() {
 
       <AnimatePresence mode="wait">
         {phase === 'invitation' && (
-          <motion.section
-            key="invitation"
-            className="fate-screen fate-invite"
-            exit={{ opacity: 0, scale: 1.05 }}
-            transition={{ duration: 0.7, ease: EASE }}
-          >
-            <div className="fate-portal" aria-hidden>
-              <i className="fate-portal__ring fate-portal__ring--1" />
-              <i className="fate-portal__ring fate-portal__ring--2" />
-              <i className="fate-portal__ring fate-portal__ring--3" />
-              <i className="fate-portal__core" />
-            </div>
-            <motion.div
-              className="fate-invite__body"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.2, ease: EASE }}
-            >
-              <h1 className="fate-brand">Table Tale</h1>
-              <p className="fate-kicker">Your story starts here.</p>
-              <p className="fate-quote">“Nine cards. Two factions. One destiny.”</p>
-              <p className="fate-support">
-                Every player has a place in this universe. Choose a card and discover where your story begins.
-              </p>
-              <button type="button" className="fate-btn fate-btn--primary fate-btn--xl" onClick={() => setPhase('selection')}>
-                Discover your fate
-              </button>
-            </motion.div>
+          <motion.section key="invitation" className="fate-screen fate-invite" exit={{ opacity: 0, scale: 1.05 }} transition={{ duration: 0.7, ease: EASE }}>
+            <FateDrawIntro onStart={() => setPhase('selection')} />
           </motion.section>
         )}
       </AnimatePresence>
 
-      {phase !== 'invitation' && (
+      {phase === 'selection' && (
         <section className="fate-screen fate-select" aria-label="Choose your card">
           <motion.header
             className="fate-select__head"
             initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: phase === 'reveal' ? 0 : 1, y: 0 }}
-            transition={{ duration: phase === 'reveal' ? 0.8 : 1, ease: EASE }}
+            animate={{ opacity: pickedIndex !== null ? 0 : 1, y: 0 }}
+            transition={{ duration: pickedIndex !== null ? 0.8 : 1, ease: EASE }}
           >
             <h2 className="fate-select__title">Choose your card</h2>
             <p className="fate-select__sub">Trust your instinct. Your story awaits.</p>
+            {error && <p className="fate-error" role="alert">{error}</p>}
           </motion.header>
-          <CardDeck count={deal.length} pickedIndex={chosen?.index ?? null} onPick={pick} />
+          <CardSelectionGrid count={FATE_CARDS.length} pickedIndex={pickedIndex} hidePicked={chosen !== null} onPick={(i) => void pick(i)} />
         </section>
       )}
 
       {chosen && (
-        <RevealScene
+        <CardRevealAnimation
           card={chosen.card}
           origin={chosen.origin}
           audio={audio}
           reduced={reduced}
-          onEnter={() => navigate('/')}
+          player={{ name: profile.data?.displayName || user?.email?.split('@')[0] || 'Player', avatarUrl: profile.data?.avatarUrl ?? null }}
+          seasonName={fate.season.data?.name ?? 'This season'}
+          onEnter={() => navigate('/profile')}
         />
       )}
     </main>

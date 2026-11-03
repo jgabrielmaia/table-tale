@@ -6,7 +6,7 @@
   --blue: #168cff;
   --orange: #ff8a24;
   --silver: #dce7f5;
-  --card-ratio: 282 / 440;
+  --card-ratio: 286 / 443;
   --card-w: clamp(112px, 10.5vw, 170px);
   position: fixed;
   inset: 0;
@@ -103,7 +103,7 @@
 .fcard__tilt, .fcard__flip { position: absolute; inset: 0; transform-style: preserve-3d; }
 .fcard__face { position: absolute; inset: 0; overflow: hidden; border-radius: 5.4% / 3.5%; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 .fcard__face--front { transform: rotateY(180deg); }
-.fcard__face img { display: block; width: 100%; height: 100%; object-fit: fill; user-select: none; -webkit-user-drag: none; }
+.fcard__face img { display: block; width: 100%; height: 100%; object-fit: contain; user-select: none; -webkit-user-drag: none; }
 .fcard__shine { position: absolute; inset: 0; opacity: 0; transition: opacity 0.3s; mix-blend-mode: soft-light; pointer-events: none; }
 .fcard[data-interactive='true']:hover .fcard__shine { opacity: 1; }
 .fcard__foil {
@@ -164,6 +164,14 @@
 .fate-chip--faction { border-color: transparent; color: #05060a; font-weight: 700; background: var(--faction-gradient); }
 .fate-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.8rem; justify-content: inherit; }
 .fate-status { min-height: 1.2em; margin: 0; font-size: 0.85rem; color: #9fdcff; }
+.fate-emblem { width: clamp(44px, 9vw, 64px); height: auto; filter: drop-shadow(0 0 18px rgba(0, 229, 255, 0.4)); }
+.fate-title { margin: 0.2rem 0 0; font-family: var(--font-display, serif); font-weight: 600; font-size: clamp(1.3rem, 4vw, 2rem); letter-spacing: 0.4em; text-transform: uppercase; }
+.fate-error { margin: 0.8rem 0 0; padding: 0.5rem 0.9rem; border: 1px solid #ff6b6b; border-radius: 4px; color: #ffb4b4; background: rgba(60, 10, 10, 0.6); }
+.fate-support { max-width: 28rem; text-align: center; line-height: 1.6; color: #b6bed2; }
+a.fate-btn { display: inline-block; text-decoration: none; }
+.fate-preview { display: flex; align-items: center; gap: 1.1rem; margin-top: 0.4rem; }
+.fate-preview__label { margin: 0; font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; color: #b6bed2; text-align: left; }
+.fate-preview__label span { color: #fff; }
 
 /* ---------- keyframes ---------- */
 @keyframes fate-spin { to { transform: rotate(360deg); } }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ActivityTimeline } from '@/components/profile/ActivityTimeline';
 import { AchievementCard } from '@/components/profile/AchievementCard';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
@@ -9,6 +9,8 @@ import { Button, Card, ErrorState, Icon, LoadingState, Tabs, useToast } from '@/
 import { useAchievements } from '@/hooks/useAchievements';
 import { useAuth } from '@/hooks/useAuth';
 import { useEvents } from '@/hooks/useEvents';
+import { useFate } from '@/hooks/useFate';
+import { SeasonalIdentityProfile } from '@/components/identity/SeasonalIdentityProfile';
 import { useLore } from '@/hooks/useLore';
 import { useProfile } from '@/hooks/useProfile';
 import { errorMessage } from '@/lib/errors';
@@ -17,11 +19,13 @@ import { ProfileEditModal } from './ProfileEditModal';
 
 export function ProfilePage() {
   const { providers, linkGoogle } = useAuth();
-  const { profile, stats, activity, update } = useProfile();
+  const { profile, stats, activity, update, providerAvatar } = useProfile();
   const achievements = useAchievements();
   const { events } = useEvents();
   const lore = useLore();
+  const fate = useFate();
   const { notify } = useToast();
+  const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [tab, setTab] = useState('activity');
 
@@ -43,6 +47,16 @@ export function ProfilePage() {
   const attended = events.filter((e) => e.isParticipating);
   const achievementList = achievements.data ?? [];
   const hasGoogle = providers.includes('google');
+
+  // TEMPORARY (dev builds only): clears this season's card and goes back to the draw.
+  const resetCard = async () => {
+    try {
+      await fate.devReset.mutateAsync();
+      navigate('/fate');
+    } catch (e) {
+      notify(errorMessage(e), { tone: 'error' });
+    }
+  };
 
   const save = async (values: Parameters<typeof update.mutateAsync>[0]) => {
     try {
@@ -76,6 +90,12 @@ export function ProfilePage() {
             </>
           }
         />
+
+        {fate.state !== 'loading' && (
+          <SeasonalIdentityProfile profile={p} active={fate.active} history={fate.history} seasonOpen={Boolean(fate.season.data)}
+            onDevReset={import.meta.env.DEV ? () => void resetCard() : undefined}
+          />
+        )}
 
         {stats.isLoading ? (
           <LoadingState variant="lines" count={2} label="A calcular estatísticas…" className="my-6" />
@@ -145,7 +165,7 @@ export function ProfilePage() {
         </p>
       </div>
 
-      <ProfileEditModal open={editing} profile={p} factions={factions} saving={update.isPending} onClose={() => setEditing(false)} onSave={save} />
+      <ProfileEditModal open={editing} profile={p} factions={factions} saving={update.isPending} providerAvatar={providerAvatar} onClose={() => setEditing(false)} onSave={save} />
     </>
   );
 }
