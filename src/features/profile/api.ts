@@ -70,7 +70,7 @@ export async function fetchProfileStats(): Promise<ProfileStats> {
   };
 }
 
-const METRIC_BY_REQUIREMENT: Record<AchievementRow['requirement_type'], keyof ProfileStats> = {
+const METRIC_BY_REQUIREMENT: Record<Exclude<AchievementRow['requirement_type'], 'fate_draw'>, keyof ProfileStats> = {
   sessions: 'sessions',
   games_played: 'gamesPlayed',
   completed: 'completed',
@@ -90,7 +90,10 @@ export async function fetchAchievements(userId: string | null, stats: ProfileSta
   }
   const unlockedAt = new Map(unlocked.map((u) => [u.achievement_id, u.unlocked_at]));
   return all.map((a) => {
-    const current = stats ? Number(stats[METRIC_BY_REQUIREMENT[a.requirement_type]]) : 0;
+    // The Fate Draw has no counter in the stats: it is either revealed or not.
+    const current = a.requirement_type === 'fate_draw'
+      ? (unlockedAt.has(a.id) ? a.requirement_value : 0)
+      : stats ? Number(stats[METRIC_BY_REQUIREMENT[a.requirement_type]]) : 0;
     return {
       id: a.id,
       slug: a.slug,

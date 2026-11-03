@@ -3,7 +3,7 @@
 
 export type GameStatusRow = 'unplayed' | 'in_progress' | 'completed';
 export type OwnershipCondition = 'new' | 'good' | 'worn' | 'damaged';
-export type AchievementRequirement = 'sessions' | 'games_played' | 'completed' | 'favorites' | 'events' | 'genres';
+export type AchievementRequirement = 'sessions' | 'games_played' | 'completed' | 'favorites' | 'events' | 'genres' | 'fate_draw';
 
 export interface FactionRow {
   id: string;
