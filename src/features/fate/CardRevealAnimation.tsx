@@ -8,6 +8,7 @@ import type { FateAudio } from './audio';
 import { Burst, EnergyField } from './EnergyField';
 import { FactionReveal } from './FactionReveal';
 import { FateCard } from './FateCard';
+import { PosterDialog } from './poster/PosterDialog';
 
 export interface RevealOrigin {
   cx: number;
@@ -24,6 +25,8 @@ interface CardRevealAnimationProps {
   reduced: boolean;
   player: { name: string; avatarUrl: string | null };
   seasonName: string;
+  /** ISO timestamp of the draw, shown on the poster. */
+  discoveredAt?: string;
   onEnter: () => void;
 }
 
@@ -33,13 +36,13 @@ const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 const NEUTRAL = '#f3ead4';
 
 /** Screens 03-05: reveal sequence, faction/card identity and welcome. The card is fixed before this mounts. */
-export function CardRevealAnimation({ card, origin, audio, reduced, player, seasonName, onEnter }: CardRevealAnimationProps) {
+export function CardRevealAnimation({ card, origin, audio, reduced, player, seasonName, discoveredAt, onEnter }: CardRevealAnimationProps) {
   const { t } = useI18n();
   const faction = getFaction(card.faction);
   const [stage, setStage] = useState<Stage>('revealing');
   const [burstKey, setBurstKey] = useState(0);
   const [accent, setAccent] = useState<string | null>(null);
-  const [status, setStatus] = useState('');
+  const [posterOpen, setPosterOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   const x = useMotionValue(0);
@@ -135,26 +138,6 @@ export function CardRevealAnimation({ card, origin, audio, reduced, player, seas
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const share = async () => {
-    const text = t('fate.shareText', { faction: faction.name, card: card.title });
-    const url = `${window.location.origin}${import.meta.env.BASE_URL}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: t('fate.shareTitle'), text, url });
-        setStatus(t('fate.shared'));
-        return;
-      } catch (e) {
-        if (e instanceof DOMException && e.name === 'AbortError') return;
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(`${text} ${url}`);
-      setStatus(t('fate.copied'));
-    } catch {
-      setStatus(t('fate.shareUnavailable'));
-    }
-  };
-
   const vars = { '--fx': accent ?? NEUTRAL, '--faction-gradient': faction.gradient } as CSSProperties;
   const panelMotion = {
     className: 'fate-panel',
@@ -203,15 +186,22 @@ export function CardRevealAnimation({ card, origin, audio, reduced, player, seas
                 <button type="button" className="fate-btn fate-btn--primary" onClick={onEnter}>
                   {t('fate.enter')}
                 </button>
-                <button type="button" className="fate-btn" onClick={() => void share()}>
+                <button type="button" className="fate-btn" onClick={() => setPosterOpen(true)}>
                   {t('fate.share')}
                 </button>
               </div>
-              <p className="fate-status" role="status">{status}</p>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {posterOpen && (
+        <PosterDialog
+          open
+          onClose={() => setPosterOpen(false)}
+          input={{ card, playerName: player.name, avatarUrl: player.avatarUrl, seasonName, discoveredAt }}
+        />
+      )}
     </div>
   );
 }

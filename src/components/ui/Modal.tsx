@@ -8,10 +8,11 @@ export interface ModalProps {
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
+  size?: 'md' | 'lg';
 }
 
 /** Accessible modal built on the native <dialog> (focus trap, Esc, backdrop). */
-export function Modal({ open, title, onClose, children, footer }: ModalProps) {
+export function Modal({ open, title, onClose, children, footer, size = 'md' }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
@@ -30,7 +31,7 @@ export function Modal({ open, title, onClose, children, footer }: ModalProps) {
   return (
     <dialog
       ref={ref}
-      className="dialog"
+      className={size === 'lg' ? 'dialog dialog-lg' : 'dialog'}
       aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault();

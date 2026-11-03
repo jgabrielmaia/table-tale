@@ -72,6 +72,17 @@ export const contentEn: Content = {
     fire: 'Warm, bold and impossible to ignore, you spark the moments the table remembers.',
     air: 'Light and far-sighted, you carry ideas on the wind and rise above the noise.',
   },
+  cardLore: {
+    magician: 'The first spark of the Arcanos: those who believe that understanding is the first step to transforming. In Table Tale, the Magician opens the way to every discovery.',
+    'high-priestess': 'Keeper of the secrets of the Veil. For the Arcanos, silence teaches too, and the Priestess sees what the table has not yet said.',
+    star: 'The hope that guides the Arcanos through the longest night. In Table Tale, the Star reminds us that to discover is also to guide others.',
+    world: 'The complete circle of knowledge. The Arcanos card that sees the whole board and knows when one chapter ends and another begins.',
+    temperance: 'The art of balancing opposing forces. Among the Arcanos, Temperance turns tension into harmony, one pour at a time.',
+    earth: 'The foundation of the Elementais. In Table Tale, Earth is the patient root that sustains every story and protects what deserves to remain.',
+    water: 'The strength that adapts and endures. For the Elementais, Water flows around any obstacle and keeps the memory of all it crosses.',
+    fire: 'The flame of the Elementais: courage, warmth and will. In Table Tale, Fire lights the moments the table remembers for a long time.',
+    air: 'The free breath that unites the Elementais. In Table Tale, Air carries ideas from table to table and lifts every story above the noise.',
+  },
   factionLore: {
     arcanos: {
       member: 'Arcano',

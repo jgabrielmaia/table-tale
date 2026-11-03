@@ -22,6 +22,7 @@ type Phase = 'invitation' | 'selection';
 interface Chosen {
   card: FateCardData;
   origin: RevealOrigin;
+  selectedAt: string;
 }
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -63,7 +64,7 @@ export function FateDrawPage() {
       }
       const card = getFateCard(identity.cardId);
       if (!card) throw new Error(t('fate.err.unknownCard'));
-      setChosen({ card, origin: { cx: info.cx, cy: info.cy, width: info.width, rotate: info.rotate } });
+      setChosen({ card, selectedAt: identity.selectedAt, origin: { cx: info.cx, cy: info.cy, width: info.width, rotate: info.rotate } });
     } catch (e) {
       setPickedIndex(null);
       setError(errorMessage(e));
@@ -138,6 +139,7 @@ export function FateDrawPage() {
           reduced={reduced}
           player={{ name: profile.data?.displayName || user?.email?.split('@')[0] || t('common.player'), avatarUrl: profile.data?.avatarUrl ?? null }}
           seasonName={fate.season.data?.name ?? t('idp.currentSeason')}
+          discoveredAt={chosen.selectedAt}
           onEnter={() => navigate('/profile')}
         />
       )}

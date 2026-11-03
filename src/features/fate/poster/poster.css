@@ -1,0 +1,14 @@
+.poster-dialog { display: grid; gap: 1rem; }
+.poster-formats { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.poster-formats button {
+  display: grid; gap: 0.1rem; justify-items: center; padding: 0.5rem 0.9rem; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 8px;
+  background: transparent; color: inherit; font: 600 0.8rem/1.2 var(--font-sans, sans-serif); cursor: pointer;
+}
+.poster-formats button small { font-weight: 400; opacity: 0.7; font-size: 0.68rem; }
+.poster-formats button[aria-pressed='true'] { border-color: currentColor; background: rgba(255, 255, 255, 0.12); }
+.poster-stage {
+  display: grid; place-items: center; width: auto; max-height: min(62dvh, 640px); margin-inline: auto; max-width: 100%;
+  background: #02030a; border-radius: 8px; overflow: hidden;
+}
+.poster-preview { display: block; width: auto; height: auto; max-width: 100%; max-height: min(62dvh, 640px); border-radius: 6px; }
+.poster-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }

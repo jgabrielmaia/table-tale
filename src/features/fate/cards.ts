@@ -43,6 +43,9 @@ export function getFaction(id: FactionId): Faction {
 /** Short description of what a card means, in the current language. */
 export const cardDescription = (id: CardArtKey) => getContent().cards[id];
 
+/** What the card means within the Table Tale universe, in the current language. */
+export const cardLore = (id: CardArtKey) => getContent().cardLore[id];
+
 const CYAN = '#00E5FF';
 const PURPLE = '#B026FF';
 

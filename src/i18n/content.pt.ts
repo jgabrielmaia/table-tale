@@ -73,6 +73,17 @@ export const contentPt: Content = {
     fire: 'Com calor e ousadia, és impossível de ignorar: acendes os momentos de que a mesa se lembra.',
     air: 'Leveza e visão longínqua: levas ideias no vento e elevas-te acima do ruído.',
   },
+  cardLore: {
+    magician: 'Primeira faísca dos Arcanos: quem acredita que compreender é o primeiro passo para transformar. Em Table Tale, o Mago abre o caminho para todas as descobertas.',
+    'high-priestess': 'Guardiã dos segredos do Véu. Para os Arcanos, o silêncio também ensina, e a Sacerdotisa vê o que a mesa ainda não disse.',
+    star: 'A esperança que orienta os Arcanos na noite mais longa. Em Table Tale, a Estrela lembra que descobrir é também guiar os outros.',
+    world: 'O círculo completo do conhecimento. A carta dos Arcanos que vê o tabuleiro inteiro e sabe quando um capítulo termina e outro começa.',
+    temperance: 'A arte de equilibrar forças opostas. Entre os Arcanos, a Temperança transforma tensão em harmonia, um gole de cada vez.',
+    earth: 'O alicerce dos Elementais. Em Table Tale, a Terra é a raiz paciente que sustenta cada história e protege o que merece permanecer.',
+    water: 'A força que se adapta e persiste. Para os Elementais, a Água contorna qualquer obstáculo e guarda a memória de tudo o que atravessa.',
+    fire: 'A chama dos Elementais: coragem, calor e vontade. Em Table Tale, o Fogo acende os momentos de que a mesa se lembra durante muito tempo.',
+    air: 'O sopro livre que une os Elementais. Em Table Tale, o Ar leva ideias de mesa em mesa e eleva cada história acima do ruído.',
+  },
   factionLore: {
     arcanos: { motto: 'O conhecimento é poder.' },
     elementais: { motto: 'A força é poder.' },

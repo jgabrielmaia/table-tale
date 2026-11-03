@@ -24,6 +24,8 @@ export type FactionLoreText = Partial<Omit<FactionLore, 'color2' | 'latin' | 'vi
 export interface Content {
   lore: LoreContent;
   cards: Record<CardArtKey, string>;
+  /** Short meaning of each card within the Table Tale universe (used on the share poster). */
+  cardLore: Record<CardArtKey, string>;
   factionLore: Record<FactionSlug, FactionLoreText>;
   genres: Record<string, string>;
   complexities: Record<string, string>;
