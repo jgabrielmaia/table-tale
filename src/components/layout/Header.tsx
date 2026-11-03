@@ -6,7 +6,7 @@ import { ButtonLink, Button, Icon, useToast } from '@/components/ui';
 import { PlayerAvatar } from '@/components/identity/PlayerAvatar';
 import { useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
-import { EmblemPaths } from './Brand';
+import { Logo } from '@/components/brand/Logo';
 import { LanguageSelector } from './LanguageSelector';
 import { NAV_ITEMS } from './navItems';
 
@@ -42,12 +42,7 @@ export function Header() {
     <header className="site-header">
       <div className="container header-inner">
         <Link className="brand" to="/" aria-label={t('header.homeAria')}>
-          <svg className="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
-            <EmblemPaths />
-          </svg>
-          <span className="brand-name">
-            Table<span className="brand-dot" aria-hidden="true">✦</span>Tale
-          </span>
+          <Logo variant="horizontal" decorative className="brand-logo" />
         </Link>
 
         <button

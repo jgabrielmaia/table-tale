@@ -1,7 +1,7 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { BrandDefs } from '@/components/layout/Brand';
+import { Logo } from '@/components/brand/Logo';
 import { LanguageSelector } from '@/components/layout/LanguageSelector';
 import { useAuth } from '@/hooks/useAuth';
 import { useFate } from '@/hooks/useFate';
@@ -73,7 +73,6 @@ export function FateDrawPage() {
 
   const shell = (children: React.ReactNode) => (
     <main className="fate">
-      <BrandDefs />
       <FateBackdrop />
       <LanguageSelector className="fate-lang" />
       <section className="fate-screen">{children}</section>
@@ -84,7 +83,12 @@ export function FateDrawPage() {
     return shell(<p className="fate-support">{t('fate.noBackend')}</p>);
   }
   if (fate.state === 'loading' || fate.season.isLoading) {
-    return shell(<p className="fate-support" role="status">{t('fate.opening')}</p>);
+    return shell(
+      <>
+        <Logo variant="symbol" height={72} decorative className="logo-pulse" />
+        <p className="fate-support" role="status">{t('fate.opening')}</p>
+      </>,
+    );
   }
   // Players who already hold this season's card never see the draw again.
   if (fate.active && !chosen && pickedIndex === null) return <Navigate to="/profile" replace />;
@@ -99,7 +103,6 @@ export function FateDrawPage() {
 
   return (
     <main className="fate">
-      <BrandDefs />
       <FateBackdrop />
 
       <button type="button" className="fate-sound" aria-pressed={soundOn} onClick={toggleSound}>

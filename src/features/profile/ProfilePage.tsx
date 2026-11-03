@@ -4,7 +4,7 @@ import { ActivityTimeline } from '@/components/profile/ActivityTimeline';
 import { AchievementCard } from '@/components/profile/AchievementCard';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileStats } from '@/components/profile/ProfileStats';
-import { Scenery } from '@/components/layout/Brand';
+import { Scenery } from '@/components/layout/Scenery';
 import { Button, Card, ErrorState, Icon, LoadingState, Tabs, useToast } from '@/components/ui';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useAuth } from '@/hooks/useAuth';

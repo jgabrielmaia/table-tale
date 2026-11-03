@@ -1,5 +1,5 @@
 import type { CardArtKey } from '@/assets/cards';
-import { LOGO_MAIN, LOGO_SYMBOL } from '@/assets/brand';
+import { LOGOS } from '@/assets/brand';
 import { FRAME_THEMES, type FrameTheme } from '@/components/identity/frameThemes';
 import { getLocale, t } from '@/i18n';
 import { env } from '@/lib/env';
@@ -314,7 +314,7 @@ export async function renderPoster(input: PosterInput, format: PosterFormat): Pr
     document.fonts.load(SANS(30, 600)),
   ]).catch(() => undefined);
 
-  const [art, logo, symbol, avatar] = await Promise.all([loadImage(card.image), loadImage(LOGO_MAIN), loadImage(LOGO_SYMBOL), loadAvatar(input.avatarUrl)]);
+  const [art, logo, symbol, avatar] = await Promise.all([loadImage(card.image), loadImage(LOGOS.primary.ivory.src), loadImage(LOGOS.symbol.ivory.src), loadAvatar(input.avatarUrl)]);
 
   const canvas = document.createElement('canvas');
   canvas.width = spec.width;
@@ -334,13 +334,9 @@ export async function renderPoster(input: PosterInput, format: PosterFormat): Pr
 
   drawBackground(ctx, W, H, theme, card.glow, cardCx, cardCy, random);
 
-  // Official logo.
+  // Official logo, drawn untouched.
   const logoH = L.logoW * (logo.naturalHeight / logo.naturalWidth);
-  ctx.save();
-  ctx.shadowColor = withAlpha(card.glow, 0.5);
-  ctx.shadowBlur = 24;
   ctx.drawImage(logo, (W - L.logoW) / 2, L.logoY, L.logoW, logoH);
-  ctx.restore();
 
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';

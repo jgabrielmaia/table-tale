@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import { Button, ButtonLink, Icon, Input } from '@/components/ui';
-import { Emblem, Scenery } from '@/components/layout/Brand';
+import { Logo } from '@/components/brand/Logo';
+import { Scenery } from '@/components/layout/Scenery';
 import { useAuth } from '@/hooks/useAuth';
 import { useEnabledProviders } from '@/hooks/useEnabledProviders';
 import { useI18n } from '@/i18n';
@@ -58,7 +59,7 @@ export function LoginPage({ mode = 'login' }: { mode?: 'login' | 'register' }) {
     <section className="auth-page">
       <Scenery />
       <div className="auth-card">
-        <span className="auth-seal"><Emblem /></span>
+        <span className="auth-seal"><Logo variant="symbol" height={52} /></span>
         {sentTo ? (
           <div className="auth-confirm" role="status">
             <h1>{t('login.checkMail')}</h1>

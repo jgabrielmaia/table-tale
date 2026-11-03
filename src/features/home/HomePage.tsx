@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { GameGrid } from '@/components/games/GameGrid';
-import { Emblem, Scenery } from '@/components/layout/Brand';
+import { Logo } from '@/components/brand/Logo';
+import { Scenery } from '@/components/layout/Scenery';
 import { ButtonLink, ErrorState, LoadingState } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useGames } from '@/hooks/useGames';
@@ -30,7 +31,7 @@ export function HomePage() {
             </div>
           </div>
           <div className="hero-art">
-            <div className="hero-emblem"><Emblem /></div>
+            <Logo variant="primary" className="hero-logo" />
             <dl className="hero-stats" aria-label={t('home.statsAria')}>
               <div><dt>{t('home.statGames')}</dt><dd>{isLoading ? '…' : games.length}</dd></div>
               <div><dt>{t('home.statGenres')}</dt><dd>{isLoading ? '…' : new Set(games.map((g) => g.genre)).size}</dd></div>

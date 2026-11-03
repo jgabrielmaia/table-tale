@@ -61,7 +61,7 @@
 
 /* ---------- screen 1: invitation ---------- */
 .fate-invite__body { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 36rem; gap: 1.1rem; }
-.fate-brand { font-family: var(--font-brand, var(--font-display, serif)); font-weight: 700; font-size: clamp(2.6rem, 9vw, 5.5rem); line-height: 1; letter-spacing: 0.06em; text-transform: uppercase; margin: 0; text-shadow: 0 0 40px rgba(0, 229, 255, 0.25), 0 0 80px rgba(176, 38, 255, 0.25); }
+.fate-logo { width: clamp(220px, 60vw, 420px); height: auto; }
 .fate-kicker { margin: 0; font-weight: 600; font-size: clamp(0.85rem, 2.4vw, 1.05rem); letter-spacing: 0.32em; text-transform: uppercase; color: var(--cyan); }
 .fate-quote { margin: 0.6rem 0 0; font-family: var(--font-editorial, var(--font-display, serif)); font-style: italic; font-size: clamp(1.35rem, 4vw, 2rem); }
 .fate-support { margin: 0 0 1rem; max-width: 30rem; font-size: 1rem; line-height: 1.6; color: #aab3c8; }
@@ -164,7 +164,6 @@
 .fate-chip--faction { border-color: transparent; color: #05060a; font-weight: 700; background: var(--faction-gradient); }
 .fate-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.8rem; justify-content: inherit; }
 .fate-status { min-height: 1.2em; margin: 0; font-size: 0.85rem; color: #9fdcff; }
-.fate-emblem { width: clamp(44px, 9vw, 64px); height: auto; filter: drop-shadow(0 0 18px rgba(0, 229, 255, 0.4)); }
 .fate-title { margin: 0.2rem 0 0; font-family: var(--font-display, serif); font-weight: 600; font-size: clamp(1.3rem, 4vw, 2rem); letter-spacing: 0.4em; text-transform: uppercase; }
 .fate-error { margin: 0.8rem 0 0; padding: 0.5rem 0.9rem; border: 1px solid #ff6b6b; border-radius: 4px; color: #ffb4b4; background: rgba(60, 10, 10, 0.6); }
 .fate-support { max-width: 28rem; text-align: center; line-height: 1.6; color: #b6bed2; }

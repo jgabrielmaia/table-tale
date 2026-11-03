@@ -2,7 +2,7 @@ import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { useI18n } from '@/i18n';
-import { BrandDefs } from './Brand';
+import { Logo } from '@/components/brand/Logo';
 import { Header } from './Header';
 import { MobileNavigation } from './MobileNavigation';
 
@@ -33,7 +33,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <BrandDefs />
       <a className="skip-link" href="#main" onClick={skip}>{t('shell.skip')}</a>
       {!isSupabaseConfigured && (
         <div className="config-banner" role="alert">
@@ -46,7 +45,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
       <footer className="site-footer">
         <div className="container footer-inner">
-          <p><span className="footer-brand">Table Tale</span> — {t('footer.tagline')}</p>
+          <p className="footer-id"><Logo variant="horizontal" height={30} /><span>{t('footer.tagline')}</span></p>
           <p className="footer-note">
             <Link to="/lore">{t('nav.lore')}</Link>{import.meta.env.DEV && <> · <Link to="/ui">{t('footer.components')}</Link></>}
           </p>

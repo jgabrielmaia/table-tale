@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Emblem } from '@/components/layout/Brand';
+import { Logo } from '@/components/brand/Logo';
 import { useI18n } from '@/i18n';
 
 interface FateDrawIntroProps {
@@ -20,8 +20,7 @@ export function FateDrawIntro({ onStart }: FateDrawIntroProps) {
         <i className="fate-portal__core" />
       </div>
       <motion.div className="fate-invite__body" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2, ease: EASE }}>
-        <Emblem className="fate-emblem" />
-        <p className="fate-brand">Table Tale</p>
+        <Logo variant="primary" className="fate-logo" />
         <h1 className="fate-title">{t('fate.introTitle')}</h1>
         <p className="fate-kicker">{t('fate.introKicker')}</p>
         <p className="fate-quote">{t('fate.introQuote')}</p>

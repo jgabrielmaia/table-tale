@@ -104,7 +104,7 @@ strong { color: var(--creme); }
 .sym { width: 1.5em; height: 1.5em; flex: none; }
 .rot45 { transform: rotate(45deg); }
 
-.gold-text, .hero h1, .hero-lore h1, .brand-name {
+.gold-text, .hero h1, .hero-lore h1 {
   background: var(--gold-text);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: var(--dourado);
@@ -189,11 +189,12 @@ strong { color: var(--creme); }
   background: linear-gradient(90deg, transparent, var(--dourado) 50%, transparent); opacity: .5;
 }
 .header-inner { display: flex; align-items: center; gap: 1.5rem; min-height: var(--header-h); }
-.brand { display: inline-flex; align-items: center; gap: .7rem; text-decoration: none; }
-.brand-mark { width: 40px; height: 40px; filter: drop-shadow(0 0 8px rgba(231, 111, 60, .35)); transition: transform .6s var(--ease); }
-.brand:hover .brand-mark { transform: rotate(45deg); }
-.brand-name { font-family: var(--font-brand); font-weight: 900; font-size: 1.45rem; letter-spacing: .04em; text-transform: uppercase; display: inline-flex; align-items: center; }
-.brand-dot { font-size: .55em; margin-inline: .3em; color: var(--laranja); -webkit-text-fill-color: var(--laranja); }
+.brand { display: inline-flex; align-items: center; text-decoration: none; }
+.brand-logo { height: 44px; }
+:where(.logo) { display: block; width: auto; max-width: 100%; object-fit: contain; user-select: none; }
+.logo-pulse { animation: logo-pulse 2.4s ease-in-out infinite; }
+@keyframes logo-pulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .logo-pulse { animation: none; } }
 
 .site-nav { display: flex; align-items: center; gap: 1.5rem; margin-left: auto; }
 .site-nav ul { display: flex; gap: .25rem; list-style: none; margin: 0; padding: 0; }
@@ -282,18 +283,7 @@ strong { color: var(--creme); }
 }
 .hero-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.75rem; }
 .hero-art { display: flex; flex-direction: column; align-items: center; gap: 1.75rem; }
-.hero-emblem { position: relative; width: clamp(150px, 20vw, 220px); aspect-ratio: 1; }
-.hero-emblem::before {
-  content: ""; position: absolute; inset: -18%; border-radius: 50%;
-  background: radial-gradient(circle, rgba(231, 111, 60, .45), transparent 65%);
-  animation: pulse 5s ease-in-out infinite;
-}
-.hero-emblem::after {
-  content: ""; position: absolute; inset: -6%; border-radius: 50%;
-  border: 1px dashed rgba(212, 168, 90, .45); animation: spin 60s linear infinite;
-}
-.hero-emblem .emblem { position: relative; width: 100%; height: 100%; filter: drop-shadow(0 0 18px rgba(231, 111, 60, .5)); }
-@keyframes pulse { 50% { transform: scale(1.08); opacity: .75; } }
+.hero-logo { width: clamp(240px, 30vw, 440px); height: auto; }
 .hero-stats {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin: 0; width: 100%;
   background: var(--line); border: 1px solid var(--line-strong);
@@ -491,8 +481,7 @@ input[aria-invalid="true"] { border-color: #e0604f; }
     linear-gradient(180deg, #08161f, var(--azul-profundo));
 }
 .hero-lore-inner { position: relative; z-index: 1; padding-block: clamp(3rem, 8vw, 5.5rem) clamp(4rem, 9vw, 7rem); display: flex; flex-direction: column; align-items: center; }
-.hero-lore-emblem { width: 84px; height: 84px; margin-bottom: 1.25rem; filter: drop-shadow(0 0 20px rgba(231, 111, 60, .55)); }
-.hero-lore-emblem .emblem { width: 100%; height: 100%; }
+.hero-lore-logo { margin-bottom: 1.25rem; }
 .hero-lore h1 { max-width: none; font-family: var(--font-brand); font-weight: 900; font-size: clamp(2.2rem, 6vw, 4rem); letter-spacing: .03em; }
 .hero-lore .lead { margin-inline: auto; }
 
@@ -800,7 +789,7 @@ input[aria-invalid="true"] { border-color: #e0604f; }
   background: radial-gradient(circle, #143047, var(--bg-deep)); border: 1px solid var(--line-strong);
   box-shadow: 0 0 0 5px rgba(11, 30, 45, .9), 0 0 30px rgba(231, 111, 60, .45);
 }
-.auth-seal .emblem { width: 52px; height: 52px; }
+/* The seal is a dark disc, so the official ivory symbol sits on it unaltered. */
 .auth-form { display: grid; gap: 1rem; text-align: left; margin-top: 1.5rem; }
 .auth-providers { display: grid; gap: .6rem; }
 .auth-btn-label { display: grid; justify-items: center; gap: .1rem; }
@@ -813,7 +802,7 @@ input[aria-invalid="true"] { border-color: #e0604f; }
 .site-footer { margin-top: auto; background: var(--bg-deep); border-top: 1px solid var(--line); color: var(--text-2); font-size: .88rem; }
 .footer-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem 2rem; padding-block: 1.5rem; }
 .footer-inner p { margin: 0; }
-.footer-brand { font-family: var(--font-brand); font-weight: 900; color: var(--dourado); font-size: 1rem; text-transform: uppercase; letter-spacing: .04em; }
+.footer-id { display: flex; align-items: center; gap: .9rem; flex-wrap: wrap; }
 
 /* ---------- Toasts ---------- */
 .toast-region { position: fixed; z-index: 200; bottom: 1.25rem; right: 1.25rem; display: grid; gap: .5rem; pointer-events: none; }
@@ -865,7 +854,7 @@ input[aria-invalid="true"] { border-color: #e0604f; }
 
   .hero-inner { grid-template-columns: 1fr; gap: 2rem; }
   .hero-art { flex-direction: row; align-items: center; }
-  .hero-emblem { width: 110px; flex: none; }
+  .hero-logo { width: 200px; flex: none; }
   .detail-grid { grid-template-columns: 1fr; }
   .detail-media { position: static; }
   .origin-grid { grid-template-columns: 1fr; }
@@ -878,8 +867,7 @@ input[aria-invalid="true"] { border-color: #e0604f; }
 
 @media (max-width: 600px) {
   .container { width: min(1200px, 100% - 2rem); }
-  .brand-name { font-size: 1.2rem; }
-  .brand-mark { width: 34px; height: 34px; }
+  .brand-logo { height: 36px; }
   .hero-art { flex-direction: column; }
   .filters { grid-template-columns: 1fr 1fr; padding: 1rem; gap: .75rem; }
   .facts { grid-template-columns: repeat(2, 1fr); }
@@ -924,6 +912,6 @@ input[aria-invalid="true"] { border-color: #e0604f; }
 
 @media (forced-colors: active) {
   .btn, .game-card, .panel, .status-badge { border: 1px solid CanvasText; }
-  .brand-name, .hero h1, .hero-lore h1 { -webkit-text-fill-color: CanvasText; }
+  .hero h1, .hero-lore h1 { -webkit-text-fill-color: CanvasText; }
   :focus-visible { outline: 2px solid Highlight; }
 }

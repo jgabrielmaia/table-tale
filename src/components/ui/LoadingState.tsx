@@ -1,4 +1,5 @@
 import { cn } from '@/lib/format';
+import { Logo } from '@/components/brand/Logo';
 import { t } from '@/i18n';
 
 export interface LoadingStateProps {
@@ -42,7 +43,7 @@ export function LoadingState({ label = t('common.loading'), variant = 'spinner',
   }
   return (
     <div className={cn('flex items-center justify-center gap-3 py-12 text-muted', className)} role="status" aria-live="polite">
-      <span className="spinner spinner-gold" aria-hidden="true" />
+      <Logo variant="symbol" height={44} decorative className="logo-pulse" />
       <span>{label}</span>
     </div>
   );

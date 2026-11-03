@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { LoreCollection, LoreLocked } from '@/components/identity/LoreCollection';
 import { FactionPanel } from '@/components/lore/FactionPanel';
 import { LoreTimeline } from '@/components/lore/LoreTimeline';
-import { Emblem, EmblemPaths, Scenery } from '@/components/layout/Brand';
+import { Logo } from '@/components/brand/Logo';
+import { LOGOS } from '@/assets/brand';
+import { Scenery } from '@/components/layout/Scenery';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { BrandSymbol, ErrorState, LoadingState } from '@/components/ui';
 import { useFate } from '@/hooks/useFate';
@@ -47,7 +49,7 @@ function BalanceFigure({ arcanos, elementais }: { arcanos: Faction; elementais: 
         {medal(arcanos, 75)}
         {medal(elementais, 365)}
         <circle cx={220} cy={100} r={40} fill="#07131d" stroke="#D4A85A" strokeOpacity={0.7} />
-        <svg x={188} y={68} width={64} height={64} viewBox="0 0 64 64"><EmblemPaths /></svg>
+        <image href={LOGOS.symbol.ivory.src} x={220 - 21.9} y={72} width={43.8} height={56} preserveAspectRatio="xMidYMid meet" />
         <text x={220} y={165} textAnchor="middle" className="balance-sub">{t('lore.neutralBack')}</text>
       </svg>
       <figcaption>{content.lore.neutral}</figcaption>
@@ -71,7 +73,7 @@ export function LorePage() {
       <section className="hero hero-lore">
         <Scenery />
         <div className="container hero-lore-inner">
-          <div className="hero-lore-emblem"><Emblem /></div>
+          <Logo variant="symbol" height={96} decorative className="hero-lore-logo" />
           <p className="eyebrow eyebrow-light">{L.intro.title}</p>
           <h1>{t('nav.lore')}</h1>
           <p className="lead">{L.intro.text}</p>
