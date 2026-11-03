@@ -1,4 +1,4 @@
-import { Button, ButtonLink } from '@/components/ui';
+import { ButtonLink } from '@/components/ui';
 import type { PlayerIdentity } from '@/features/fate/api';
 import { cardDescription, cardTitle, getFaction, getFateCard } from '@/features/fate/cards';
 import { useI18n } from '@/i18n';
@@ -12,11 +12,9 @@ interface SeasonalIdentityProfileProps {
   active: PlayerIdentity | null;
   history: PlayerIdentity[];
   seasonOpen: boolean;
-  /** TEMPORARY: dev builds only. */
-  onDevReset?: () => void;
 }
 
-export function SeasonalIdentityProfile({ active, history, seasonOpen, onDevReset }: SeasonalIdentityProfileProps) {
+export function SeasonalIdentityProfile({ active, history, seasonOpen }: SeasonalIdentityProfileProps) {
   const { t } = useI18n();
   const card = active ? getFateCard(active.cardId) : undefined;
   const faction = card ? getFaction(card.faction) : null;
@@ -41,7 +39,6 @@ export function SeasonalIdentityProfile({ active, history, seasonOpen, onDevRese
               <li>{t('idp.season', { name: active.season?.name ?? t('idp.currentSeason') })}</li>
               <li>{t('idp.discovered', { date: '' })}<time dateTime={active.selectedAt}>{formatDate(active.selectedAt)}</time></li>
             </ul>
-            {onDevReset && <Button variant="ghost" size="sm" onClick={onDevReset}>{t('idp.devReset')}</Button>}
           </div>
         </div>
       ) : (

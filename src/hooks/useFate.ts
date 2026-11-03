@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { drawFateCard, fetchActiveIdentities, fetchActiveSeason, fetchMyIdentities, type PlayerIdentity } from '@/features/fate/api';
 import { queryKeys } from '@/lib/queryKeys';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { useAuth } from './useAuth';
 
 /** UNINITIATED: never drew. INITIATED: card in the active season. ARCHIVED: only past seasons. */
@@ -31,19 +31,7 @@ export function useFate() {
     },
   });
 
-  // TEMPORARY (dev builds only): owner-only server function that clears this season's card.
-  const devReset = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.rpc('dev_reset_my_card');
-      if (error) throw new Error(error.message);
-    },
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.myIdentities(userId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.activeIdentities });
-    },
-  });
-
-  return { season, identities, active, history, state, draw, devReset, canDraw: Boolean(season.data) && !active };
+  return { season, identities, active, history, state, draw, canDraw: Boolean(season.data) && !active };
 }
 
 /** Active-season identity of any player, or null. Shared cache: one request feeds every avatar. */

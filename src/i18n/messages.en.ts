@@ -331,7 +331,6 @@ export const en: Record<MessageKey, string> = {
   'idp.cta': 'Discover your fate',
   'idp.history': 'Season history',
   'idp.pastSeason': 'Past season',
-  'idp.devReset': 'Repeat the draw (temporary)',
 
   // fate draw
   'fate.soundOn': 'Sound on',
