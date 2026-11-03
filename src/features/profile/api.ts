@@ -1,9 +1,8 @@
 import { supabase } from '@/lib/supabase';
 import { AppError, unwrap } from '@/lib/errors';
-import type { AchievementRow, GameSessionRow, ProfileRow, ProfileStatsRow, UserAchievementRow } from '@/types/database';
-import type { Achievement, ActivityItem, Profile, ProfileStats } from '@/types/domain';
-import { formatDate } from '@/lib/format';
-import { localizeAchievement, localizeEvent, t, tn } from '@/i18n';
+import type { AchievementRow, ProfileRow, ProfileStatsRow, UserAchievementRow } from '@/types/database';
+import type { Achievement, Profile, ProfileStats } from '@/types/domain';
+import { t } from '@/i18n';
 
 const PROFILE_COLUMNS = 'id,display_name,avatar_url,level,experience_points,faction_id,bio,created_at,updated_at';
 
@@ -106,52 +105,4 @@ export async function fetchAchievements(userId: string | null, stats: ProfileSta
       progress: Math.min(current, a.requirement_value),
     };
   });
-}
-
-type SessionWithGame = GameSessionRow & { games: { title: string; slug: string } | null };
-type Related<T> = T | T[] | null;
-
-const firstRelated = <T,>(value: Related<T>): T | null => Array.isArray(value) ? value[0] ?? null : value;
-
-/** Recent activity merged from sessions, event participation and achievements. */
-export async function fetchActivity(userId: string, limit = 8): Promise<ActivityItem[]> {
-  const [sessions, events, achievements] = await Promise.all([
-    supabase.from('game_sessions').select('*,games(title,slug)').eq('user_id', userId).order('played_at', { ascending: false }).limit(limit),
-    supabase.from('event_participants').select('id,joined_at,events(slug,name,event_date,location)').eq('user_id', userId).order('joined_at', { ascending: false }).limit(limit),
-    supabase.from('user_achievements').select('id,unlocked_at,achievements(slug,name,description)').eq('user_id', userId).order('unlocked_at', { ascending: false }).limit(limit),
-  ]);
-
-  const items: ActivityItem[] = [];
-  for (const s of unwrap(sessions, t('profile.err.activity')) as SessionWithGame[]) {
-    items.push({
-      id: `s-${s.id}`,
-      type: 'session',
-      date: s.played_at,
-      title: s.games ? t('activity.played', { game: s.games.title }) : t('activity.session'),
-      detail: [s.players_count ? tn('common.players', s.players_count) : '', s.rating ? `${'★'.repeat(s.rating)}` : '', s.notes ?? ''].filter(Boolean).join(' · '),
-      href: s.games ? `/games/${s.games.slug}` : undefined,
-    });
-  }
-  for (const row of unwrap(events, t('profile.err.activity')) as { id: string; joined_at: string; events: Related<{ slug: string; name: string; event_date: string; location: string }> }[]) {
-    const event = firstRelated(row.events);
-    items.push({
-      id: `e-${row.id}`,
-      type: 'event',
-      date: row.joined_at,
-      title: event ? t('activity.eventJoined', { name: localizeEvent({ slug: event.slug, name: event.name, description: '', location: event.location }).name }) : t('activity.event'),
-      detail: event ? `${formatDate(event.event_date)} · ${localizeEvent({ slug: event.slug, name: event.name, description: '', location: event.location }).location}` : undefined,
-      href: '/events',
-    });
-  }
-  for (const row of unwrap(achievements, t('profile.err.activity')) as { id: string; unlocked_at: string; achievements: Related<{ slug: string; name: string; description: string }> }[]) {
-    const achievement = firstRelated(row.achievements);
-    items.push({
-      id: `a-${row.id}`,
-      type: 'achievement',
-      date: row.unlocked_at,
-      title: achievement ? t('activity.achievement', { name: localizeAchievement({ slug: achievement.slug, name: achievement.name, description: achievement.description }).name }) : t('activity.achievementUnlocked'),
-      detail: achievement ? localizeAchievement({ slug: achievement.slug, name: achievement.name, description: achievement.description }).description : undefined,
-    });
-  }
-  return items.sort((a, b) => b.date.localeCompare(a.date)).slice(0, limit);
 }

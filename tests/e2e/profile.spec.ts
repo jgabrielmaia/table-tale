@@ -23,10 +23,10 @@ test.describe('Perfil', () => {
       await expect(page.getByText('0 / 300 XP')).toBeVisible();
       await expect(page.getByRole('list', { name: 'Estatísticas' })).toContainText('Jogos jogados');
       await expect(page.getByText('Destino por revelar')).toBeVisible();
-      await expect(page.getByText('Ainda sem atividade')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'O teu diário' })).toHaveCount(0);
     });
 
-    test('a experiência, as estatísticas e a atividade acompanham o diário', async ({ page, backend }) => {
+    test('a experiência e as estatísticas acompanham o diário de sessões', async ({ page, backend }) => {
       backend.addSession(PLAYER.id, 'dixit', { players_count: 4, rating: 5, notes: 'Boa noite' });
       const profile = new ProfilePage(page);
       await profile.goto();
@@ -34,9 +34,6 @@ test.describe('Perfil', () => {
       await expect(page.getByText('65 / 300 XP')).toBeVisible();
       await expect(profile.progress().first()).toHaveAttribute('aria-valuenow', '65');
       await expect(page.getByRole('list', { name: 'Estatísticas' }).getByRole('listitem').filter({ hasText: 'Jogos jogados' })).toContainText('1');
-      await expect(page.getByRole('tabpanel')).toContainText('Jogou Dixit');
-      await expect(page.getByRole('tabpanel')).toContainText('4 jogadores');
-      await expect(page.getByRole('tabpanel').getByRole('link', { name: /Jogou Dixit/ })).toHaveAttribute('href', /\/games\/dixit$/);
     });
 
     test('mostra a facção e a carta do Sorteio do Destino (e nenhuma escolha de facção)', async ({ page, backend }) => {
@@ -47,15 +44,6 @@ test.describe('Perfil', () => {
       await expect(page.getByText('Radices Tenent Mundum')).toBeVisible();
       await expect(profile.identity().getByRole('heading', { name: 'Terra' })).toBeVisible();
       await expect(profile.identity().getByRole('img', { name: 'Terra' })).toBeVisible();
-    });
-
-    test('o separador de atividade navega com as setas do teclado', async ({ page }) => {
-      await new ProfilePage(page).goto();
-      const activity = page.getByRole('tab', { name: 'Atividade recente' });
-      await activity.focus();
-      await page.keyboard.press('ArrowRight');
-      await expect(page.getByRole('tab', { name: /^Eventos/ })).toHaveAttribute('aria-selected', 'true');
-      await expect(page.getByRole('tabpanel')).toContainText('Ainda não participaste em eventos');
     });
 
     test('mostra erro com opção de tentar novamente quando o perfil não carrega', async ({ page, backend }) => {

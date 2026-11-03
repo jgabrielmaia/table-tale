@@ -60,15 +60,12 @@ test.describe('Eventos', () => {
       await expect(past.getByRole('button', { name: 'Participei' })).toHaveAttribute('aria-pressed', 'true');
     });
 
-    test('a participação aparece no perfil e dá experiência', async ({ page }) => {
+    test('a participação dá experiência no perfil', async ({ page }) => {
       await page.goto('events');
       await eventItem(page, 'Torneio Futuro').getByRole('button', { name: 'Vou participar' }).click();
       await expect(eventItem(page, 'Torneio Futuro').getByRole('button', { name: 'Inscrito' })).toBeVisible();
 
       await page.goto('profile');
-      await expect(page.getByRole('tab', { name: 'Eventos (1)' })).toBeVisible();
-      await page.getByRole('tab', { name: 'Eventos (1)' }).click();
-      await expect(page.getByRole('tabpanel')).toContainText('Torneio Futuro');
       await expect(page.getByText('50 / 300 XP')).toBeVisible();
     });
 

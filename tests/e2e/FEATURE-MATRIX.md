@@ -33,8 +33,8 @@ Estado: **Coberto** = fluxo principal + validações/erros relevantes; **Parcial
 | Detalhe do jogo | `/games/:slug` | Visitante, Jogador | Ficha, proprietário, relacionados, jogo inexistente, erro de carregamento, convite a entrar | `game-detail.spec.ts` | Coberto |
 | Diário de sessões (criar / listar / apagar) | `/games/:slug` | Jogador | Sessão completa, "jogado hoje", validações (data, jogadores, duração, notas), avaliação, apagar, erro 500, duplicado (23505), permissão (42501), sem duplo envio, HTML nas notas, notas longas, teclado | `game-detail.spec.ts` | Coberto |
 | Diário de sessões: editar / confirmar exclusão | — | — | — | — | N/A (não há edição nem confirmação; o apagar é imediato) |
-| Eventos | `/events` | Visitante, Jogador | Lista, inscrição e cancelamento, evento passado, persistência, erro, sem duplo clique, carregamento, vazio, texto longo, reflexo no perfil e na experiência | `events.spec.ts` | Coberto |
-| Perfil: visualização | `/profile` | Jogador | Nível, XP, estatísticas, atividade, facção vinda da carta, erro e "perfil a ser criado", foto do fornecedor | `profile.spec.ts` | Coberto |
+| Eventos | `/events` | Visitante, Jogador | Lista, inscrição e cancelamento, evento passado, persistência, erro, sem duplo clique, carregamento, vazio, texto longo, reflexo na experiência do perfil | `events.spec.ts` | Coberto |
+| Perfil: visualização | `/profile` | Jogador | Nível, XP, estatísticas, facção vinda da carta, erro e "perfil a ser criado", foto do fornecedor | `profile.spec.ts` | Coberto |
 | Perfil: edição | Diálogo "Editar perfil" | Jogador | Abrir/fechar/Esc/foco, sem campo de facção, nome e bio (limites e vazio), guardar e persistir, nunca enviar `faction_id`, erro, "A guardar…" sem duplo envio, avatar válido, tipo e tamanho inválidos, falha de upload | `profile.spec.ts` | Coberto |
 | Conquistas | `/profile` | Jogador | Grupos "Descobertas" / "Por descobrir", progresso, "Destino Revelado" | `profile.spec.ts`, `fate.spec.ts` | Coberto |
 | Métodos de login associados | `/profile` | Jogador | Lista e "Associar Google" (fluxo de ligação); não há "Associar GitHub" | `profile.spec.ts` | Coberto |

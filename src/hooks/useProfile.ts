@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { fetchActivity, fetchProfile, fetchProfileStats, updateProfile, uploadAvatar, type ProfileUpdate } from '@/features/profile/api';
+import { fetchProfile, fetchProfileStats, updateProfile, uploadAvatar, type ProfileUpdate } from '@/features/profile/api';
 import { providerAvatarUrl } from '@/lib/avatar';
-import { getLang, t } from '@/i18n';
+import { t } from '@/i18n';
 import { queryKeys } from '@/lib/queryKeys';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { useAuth } from './useAuth';
@@ -22,7 +22,6 @@ export function useProfile() {
     enabled,
   });
   const stats = useQuery({ queryKey: queryKeys.stats(userId), queryFn: fetchProfileStats, enabled });
-  const activity = useQuery({ queryKey: queryKeys.activity(userId, getLang()), queryFn: () => fetchActivity(userId!), enabled });
 
   const update = useMutation({
     mutationFn: async (input: ProfileUpdate & { avatarFile?: File | null }) => {
@@ -50,5 +49,5 @@ export function useProfile() {
       .catch(() => adopted.delete(userId));
   }, [userId, loaded, providerAvatar, qc]);
 
-  return { profile, stats, activity, update, providerAvatar };
+  return { profile, stats, update, providerAvatar };
 }
