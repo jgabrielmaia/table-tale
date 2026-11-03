@@ -3,15 +3,12 @@ import type { PlayerIdentity } from '@/features/fate/api';
 import { cardDescription, cardTitle, getFaction, getFateCard } from '@/features/fate/cards';
 import { useI18n } from '@/i18n';
 import { formatDate } from '@/lib/format';
-import type { Profile } from '@/types/domain';
-import { PlayerAvatar } from './PlayerAvatar';
 import { SeasonHistory } from './SeasonHistory';
 import type { CSSProperties } from 'react';
 import { FRAME_THEMES } from './frameThemes';
 import type { CardArtKey } from '@/assets/cards';
 
 interface SeasonalIdentityProfileProps {
-  profile: Profile;
   active: PlayerIdentity | null;
   history: PlayerIdentity[];
   seasonOpen: boolean;
@@ -19,12 +16,11 @@ interface SeasonalIdentityProfileProps {
   onDevReset?: () => void;
 }
 
-export function SeasonalIdentityProfile({ profile, active, history, seasonOpen, onDevReset }: SeasonalIdentityProfileProps) {
+export function SeasonalIdentityProfile({ active, history, seasonOpen, onDevReset }: SeasonalIdentityProfileProps) {
   const { t } = useI18n();
   const card = active ? getFateCard(active.cardId) : undefined;
   const faction = card ? getFaction(card.faction) : null;
   const theme = card ? FRAME_THEMES[card.id as CardArtKey] : null;
-  const name = profile.displayName || t('common.player');
 
   return (
     <section className="my-8" aria-labelledby="identity-title">
@@ -34,7 +30,6 @@ export function SeasonalIdentityProfile({ profile, active, history, seasonOpen, 
           <div className="sid__card"><img src={card.image} alt={card.numeral ? `${card.numeral} — ${cardTitle(card)}` : cardTitle(card)} /></div>
           <div className="sid__body">
             <div className="sid__who">
-              <PlayerAvatar playerId={profile.id} name={name} src={profile.avatarUrl} size="xl" decorative />
               <div>
                 <h3 className="sid__title">{cardTitle(card)}</h3>
                 <p className="sid__faction">{faction.name}</p>
@@ -51,9 +46,6 @@ export function SeasonalIdentityProfile({ profile, active, history, seasonOpen, 
         </div>
       ) : (
         <div className="sid sid__empty">
-          <div className="sid__who">
-            <PlayerAvatar playerId={profile.id} name={name} src={profile.avatarUrl} size="xl" decorative />
-          </div>
           {seasonOpen ? (
             <>
               <p className="sid__desc">

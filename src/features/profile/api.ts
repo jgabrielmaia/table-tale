@@ -31,7 +31,6 @@ export async function fetchProfile(userId: string, email: string | null): Promis
 export interface ProfileUpdate {
   displayName?: string;
   bio?: string;
-  factionId?: string | null;
   avatarUrl?: string | null;
 }
 
@@ -39,7 +38,6 @@ export async function updateProfile(userId: string, patch: ProfileUpdate): Promi
   const payload: Record<string, unknown> = {};
   if (patch.displayName !== undefined) payload.display_name = patch.displayName.trim();
   if (patch.bio !== undefined) payload.bio = patch.bio.trim() || null;
-  if (patch.factionId !== undefined) payload.faction_id = patch.factionId;
   if (patch.avatarUrl !== undefined) payload.avatar_url = patch.avatarUrl;
   if (!Object.keys(payload).length) return;
   unwrap(await supabase.from('profiles').update(payload).eq('id', userId), t('profile.err.save'));

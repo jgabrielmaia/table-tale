@@ -46,7 +46,8 @@ export function ProfilePage() {
 
   const p = profile.data;
   const factions = lore.data?.factions ?? [];
-  const faction = factions.find((f) => f.id === p.factionId) ?? null;
+  // The faction comes from this season's card; the player never picks it.
+  const faction = factions.find((f) => f.slug === fate.active?.faction) ?? null;
   const attended = events.filter((e) => e.isParticipating).map(localizeEvent);
   const achievementList = achievements.data ?? [];
   const unlinked = OAUTH_PROVIDERS.filter((pr) => !providers.includes(pr));
@@ -97,7 +98,7 @@ export function ProfilePage() {
         />
 
         {fate.state !== 'loading' && (
-          <SeasonalIdentityProfile profile={p} active={fate.active} history={fate.history} seasonOpen={Boolean(fate.season.data)}
+          <SeasonalIdentityProfile active={fate.active} history={fate.history} seasonOpen={Boolean(fate.season.data)}
             onDevReset={import.meta.env.DEV ? () => void resetCard() : undefined}
           />
         )}
@@ -170,7 +171,7 @@ export function ProfilePage() {
         </p>
       </div>
 
-      <ProfileEditModal open={editing} profile={p} factions={factions} saving={update.isPending} providerAvatar={providerAvatar} onClose={() => setEditing(false)} onSave={save} />
+      <ProfileEditModal open={editing} profile={p} saving={update.isPending} providerAvatar={providerAvatar} onClose={() => setEditing(false)} onSave={save} />
     </>
   );
 }

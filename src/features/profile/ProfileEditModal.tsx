@@ -1,16 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Avatar, Button, Input, Modal, Select, Textarea } from '@/components/ui';
-import { localizeFaction, t } from '@/i18n';
+import { Avatar, Button, Input, Modal, Textarea } from '@/components/ui';
+import { t } from '@/i18n';
 import { AVATAR_MAX_BYTES } from './api';
 import { profileSchema, type ProfileFormValues } from './schemas';
-import type { Faction, Profile } from '@/types/domain';
+import type { Profile } from '@/types/domain';
 
 export interface ProfileEditModalProps {
   open: boolean;
   profile: Profile;
-  factions: Faction[];
   saving: boolean;
   /** Picture supplied by the sign-in provider, when available. */
   providerAvatar?: string | null;
@@ -20,7 +19,7 @@ export interface ProfileEditModalProps {
 
 const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp'];
 
-export function ProfileEditModal({ open, profile, factions, saving, providerAvatar, onClose, onSave }: ProfileEditModalProps) {
+export function ProfileEditModal({ open, profile, saving, providerAvatar, onClose, onSave }: ProfileEditModalProps) {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [useProvider, setUseProvider] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
@@ -33,7 +32,7 @@ export function ProfileEditModal({ open, profile, factions, saving, providerAvat
 
   useEffect(() => {
     if (!open) return;
-    reset({ displayName: profile.displayName, bio: profile.bio ?? '', factionId: profile.factionId });
+    reset({ displayName: profile.displayName, bio: profile.bio ?? '' });
     setAvatarFile(null);
     setUseProvider(false);
     setPreview(null);
@@ -54,7 +53,7 @@ export function ProfileEditModal({ open, profile, factions, saving, providerAvat
 
   const submit = handleSubmit(async (values) => {
     try {
-      await onSave({ ...values, factionId: values.factionId || null, avatarFile, ...(useProvider && providerAvatar ? { avatarUrl: providerAvatar } : {}) });
+      await onSave({ ...values, avatarFile, ...(useProvider && providerAvatar ? { avatarUrl: providerAvatar } : {}) });
       onClose();
     } catch {
       // Error already surfaced by the caller; keep the modal open with the user's input.
@@ -93,12 +92,6 @@ export function ProfileEditModal({ open, profile, factions, saving, providerAvat
           </div>
         </div>
         <Input label={t('edit.name')} autoComplete="name" maxLength={60} error={errors.displayName?.message} {...register('displayName')} />
-        <Select
-          label={t('edit.faction')}
-          hint={t('edit.factionHint')}
-          options={[{ value: '', label: t('edit.noFaction') }, ...factions.map(localizeFaction).map((f) => ({ value: f.id, label: `${f.name} — ${f.lore.latin}` }))]}
-          {...register('factionId', { setValueAs: (v: string) => v || null })}
-        />
         <Textarea label={t('edit.bio')} rows={3} maxLength={280} optional error={errors.bio?.message} {...register('bio')} />
       </form>
     </Modal>
