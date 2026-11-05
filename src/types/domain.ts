@@ -89,6 +89,8 @@ export interface GameSession {
   gameId: string;
   userId: string;
   playedAt: string;
+  startedAt: string | null;
+  endedAt: string | null;
   durationMinutes: number | null;
   playersCount: number | null;
   rating: number | null;

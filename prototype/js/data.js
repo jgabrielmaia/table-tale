@@ -264,7 +264,7 @@ window.TT_DATA = (function () {
       status: 'por-jogar', favorite: false, sessions: []
     },
     {
-      id: 'baralho-classico', title: 'Cartas Clássico', genre: 'Clássico', tone: 'steel', symbol: 'cards', copies: 2,
+      id: 'baralho-classico', title: 'Baralho Clássico', genre: 'Clássico', tone: 'steel', symbol: 'cards', copies: 2,
       minPlayers: 1, maxPlayers: 8, duration: 30, complexity: 'Variável',
       description: 'Baralho clássico de 52 cartas para sueca, paciência, bisca, poker e tantos outros jogos de sempre.',
       status: 'por-jogar', favorite: false, sessions: []

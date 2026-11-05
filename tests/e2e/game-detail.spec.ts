@@ -115,6 +115,29 @@ test.describe('Detalhe do jogo', () => {
       await expect(game.sessions().first()).toContainText('Ganhou a Ana');
     });
 
+    test('cronómetro continua após navegar e recarregar e regista os horários ao encerrar @responsive', async ({ page, backend }) => {
+      const game = new GamePage(page);
+      await game.goto('dixit');
+      await page.getByRole('button', { name: 'Iniciar' }).click();
+      await expect(page.getByRole('button', { name: 'Pausar' })).toBeVisible();
+
+      await page.goto('library');
+      await game.goto('dixit');
+      await page.reload();
+      await page.getByRole('button', { name: 'Pausar' }).click();
+      await expect(page.getByRole('button', { name: 'Retomar' })).toBeVisible();
+      await page.reload();
+      await page.getByRole('button', { name: 'Retomar' }).click();
+      await page.getByRole('button', { name: 'Encerrar' }).click();
+
+      await expect(game.sessions()).toHaveCount(1);
+      const session = backend.db.sessions[0]!;
+      expect(session).toMatchObject({ game_id: expect.any(String), user_id: PLAYER.id, duration_minutes: 1 });
+      expect(Date.parse(session.started_at)).toBeLessThanOrEqual(Date.parse(session.ended_at));
+      await expect(game.sessions().first()).toContainText('Início:');
+      await expect(game.sessions().first()).toContainText('Fim:');
+    });
+
     test('valida os campos do formulário com mensagens claras associadas ao campo', async ({ page, backend }) => {
       const game = new GamePage(page);
       await game.goto('dixit');

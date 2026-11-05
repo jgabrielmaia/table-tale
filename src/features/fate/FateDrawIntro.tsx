@@ -4,12 +4,13 @@ import { useI18n } from '@/i18n';
 
 interface FateDrawIntroProps {
   onStart: () => void;
+  onSkip: () => void;
 }
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 /** Screen 01: the invitation. */
-export function FateDrawIntro({ onStart }: FateDrawIntroProps) {
+export function FateDrawIntro({ onStart, onSkip }: FateDrawIntroProps) {
   const { t } = useI18n();
   return (
     <>
@@ -26,6 +27,9 @@ export function FateDrawIntro({ onStart }: FateDrawIntroProps) {
         <p className="fate-quote">{t('fate.introQuote')}</p>
         <button type="button" className="fate-btn fate-btn--primary fate-btn--xl" onClick={onStart}>
           {t('fate.introCta')}
+        </button>
+        <button type="button" className="fate-btn fate-btn--skip" onClick={onSkip}>
+          {t('fate.skip')}
         </button>
       </motion.div>
     </>

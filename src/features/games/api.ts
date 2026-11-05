@@ -51,6 +51,8 @@ export const mapSession = (r: GameSessionRow): GameSession => ({
   gameId: r.game_id,
   userId: r.user_id,
   playedAt: r.played_at,
+  startedAt: r.started_at ?? null,
+  endedAt: r.ended_at ?? null,
   durationMinutes: r.duration_minutes,
   playersCount: r.players_count,
   rating: r.rating,
@@ -111,6 +113,8 @@ export async function fetchSessions(userId: string, gameId?: string): Promise<Ga
 export interface NewSession {
   gameId: string;
   playedAt: string;
+  startedAt?: string | null;
+  endedAt?: string | null;
   durationMinutes?: number | null;
   playersCount?: number | null;
   rating?: number | null;
@@ -125,6 +129,8 @@ export async function createSession(userId: string, input: NewSession): Promise<
         user_id: userId,
         game_id: input.gameId,
         played_at: input.playedAt,
+        started_at: input.startedAt ?? null,
+        ended_at: input.endedAt ?? null,
         duration_minutes: input.durationMinutes ?? null,
         players_count: input.playersCount ?? null,
         rating: input.rating ?? null,

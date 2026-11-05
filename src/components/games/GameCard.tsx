@@ -1,10 +1,11 @@
 import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
-import { Icon } from '@/components/ui';
+import { BrandSymbol, Icon } from '@/components/ui';
 import { PlayerAvatar } from '@/components/identity/PlayerAvatar';
 import { complexityLabel, genreLabel, t, tn } from '@/i18n';
 import { playersLabel } from '@/lib/format';
 import type { GameStatus, LibraryGame } from '@/types/domain';
+import { gameStyle } from '@/lib/cover';
 import { GameCover, coverAccent } from './GameCover';
 import { GameStatusBadge, statusOptions } from './GameStatusBadge';
 
@@ -30,6 +31,11 @@ export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact
       <Link className="game-card-link" to={`/games/${game.slug}`}>
         <div className="game-card-media">
           <GameCover slug={game.slug} title={game.title} genre={game.genre} coverUrl={game.coverUrl} />
+          {game.coverUrl && (
+            <span className="game-cover-symbol" aria-hidden="true">
+              <BrandSymbol name={gameStyle(game.slug, game.genre).symbol} />
+            </span>
+          )}
           {!compact && <GameStatusBadge status={game.status} />}
           {game.isFavorite && (
             <span className="fav-badge">

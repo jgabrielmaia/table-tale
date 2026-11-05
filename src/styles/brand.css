@@ -358,7 +358,11 @@ input[aria-invalid="true"] { border-color: #e0604f; }
 .game-card-link:hover { color: inherit; }
 .game-card-media { position: relative; aspect-ratio: 3 / 2; overflow: hidden; background: var(--bg-deep); }
 .game-card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s var(--ease), filter .4s; }
+.game-card-media img.game-cover-real, .detail-media img.game-cover-real { object-fit: contain; background: var(--bg-deep); }
 .game-card:hover .game-card-media img { transform: scale(1.05); filter: brightness(1.1) saturate(1.1); }
+.game-cover-symbol { position: absolute; right: .75rem; bottom: .75rem; z-index: 1; display: none; place-items: center; width: 2.4rem; aspect-ratio: 1; border: 1px solid rgba(212, 168, 90, .6); border-radius: 50%; color: var(--dourado); background: rgba(7, 19, 29, .88); }
+.game-card-media img.game-cover-real + .game-cover-symbol { display: grid; }
+.game-cover-symbol .sym { width: 1.35rem; height: 1.35rem; }
 .game-card-body { display: flex; flex-direction: column; gap: .35rem; padding: 1rem 1.15rem 1.15rem; flex: 1; }
 .game-card-genre { display: flex; align-items: center; gap: .45rem; margin: 0; font-size: .74rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); }
 .dot { width: 8px; height: 8px; transform: rotate(45deg); background: var(--accent); box-shadow: 0 0 8px var(--accent); }
@@ -445,6 +449,12 @@ input[aria-invalid="true"] { border-color: #e0604f; }
 .segment input:checked + span { background: linear-gradient(180deg, #ee8150, var(--laranja)); color: #1a0e08; box-shadow: 0 4px 14px rgba(231, 111, 60, .35); }
 .segment input:focus-visible + span { box-shadow: var(--focus); }
 .detail-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.game-timer { display: flex; justify-content: space-between; align-items: center; gap: 1.25rem; margin-top: 1.4rem; padding: 1.1rem 0; border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); }
+.game-timer-readout { display: grid; grid-template-columns: auto auto; align-items: baseline; gap: .1rem .75rem; }
+.game-timer-readout h2 { grid-column: 1 / -1; margin: 0; color: var(--dourado); font-size: .75rem; font-weight: 700; text-transform: uppercase; }
+.game-timer-time { font-family: var(--font-display); font-size: 1.8rem; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.game-timer-status { margin: 0; color: var(--text-2); font-size: .82rem; }
+.game-timer-controls { display: flex; flex-wrap: wrap; gap: .5rem; }
 
 .detail-lower { display: grid; grid-template-columns: 1.4fr 1fr; gap: 2rem; align-items: start; }
 .panel {
@@ -462,6 +472,7 @@ input[aria-invalid="true"] { border-color: #e0604f; }
 .session-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .75rem; }
 .session-item { position: relative; padding: 1rem 3.25rem 1rem 1.15rem; border-left: 3px solid var(--laranja); background: rgba(7, 19, 29, .45); border-radius: 0 var(--radius) var(--radius) 0; }
 .session-date { display: flex; align-items: center; gap: .4rem; font-family: var(--font-display); font-weight: 600; font-size: 1rem; color: var(--dourado); }
+.session-times { display: flex; flex-wrap: wrap; gap: .25rem 1rem; margin: .25rem 0 0; color: var(--text-2); font-size: .82rem; }
 .session-people { display: flex; align-items: center; gap: .4rem; margin: .25rem 0 0; color: var(--text-2); font-size: .9rem; }
 .session-notes { margin: .5rem 0 0; font-family: var(--font-editorial); font-style: italic; font-size: 1.1rem; color: var(--creme); }
 .session-item .icon-btn { position: absolute; right: .5rem; top: .5rem; }
@@ -880,6 +891,8 @@ section + section > .medal-group { margin-top: 1.75rem; }
   .filters { grid-template-columns: 1fr 1fr; padding: 1rem; gap: .75rem; }
   .facts { grid-template-columns: repeat(2, 1fr); }
   .session-form { grid-template-columns: 1fr; }
+  .game-timer { align-items: stretch; flex-direction: column; }
+  .game-timer-controls .btn { flex: 1; }
   .form-actions .btn { width: 100%; }
   .lore-grid { grid-template-columns: 1fr; }
   .value-grid { grid-template-columns: 1fr; }

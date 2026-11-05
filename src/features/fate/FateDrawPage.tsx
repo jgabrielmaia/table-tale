@@ -97,7 +97,7 @@ export function FateDrawPage() {
       <AnimatePresence mode="wait">
         {phase === 'invitation' && (
           <motion.section key="invitation" className="fate-screen fate-invite" exit={{ opacity: 0, scale: 1.05 }} transition={{ duration: 0.7, ease: EASE }}>
-            <FateDrawIntro onStart={() => setPhase('selection')} />
+            <FateDrawIntro onStart={() => setPhase('selection')} onSkip={() => navigate('/profile')} />
           </motion.section>
         )}
       </AnimatePresence>

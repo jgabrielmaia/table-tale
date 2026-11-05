@@ -2,7 +2,7 @@ import { LibraryPage } from '../pages/LibraryPage';
 import { AppShell } from '../pages/AppShell';
 import { expect, test } from '../fixtures';
 
-const ALL_TITLES = ['Cartas Clássico', 'Cores com Dicas', 'Coup', 'Dixit', 'Duelo por Cardia', 'Hitster', 'Tranquility', 'Uno', 'Vaalbara'];
+const ALL_TITLES = ['Baralho Clássico', 'Cores com Dicas', 'Coup', 'Dixit', 'Duelo por Cardia', 'Hitster', 'Tranquility', 'Uno', 'Vaalbara'];
 
 test.describe('Biblioteca', () => {
   test.describe('visitante', () => {
@@ -11,7 +11,7 @@ test.describe('Biblioteca', () => {
       await library.goto();
       await expect(library.count()).toHaveText('9 jogos encontrados');
       expect((await library.titles()).sort()).toEqual([...ALL_TITLES].sort());
-      await expect(library.card('Cartas Clássico')).toContainText('2 exemplares');
+      await expect(library.card('Baralho Clássico')).toContainText('2 exemplares');
       await expect(library.card('Dixit')).toContainText('Dono da Estante');
     });
 
@@ -29,7 +29,7 @@ test.describe('Biblioteca', () => {
       await library.goto();
       await library.search().fill('CLASSICO');
       await expect(library.count()).toHaveText('1 jogo encontrado');
-      await expect(library.card('Cartas Clássico')).toBeVisible();
+      await expect(library.card('Baralho Clássico')).toBeVisible();
       await library.search().fill('  dixit ');
       await expect(library.count()).toHaveText('1 jogo encontrado');
     });
