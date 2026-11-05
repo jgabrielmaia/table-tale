@@ -1,0 +1,50 @@
+name: Production deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  deploy:
+    name: deploy-production
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Confirm the commit came from a merged pull request
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const sha = context.payload.workflow_run.head_sha;
+            const { data: pulls } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner,
+              repo,
+              commit_sha: sha,
+            });
+            const merged = pulls.find((pull) => pull.base.ref === 'main' && pull.merged_at);
+            if (!merged) {
+              core.setFailed(`Commit ${sha} is not associated with a merged pull request into main.`);
+            }
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm install --global vercel@65.11.0
+      - name: Deploy to Vercel production
+        run: vercel deploy --prod --yes --scope jgabrielmaia1 --project table-tale
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
