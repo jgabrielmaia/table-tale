@@ -868,7 +868,9 @@ section + section > .medal-group { margin-top: 1.75rem; }
   .site-nav ul a::after { display: none; }
   .site-nav ul a[aria-current="page"] { background: rgba(231, 111, 60, .12); box-shadow: inset 3px 0 0 var(--laranja); }
   .auth-slot { justify-content: space-between; padding-top: 1rem; border-top: 1px solid var(--line); }
-  .auth-slot > .btn-gold { width: 100%; }
+  /* Keep the language toggle visible beside the auth action instead of letting
+     the button's 100% width push it outside the mobile menu. */
+  .auth-slot > .btn-gold { flex: 1 1 0; min-width: 0; width: auto; white-space: nowrap; }
   .auth-email { max-width: none; }
 
   .hero-inner { grid-template-columns: 1fr; gap: 2rem; }
