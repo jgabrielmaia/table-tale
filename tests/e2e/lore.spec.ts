@@ -57,7 +57,7 @@ test.describe('Lore: Arcanos & Elementais', () => {
       await new AppShell(page).openMenuIfCollapsed();
       await new AppShell(page).switchLanguage('EN');
       await expect(page.getByText('You do not choose your faction. Your card reveals where you belong.')).toBeVisible();
-      await expect(page.getByRole('heading', { name: 'The Arcanos believe that:' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'The Arcanists believe that:' })).toBeVisible();
       await expect(page.getByText('Knowledge is power.').first()).toBeVisible();
     });
   });

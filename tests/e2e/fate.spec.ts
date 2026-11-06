@@ -159,7 +159,7 @@ test.describe('O Sorteio do Destino', () => {
       await expect(page.getByText('You do not choose your destiny. The cards reveal it.')).toBeVisible();
       await page.getByRole('button', { name: 'Reveal card 1 of 9' }).click();
       await expect(page.getByRole('heading', { name: 'Temperance', level: 2 })).toBeVisible({ timeout: REVEAL_TIMEOUT });
-      await expect(page.getByText('You belong to the Arcanos')).toBeVisible();
+      await expect(page.getByText('You belong to the Arcanists')).toBeVisible();
     });
   });
 

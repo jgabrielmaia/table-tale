@@ -14,9 +14,11 @@ export function LoreTimeline({ steps, label }: { steps: LoreTimelineStep[]; labe
     <ol className="timeline" aria-label={label}>
       {steps.map((step) => (
         <li key={step.id} className="timeline-item">
-          <span className="timeline-marker"><BrandSymbol name={step.symbol} /></span>
           <div className="timeline-body">
-            <p className="timeline-era">{step.marker}</p>
+            <p className="timeline-era">
+              <span>{step.marker}</span>
+              <span className="timeline-marker" aria-hidden="true"><BrandSymbol name={step.symbol} /></span>
+            </p>
             <h3>{step.title}</h3>
             <p>{step.text}</p>
           </div>
