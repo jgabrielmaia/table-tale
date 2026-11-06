@@ -29,6 +29,12 @@ export const EVENT_DEFS = [
   { slug: 'noite-cooperativa', name: 'Noite Cooperativa', location: 'Braga · Sala C', event_date: '2099-11-21T20:00:00.000Z', description: 'Jogos cooperativos com equipas mistas.' },
 ];
 
+export const COMMUNITY_DEFS = [
+  { slug: 'table-tale', name: 'Table Tale Lisboa', visibility: 'public', city: 'Lisboa', district: 'Alvalade', country: 'Portugal' },
+  { slug: 'tabuleiros-do-porto', name: 'Tabuleiros do Porto', visibility: 'public', city: 'Porto', district: 'Boavista', country: 'Portugal' },
+  { slug: 'clube-secreto-braga', name: 'Clube Secreto de Braga', visibility: 'private', city: 'Braga', district: 'Centro', country: 'Portugal' },
+];
+
 export interface Db {
   profiles: Row[];
   games: Row[];
@@ -42,6 +48,9 @@ export interface Db {
   seasons: Row[];
   identities: Row[];
   factions: Row[];
+  communities: Row[];
+  memberships: Row[];
+  communityGames: Row[];
   counter: number;
 }
 
@@ -69,6 +78,14 @@ export function baseDb(): Db {
     seasons: [{ ...SEASON }],
     identities: [],
     factions: factions.map((f, i) => ({ id: uuid('5000', i + 1), slug: f.slug, name: f.name, description: f.description, symbol: f.symbol, color: f.color, lore: f.lore, created_at: CREATED })),
+    communities: COMMUNITY_DEFS.map((c, i) => ({ id: uuid('a000', i + 1), description: '', latitude: null, longitude: null, created_by: OWNER.id, created_at: CREATED, updated_at: CREATED, ...c })),
+    memberships: [
+      ...COMMUNITY_DEFS.map((_, i) => ({ id: uuid('a100', i + 1), user_id: OWNER.id, community_id: uuid('a000', i + 1), role: 'owner', status: 'active', joined_at: CREATED })),
+      { id: uuid('a100', 10), user_id: PLAYER.id, community_id: uuid('a000', 1), role: 'member', status: 'active', joined_at: CREATED },
+    ],
+    communityGames: [
+      { id: uuid('a200', 1), community_id: uuid('a000', 1), game_id: gameRows[0]!.id, added_by: OWNER.id, copies: 2, condition: 'good', notes: null, added_at: CREATED },
+    ],
     counter: 0,
   };
 }

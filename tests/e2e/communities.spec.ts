@@ -1,0 +1,188 @@
+import { expect, test, PLAYER } from '../fixtures';
+import { OWNER } from '../data/seed';
+
+const card = (page: import('@playwright/test').Page, name: string) =>
+  page.getByRole('listitem').filter({ has: page.getByRole('heading', { name, exact: true }) });
+
+test.describe('Comunidades', () => {
+  test('descoberta: lista, pesquisa por texto e filtra por cidade e bairro @smoke', async ({ page }) => {
+    await page.goto('communities');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Comunidades');
+    await expect(page.getByText('2 comunidades encontradas')).toBeVisible();
+    await expect(card(page, 'Table Tale Lisboa')).toContainText('Alvalade, Lisboa · Portugal');
+    // A comunidade privada não é visível a quem não pertence.
+    await expect(card(page, 'Clube Secreto de Braga')).toHaveCount(0);
+
+    await page.getByRole('searchbox', { name: 'Pesquisar' }).fill('boavista');
+    await expect(page.getByText('1 comunidade encontrada')).toBeVisible();
+    await expect(card(page, 'Tabuleiros do Porto')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Limpar filtros' }).first().click();
+    await page.getByLabel('Cidade').selectOption('Lisboa');
+    await expect(page.getByText('1 comunidade encontrada')).toBeVisible();
+    await expect(page.getByLabel('Bairro / distrito').locator('option')).toHaveText(['Todos os bairros', 'Alvalade']);
+    await page.getByLabel('Bairro / distrito').selectOption('Alvalade');
+    await expect(card(page, 'Table Tale Lisboa')).toBeVisible();
+  });
+
+  test('um visitante vê a comunidade pública mas é convidado a entrar para participar', async ({ page }) => {
+    await page.goto('communities/tabuleiros-do-porto');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tabuleiros do Porto');
+    await expect(page.getByRole('link', { name: 'Entrar para participar' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Membros' })).toBeVisible();
+  });
+
+  test.describe('jogador com sessão', () => {
+    test.beforeEach(async ({ signIn }) => {
+      await signIn();
+    });
+
+    test('cria uma comunidade com localização obrigatória e fica como dono', async ({ page, backend }) => {
+      await page.goto('communities/new');
+      await page.getByLabel('Nome', { exact: true }).fill('Dados e Tabuleiros');
+      await page.getByRole('button', { name: 'Criar' }).click();
+      await expect(page.getByText('Indica a cidade.')).toBeVisible();
+      await expect(page.getByText('Indica o bairro ou distrito.')).toBeVisible();
+      await expect(page.getByText('Indica o país.')).toBeVisible();
+
+      await page.getByLabel('Cidade').fill('Coimbra');
+      await page.getByLabel('Bairro / distrito').fill('Baixa');
+      await page.getByLabel('País').fill('Portugal');
+      await page.getByLabel('Latitude').fill('40.2');
+      await page.getByRole('button', { name: 'Criar' }).click();
+      await expect(page.getByText('Indica latitude e longitude em conjunto.')).toBeVisible();
+      await page.getByLabel('Longitude').fill('-8.4');
+      await page.getByRole('button', { name: 'Criar' }).click();
+
+      await expect(page).toHaveURL(/\/communities\/dados-e-tabuleiros-/);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Dados e Tabuleiros');
+      await expect(page.getByText('Dono', { exact: true }).first()).toBeVisible();
+      const created = backend.db.communities.find((c) => c.name === 'Dados e Tabuleiros')!;
+      expect(created).toMatchObject({ city: 'Coimbra', district: 'Baixa', country: 'Portugal', latitude: 40.2, longitude: -8.4, created_by: PLAYER.id });
+      expect(backend.db.memberships.find((m) => m.community_id === created.id)).toMatchObject({ user_id: PLAYER.id, role: 'owner', status: 'active' });
+    });
+
+    test('entra numa comunidade pública de imediato e pode sair', async ({ page, backend }) => {
+      await page.goto('communities/tabuleiros-do-porto');
+      await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+      await expect(page.getByText('Entraste na comunidade.')).toBeVisible();
+      expect(backend.db.memberships.find((m) => m.user_id === PLAYER.id && m.community_id.endsWith('a000-000000000002'))).toMatchObject({ role: 'member', status: 'active' });
+      await page.getByRole('button', { name: 'Sair da comunidade' }).click();
+      await expect(page.getByText('Saíste da comunidade.')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeVisible();
+    });
+
+    test('pertence a várias comunidades e vê-as no perfil, separadas da biblioteca pessoal', async ({ page }) => {
+      await page.goto('communities/tabuleiros-do-porto');
+      await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+      await expect(page.getByText('Entraste na comunidade.')).toBeVisible();
+      await page.goto('profile');
+      const mine = page.getByRole('region', { name: 'As minhas comunidades' });
+      await expect(mine.getByRole('link', { name: 'Table Tale Lisboa' })).toBeVisible();
+      await expect(mine.getByRole('link', { name: 'Tabuleiros do Porto' })).toBeVisible();
+      // A coleção pessoal não depende das comunidades.
+      await expect(page.getByText('Ainda não tens jogos na tua coleção.')).toBeVisible();
+    });
+
+    test('a biblioteca pessoal permite adicionar e remover jogos', async ({ page, backend }) => {
+      await page.goto('profile');
+      const lib = page.getByRole('region', { name: 'A minha biblioteca' });
+      await lib.getByLabel('Jogo').selectOption({ label: 'Dixit' });
+      await lib.getByRole('button', { name: 'Adicionar à coleção' }).click();
+      await expect(lib.getByRole('link', { name: 'Dixit' })).toBeVisible();
+      expect(backend.db.ownerships.filter((o) => o.user_id === PLAYER.id)).toHaveLength(1);
+      await lib.getByRole('button', { name: 'Remover Dixit da coleção' }).click();
+      await expect(lib.getByText('Ainda não tens jogos na tua coleção.')).toBeVisible();
+      expect(backend.db.ownerships.filter((o) => o.user_id === PLAYER.id)).toHaveLength(0);
+    });
+
+    test('um membro vê membros e biblioteca, mas não tem gestão', async ({ page }) => {
+      await page.goto('communities/table-tale');
+      await expect(page.getByRole('tab', { name: 'Gestão' })).toHaveCount(0);
+      await page.getByRole('tab', { name: 'Membros' }).click();
+      await expect(page.getByText('Dono da Estante')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Suspender' })).toHaveCount(0);
+      await page.getByRole('tab', { name: 'Biblioteca' }).click();
+      await expect(page.getByRole('link', { name: /Hitster|Dixit|Catan/ }).first()).toBeVisible();
+      await expect(page.getByLabel('Jogo')).toHaveCount(0);
+    });
+
+    test('comunidade privada: sem pertencer não existe; com pedido pendente só se vê o aviso', async ({ page, backend }) => {
+      await page.goto('communities/clube-secreto-braga');
+      await expect(page.getByText('Comunidade não encontrada.')).toBeVisible();
+
+      const community = backend.db.communities.find((c) => c.slug === 'clube-secreto-braga')!;
+      backend.db.memberships.push({ id: 'm-pending-me', user_id: PLAYER.id, community_id: community.id, role: 'member', status: 'pending', joined_at: '2026-01-03T10:00:00.000Z' });
+      await page.goto('communities/clube-secreto-braga');
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Clube Secreto de Braga');
+      await expect(page.getByText('Pedido pendente')).toBeVisible();
+      await expect(page.getByText('Esta comunidade é privada. Pede para entrar para ver os membros e a biblioteca.')).toBeVisible();
+      await expect(page.getByRole('tab')).toHaveCount(0);
+    });
+  });
+
+  test.describe('dono da comunidade', () => {
+    test.beforeEach(async ({ signIn, backend }) => {
+      // O jogador passa a ser dono de uma comunidade privada, com o dono original como membro.
+      const community = backend.db.communities.find((c) => c.slug === 'clube-secreto-braga')!;
+      backend.db.memberships = backend.db.memberships.filter((m) => m.community_id !== community.id);
+      backend.db.memberships.push(
+        { id: 'm-owner', user_id: PLAYER.id, community_id: community.id, role: 'owner', status: 'active', joined_at: '2026-01-01T10:00:00.000Z' },
+        { id: 'm-other', user_id: OWNER.id, community_id: community.id, role: 'member', status: 'active', joined_at: '2026-01-02T10:00:00.000Z' },
+      );
+      await signIn();
+    });
+
+    test('o último dono não pode sair; depois de transferir a propriedade pode', async ({ page, backend }) => {
+      await page.goto('communities/clube-secreto-braga');
+      await expect(page.getByRole('button', { name: 'Sair da comunidade' })).toBeDisabled();
+
+      await page.getByRole('tab', { name: 'Membros' }).click();
+      page.once('dialog', (d) => void d.accept());
+      await page.getByRole('button', { name: 'Transferir propriedade' }).click();
+      await expect(page.getByText('Propriedade transferida.')).toBeVisible();
+      expect(backend.db.memberships.find((m) => m.id === 'm-owner')?.role).toBe('admin');
+      expect(backend.db.memberships.find((m) => m.id === 'm-other')?.role).toBe('owner');
+
+      await expect(page.getByRole('button', { name: 'Sair da comunidade' })).toBeEnabled();
+      await page.getByRole('button', { name: 'Sair da comunidade' }).click();
+      await expect(page.getByText('Saíste da comunidade.')).toBeVisible();
+    });
+
+    test('aprova pedidos pendentes, altera papéis e suspende membros', async ({ page, backend }) => {
+      const cid = backend.db.communities.find((c) => c.slug === 'clube-secreto-braga')!.id;
+      backend.db.profiles.push({ id: 'p-new', display_name: 'Rita Nova', avatar_url: null, level: 1, experience_points: 0, faction_id: null, bio: null, created_at: '2026-01-01T10:00:00.000Z', updated_at: '2026-01-01T10:00:00.000Z' });
+      backend.db.memberships.push({ id: 'm-pending', user_id: 'p-new', community_id: cid, role: 'member', status: 'pending', joined_at: '2026-01-03T10:00:00.000Z' });
+
+      await page.goto('communities/clube-secreto-braga');
+      await page.getByRole('tab', { name: 'Membros' }).click();
+      const pending = page.getByRole('region', { name: 'Pendente' });
+      await pending.getByRole('button', { name: 'Aprovar' }).click();
+      await expect(page.getByText('Membro atualizado.').first()).toBeVisible();
+      expect(backend.db.memberships.find((m) => m.id === 'm-pending')?.status).toBe('active');
+
+      await page.getByLabel('Papel de Rita Nova').selectOption('moderator');
+      await expect.poll(() => backend.db.memberships.find((m) => m.id === 'm-pending')?.role).toBe('moderator');
+
+      await page.getByRole('listitem').filter({ hasText: 'Dono da Estante' }).getByRole('button', { name: 'Suspender' }).click();
+      await expect.poll(() => backend.db.memberships.find((m) => m.id === 'm-other')?.status).toBe('suspended');
+    });
+
+    test('o dono edita a localização e gere a biblioteca da comunidade', async ({ page, backend }) => {
+      await page.goto('communities/clube-secreto-braga');
+      await page.getByRole('tab', { name: 'Biblioteca' }).click();
+      await page.getByLabel('Jogo').selectOption({ label: 'Dixit' });
+      await page.getByRole('button', { name: 'Adicionar à biblioteca' }).click();
+      await expect(page.getByRole('link', { name: 'Dixit' })).toBeVisible();
+      expect(backend.db.communityGames.some((g) => g.added_by === PLAYER.id)).toBe(true);
+      await page.getByRole('button', { name: 'Remover Dixit' }).click();
+      await expect(page.getByRole('link', { name: 'Dixit' })).toHaveCount(0);
+
+      await page.getByRole('tab', { name: 'Gestão' }).click();
+      await page.getByLabel('Cidade').fill('Guimarães');
+      await page.getByRole('button', { name: 'Guardar' }).click();
+      await expect(page.getByText('Comunidade atualizada.')).toBeVisible();
+      expect(backend.db.communities.find((c) => c.slug === 'clube-secreto-braga')?.city).toBe('Guimarães');
+    });
+  });
+});

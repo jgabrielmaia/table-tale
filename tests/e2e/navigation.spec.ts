@@ -20,10 +20,10 @@ test.describe('Navigation e estrutura', () => {
     await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', /apple-touch-icon\.png$/);
   });
 
-  test('o menu segue a ordem Perfil, Biblioteca, Arcanos & Elementais, Eventos', async ({ page, isMobile }) => {
+  test('o menu segue a ordem Perfil, Biblioteca, Arcanos & Elementais, Eventos, Comunidades', async ({ page, isMobile }) => {
     test.skip(isMobile, 'O menu colapsado é coberto pelo teste responsivo.');
     await page.goto('');
-    expect(await new AppShell(page).navLabels()).toEqual(['Perfil', 'Biblioteca', 'Arcanos & Elementais', 'Eventos']);
+    expect(await new AppShell(page).navLabels()).toEqual(['Perfil', 'Biblioteca', 'Arcanos & Elementais', 'Eventos', 'Comunidades']);
   });
 
   test('cada entrada do menu leva à página certa e marca-se como atual', async ({ page, signIn, isMobile }) => {

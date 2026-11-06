@@ -35,6 +35,8 @@ test.describe('Acessibilidade', () => {
       ['detalhe do jogo', 'games/dixit'],
       ['lore', 'lore'],
       ['eventos', 'events'],
+      ['comunidades', 'communities'],
+      ['detalhe da comunidade', 'communities/table-tale'],
       ['entrar', 'login'],
       ['criar conta', 'register'],
       ['página não encontrada', 'nao-existe'],
@@ -71,7 +73,7 @@ test.describe('Acessibilidade', () => {
   });
 
   test('cada página pública tem exatamente um título principal', async ({ page }) => {
-    for (const path of ['', 'library', 'lore', 'events', 'login', 'games/uno']) {
+    for (const path of ['', 'library', 'lore', 'events', 'communities', 'communities/table-tale', 'login', 'games/uno']) {
       await page.goto(path);
       await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     }

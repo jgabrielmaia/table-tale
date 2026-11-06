@@ -20,6 +20,9 @@ const LorePage = lazy(() => import('@/features/lore/LorePage').then((m) => ({ de
 const ProfilePage = lazy(() => import('@/features/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })));
 const EventsPage = lazy(() => import('@/features/events/EventsPage').then((m) => ({ default: m.EventsPage })));
 const FateDrawPage = lazy(() => import('@/features/fate/FateDrawPage').then((m) => ({ default: m.FateDrawPage })));
+const CommunitiesPage = lazy(() => import('@/features/communities/CommunitiesPage').then((m) => ({ default: m.CommunitiesPage })));
+const NewCommunityPage = lazy(() => import('@/features/communities/NewCommunityPage').then((m) => ({ default: m.NewCommunityPage })));
+const CommunityPage = lazy(() => import('@/features/communities/CommunityPage').then((m) => ({ default: m.CommunityPage })));
 const ComponentsPage = lazy(() => import('@/features/docs/ComponentsPage').then((m) => ({ default: m.ComponentsPage })));
 
 export function AppRoutes() {
@@ -47,6 +50,9 @@ function ShellRoutes() {
           <Route path="/games/:slug" element={<GameDetailPage />} />
           <Route path="/lore" element={<LorePage />} />
           <Route path="/events" element={<EventsPage />} />
+          <Route path="/communities" element={<CommunitiesPage />} />
+          <Route path="/communities/new" element={<RequireAuth><NewCommunityPage /></RequireAuth>} />
+          <Route path="/communities/:slug" element={<CommunityPage />} />
           <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
           {import.meta.env.DEV && <Route path="/ui" element={<ComponentsPage />} />}
           <Route path="/biblioteca" element={<Navigate to="/library" replace />} />

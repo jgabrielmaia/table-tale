@@ -6,10 +6,10 @@ import type { Game, GameOwner, GameSession, GameStatus, GameUserState } from '@/
 
 const GAME_SELECT =
   'id,title,slug,description,cover_url,genre,min_players,max_players,duration_minutes,complexity,' +
-  'game_ownerships(user_id,copy_number,condition,profiles(id,display_name,avatar_url))';
+  'user_games(user_id,copy_number,condition,profiles(id,display_name,avatar_url))';
 
 type GameQueryRow = Omit<GameRow, 'created_at' | 'updated_at'> & {
-  game_ownerships: {
+  user_games: {
     user_id: string;
     copy_number: number;
     condition: OwnershipCondition;
@@ -19,7 +19,7 @@ type GameQueryRow = Omit<GameRow, 'created_at' | 'updated_at'> & {
 
 export function mapGame(row: GameQueryRow): Game {
   const owners = new Map<string, GameOwner>();
-  for (const o of row.game_ownerships ?? []) {
+  for (const o of row.user_games ?? []) {
     const existing = owners.get(o.user_id);
     if (existing) existing.copies += 1;
     else

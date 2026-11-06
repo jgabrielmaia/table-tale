@@ -241,7 +241,7 @@ export class FakeBackend {
   private filtered(rows: Row[], params: URLSearchParams) {
     let out = rows;
     for (const [key, value] of params) {
-      if (RESERVED.has(key)) continue;
+      if (RESERVED.has(key) || key.includes('.')) continue;
       const [op, ...rest] = value.split('.');
       const operand = rest.join('.');
       out = out.filter((r) => (op === 'eq' ? String(r[key]) === operand : op === 'neq' ? String(r[key]) !== operand : true));
@@ -274,13 +274,13 @@ export class FakeBackend {
     const db = this.db;
     const done = (row: Row | Row[], created = false): Result => representation ? this.rows(Array.isArray(row) ? row : [row], single) : { status: created ? 201 : 204 };
 
-    if (resource.startsWith('rpc/')) return this.rpc(resource.slice(4), uid);
+    if (resource.startsWith('rpc/')) return this.rpc(resource.slice(4), uid, body);
 
     switch (resource) {
       case 'games': {
         const rows = this.filtered(db.games, params).map((g) => ({
           ...g,
-          game_ownerships: db.ownerships.filter((o) => o.game_id === g.id).map((o) => {
+          user_games: db.ownerships.filter((o) => o.game_id === g.id).map((o) => {
             const owner = db.profiles.find((p) => p.id === o.user_id);
             return { user_id: o.user_id, copy_number: o.copy_number, condition: o.condition, profiles: owner ? { id: owner.id, display_name: owner.display_name, avatar_url: owner.avatar_url } : null };
           }),
@@ -353,6 +353,48 @@ export class FakeBackend {
         }
         break;
       }
+      case 'communities': return this.communities(method, params, body, uid, single, select, representation);
+      case 'community_memberships': return this.memberships(method, params, body, uid, single, select, representation);
+      case 'community_games': {
+        if (method === 'GET') {
+          const rows = this.filtered(db.communityGames.filter((g) => this.canReadCommunity(g.community_id, uid)), params).map((g) => ({
+            ...g, games: db.games.find((x) => x.id === g.game_id) ?? null,
+          }));
+          return this.rows(rows, single);
+        }
+        if (method === 'POST') {
+          const input = body as Row;
+          if (!this.hasRole(input.community_id, uid, ['owner', 'admin', 'moderator'])) return this.forbidden();
+          if (db.communityGames.some((g) => g.community_id === input.community_id && g.game_id === input.game_id)) return this.duplicate();
+          db.communityGames.push({ id: this.id('a200'), notes: null, condition: 'good', copies: 1, added_at: new Date().toISOString(), ...input });
+          return { status: 201 };
+        }
+        if (method === 'DELETE') {
+          const gone = this.filtered(db.communityGames, params);
+          if (gone.some((g) => !this.hasRole(g.community_id, uid, ['owner', 'admin', 'moderator']))) return this.forbidden();
+          db.communityGames = db.communityGames.filter((g) => !gone.includes(g));
+          return { status: 204 };
+        }
+        break;
+      }
+      case 'user_games': {
+        if (method === 'GET') {
+          const rows = this.filtered(db.ownerships.filter((o) => o.user_id === uid), params).map((o) => ({ ...o, games: db.games.find((x) => x.id === o.game_id) ?? null }));
+          return this.rows(rows, single);
+        }
+        if (method === 'POST') {
+          const input = body as Row;
+          if (input.user_id !== uid) return this.forbidden();
+          db.ownerships.push({ condition: 'good', ...input });
+          return { status: 201 };
+        }
+        if (method === 'DELETE') {
+          const gone = this.filtered(db.ownerships.filter((o) => o.user_id === uid), params);
+          db.ownerships = db.ownerships.filter((o) => !gone.includes(o));
+          return { status: 204 };
+        }
+        break;
+      }
       case 'achievements': return this.rows(this.filtered(db.achievements, params), single);
       case 'user_achievements': {
         const mine = this.filtered(db.userAchievements.filter((a) => a.user_id === uid), params);
@@ -362,12 +404,137 @@ export class FakeBackend {
     return { status: 404, body: { code: 'PGRST205', message: `Unhandled resource ${method} ${resource}`, details: null, hint: null } };
   }
 
+  // ---- communities (mirrors the RLS policies and tg_guard_membership) ------------------------------------------------
+
+  private static RANK: Record<string, number> = { owner: 4, admin: 3, moderator: 2, member: 1 };
+
+  private forbidden(): Result {
+    return { status: 403, body: { code: '42501', message: 'new row violates row-level security policy', details: null, hint: null } };
+  }
+
+  private duplicate(): Result {
+    return { status: 409, body: { code: '23505', message: 'duplicate key value violates unique constraint', details: null, hint: null } };
+  }
+
+  private roleOf(communityId: string, uid: string | null): string | null {
+    return this.db.memberships.find((m) => m.community_id === communityId && m.user_id === uid && m.status === 'active')?.role ?? null;
+  }
+
+  private hasRole(communityId: string, uid: string | null, roles: string[]) {
+    const role = this.roleOf(communityId, uid);
+    return role !== null && roles.includes(role);
+  }
+
+  private canReadCommunity(communityId: string, uid: string | null) {
+    const c = this.db.communities.find((x) => x.id === communityId);
+    return Boolean(c) && (c!.visibility === 'public' || this.roleOf(communityId, uid) !== null);
+  }
+
+  private communities(method: string, params: URLSearchParams, body: unknown, uid: string | null, single: boolean, select: string, representation: boolean): Result {
+    const db = this.db;
+    if (method === 'GET') {
+      const visible = db.communities.filter(
+        (c) => c.visibility === 'public' || db.memberships.some((m) => m.community_id === c.id && m.user_id === uid),
+      );
+      const rows = this.filtered(visible, params).map((c) =>
+        select.includes('community_memberships(count)')
+          ? { ...c, community_memberships: [{ count: db.memberships.filter((m) => m.community_id === c.id && m.status === 'active').length }] }
+          : c,
+      );
+      return this.rows(rows, single);
+    }
+    if (method === 'POST') {
+      const input = body as Row;
+      if (input.created_by !== uid) return this.forbidden();
+      if (db.communities.some((c) => c.slug === input.slug)) return this.duplicate();
+      const now = new Date().toISOString();
+      const row = { id: this.id('a000'), created_at: now, updated_at: now, ...input };
+      db.communities.push(row);
+      db.memberships.push({ id: this.id('a100'), user_id: uid, community_id: row.id, role: 'owner', status: 'active', joined_at: now });
+      return representation ? this.rows([row], single) : { status: 201 };
+    }
+    const targets = this.filtered(db.communities, params);
+    if (method === 'PATCH') {
+      if (targets.some((c) => !this.hasRole(c.id, uid, ['owner', 'admin']))) return this.forbidden();
+      for (const c of targets) Object.assign(c, body, { updated_at: new Date().toISOString() });
+      return { status: 204 };
+    }
+    if (method === 'DELETE') {
+      if (targets.some((c) => !this.hasRole(c.id, uid, ['owner']))) return this.forbidden();
+      const ids = new Set(targets.map((c) => c.id));
+      db.communities = db.communities.filter((c) => !ids.has(c.id));
+      db.memberships = db.memberships.filter((m) => !ids.has(m.community_id));
+      db.communityGames = db.communityGames.filter((g) => !ids.has(g.community_id));
+      return { status: 204 };
+    }
+    return this.forbidden();
+  }
+
+  private memberships(method: string, params: URLSearchParams, body: unknown, uid: string | null, single: boolean, select: string, representation: boolean): Result {
+    const db = this.db;
+    const rank = (r: string) => FakeBackend.RANK[r] ?? 0;
+    const managers = ['owner', 'admin', 'moderator'];
+    if (method === 'GET') {
+      const readable = db.memberships.filter(
+        (m) => m.user_id === uid
+          || this.hasRole(m.community_id, uid, managers)
+          || (m.status === 'active' && this.canReadCommunity(m.community_id, uid)),
+      );
+      const rows = this.filtered(readable, params).map((m) => {
+        if (!select.includes('profiles(')) return m;
+        const p = db.profiles.find((x) => x.id === m.user_id);
+        return { ...m, profiles: p ? { id: p.id, display_name: p.display_name, avatar_url: p.avatar_url } : null };
+      });
+      return this.rows(rows, single);
+    }
+    if (method === 'POST') {
+      const input = body as Row;
+      const community = db.communities.find((c) => c.id === input.community_id);
+      if (!community || input.user_id !== uid || input.role !== 'member') return this.forbidden();
+      if (db.memberships.some((m) => m.user_id === uid && m.community_id === community.id)) return this.duplicate();
+      const isPublic = community.visibility === 'public';
+      if (!((input.status === 'active' && isPublic) || (input.status === 'pending' && !isPublic))) return this.forbidden();
+      const row = { id: this.id('a100'), joined_at: new Date().toISOString(), ...input };
+      db.memberships.push(row);
+      return representation ? this.rows([row], single) : { status: 201 };
+    }
+    const targets = this.filtered(db.memberships, params);
+    const actorRank = (communityId: string) => rank(this.roleOf(communityId, uid) ?? '');
+    if (method === 'PATCH') {
+      const patch = body as Row;
+      for (const t of targets) {
+        const mine = actorRank(t.community_id);
+        const bad = mine < rank('moderator') || t.user_id === uid || rank(t.role) >= mine
+          || (patch.role !== undefined && patch.role !== t.role && (mine < rank('admin') || rank(patch.role) >= mine));
+        if (bad) return this.forbidden();
+      }
+      for (const t of targets) Object.assign(t, patch);
+      return { status: 204 };
+    }
+    if (method === 'DELETE') {
+      for (const t of targets) {
+        if (t.user_id === uid) {
+          if (t.status === 'suspended') return this.forbidden();
+          const others = db.memberships.some((m) => m.community_id === t.community_id && m.id !== t.id && m.role === 'owner' && m.status === 'active');
+          if (t.role === 'owner' && t.status === 'active' && !others) {
+            return { status: 400, body: { code: '23514', message: 'last_owner: transfer ownership before leaving', details: null, hint: null } };
+          }
+        } else if (actorRank(t.community_id) < rank('moderator') || rank(t.role) >= actorRank(t.community_id)) {
+          return this.forbidden();
+        }
+      }
+      db.memberships = db.memberships.filter((m) => !targets.includes(m));
+      return { status: 204 };
+    }
+    return this.forbidden();
+  }
+
   private gameBrief(gameId: string) {
     const g = this.db.games.find((x) => x.id === gameId);
     return g ? { title: g.title, slug: g.slug } : null;
   }
 
-  private rpc(name: string, uid: string | null): Result {
+  private rpc(name: string, uid: string | null, body?: unknown): Result {
     const db = this.db;
     if (!uid) return { status: 401, body: { code: '28000', message: 'not authenticated', details: null, hint: null } };
     if (name === 'my_profile_stats') {
@@ -386,6 +553,15 @@ export class FakeBackend {
         this.recompute(uid);
       }
       return { status: 200, body: [{ r_season_id: row.season_id, r_card_id: row.card_id, r_faction: row.faction, r_selected_at: row.selected_at, r_is_active: row.is_active, r_already_drawn: already }] };
+    }
+    if (name === 'transfer_community_ownership') {
+      const { p_community, p_new_owner } = (body ?? {}) as { p_community: string; p_new_owner: string };
+      const me = db.memberships.find((m) => m.community_id === p_community && m.user_id === uid && m.role === 'owner' && m.status === 'active');
+      const target = db.memberships.find((m) => m.community_id === p_community && m.user_id === p_new_owner && m.status === 'active');
+      if (!me || !target || p_new_owner === uid) return this.forbidden();
+      target.role = 'owner';
+      me.role = 'admin';
+      return { status: 204 };
     }
     if (name === 'dev_reset_my_card') {
       db.identities = db.identities.filter((i) => i.player_id !== uid);
