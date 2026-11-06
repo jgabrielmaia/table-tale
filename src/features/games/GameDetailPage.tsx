@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { GameCover, coverAccent } from '@/components/games/GameCover';
 import { GameGrid } from '@/components/games/GameGrid';
 import { GameSessionForm } from '@/components/games/GameSessionForm';
+import { GameTimer, type TimedSession } from '@/components/games/GameTimer';
 import { statusOptions } from '@/components/games/GameStatusBadge';
 import { Badge, BrandSymbol, Button, Card, EmptyState, ErrorState, Icon, LoadingState, useToast } from '@/components/ui';
 import { PlayerAvatar } from '@/components/identity/PlayerAvatar';
@@ -51,6 +52,7 @@ export function GameDetailPage() {
   const related = relatedGames(game, allGames);
   const copies = game.owners.reduce((sum, o) => sum + o.copies, 0);
   const style = { '--accent': coverAccent(game.slug, game.genre) } as CSSProperties;
+  const timeFormatter = new Intl.DateTimeFormat(getLang() === 'pt' ? 'pt-PT' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
 
   const setStatus = (status: GameStatus) =>
     updateState.mutate(
@@ -82,6 +84,23 @@ export function GameDetailPage() {
   const submitSession = async (values: SessionFormValues) => {
     try {
       await create.mutateAsync({ gameId: game.id, ...values });
+      if (game.status === 'unplayed') updateState.mutate({ gameId: game.id, status: 'in_progress' });
+      notify(t('game.sessionSaved'));
+    } catch (e) {
+      notify(errorMessage(e), { tone: 'error' });
+      throw e;
+    }
+  };
+
+  const submitTimedSession = async ({ startedAt, endedAt, durationMinutes }: TimedSession) => {
+    try {
+      await create.mutateAsync({
+        gameId: game.id,
+        playedAt: new Date(startedAt).toLocaleDateString('sv-SE'),
+        startedAt,
+        endedAt,
+        durationMinutes,
+      });
       if (game.status === 'unplayed') updateState.mutate({ gameId: game.id, status: 'in_progress' });
       notify(t('game.sessionSaved'));
     } catch (e) {
@@ -150,6 +169,7 @@ export function GameDetailPage() {
                       {game.isFavorite ? t('game.inFavorites') : t('game.addFavorites')}
                     </Button>
                   </div>
+                  <GameTimer userId={user.id} gameId={game.id} onComplete={submitTimedSession} />
                 </>
               ) : (
                 <LoginRequiredNotice message={t('game.loginNotice')} />
@@ -173,6 +193,12 @@ export function GameDetailPage() {
                   {sessions.map((s) => (
                     <li key={s.id} className="session-item">
                       <div className="session-date"><Icon name="calendar" /><time dateTime={s.playedAt}>{formatDate(s.playedAt)}</time></div>
+                      {s.startedAt && s.endedAt && (
+                        <p className="session-times">
+                          <time dateTime={s.startedAt}>{t('game.startedAt', { time: timeFormatter.format(new Date(s.startedAt)) })}</time>
+                          <time dateTime={s.endedAt}>{t('game.endedAt', { time: timeFormatter.format(new Date(s.endedAt)) })}</time>
+                        </p>
+                      )}
                       <p className="session-people">
                         {s.playersCount && <><Icon name="users" />{tn('common.players', s.playersCount)}</>}
                         {s.durationMinutes && <><Icon name="clock" />{t('common.minutes', { n: s.durationMinutes })}</>}

@@ -56,3 +56,20 @@ Produção: Site URL `https://jgabrielmaia.com/table-tale` e `VITE_SITE_URL` def
 ## Associação do dono da coleção
 
 O seed guarda `OWNER_EMAIL` na configuração privada; quando o e-mail autenticado coincide, o trigger associa o inventário e a facção inicial ao perfil sem fixar um UUID no código. `SUPABASE_SERVICE_ROLE_KEY` é exclusivamente para scripts de administração/seed e não pode ser publicada.
+
+## Local auth bypass (apenas desenvolvimento)
+
+Para evitar o login OAuth em `npm run dev`, defina em `.env`:
+
+```
+VITE_LOCAL_AUTH_BYPASS=true
+VITE_LOCAL_AUTH_BYPASS_EMAIL=dev@example.com
+VITE_LOCAL_AUTH_BYPASS_PASSWORD=<password da conta de dev>
+```
+
+- Crie antes a conta de dev (Supabase > Authentication > Users > Add user, com password). Use um projeto de desenvolvimento.
+- Só ativa com `import.meta.env.DEV` (dev server) **e** hostname `localhost`/`127.0.0.1`/`[::1]`; builds de produção removem o código e as credenciais. Não depende de headers nem query params.
+- A sessão é um JWT Supabase real, por isso RLS e permissões funcionam como em produção; roles/permissões/claims são os da conta de dev na base de dados.
+- Se o sign-in falhar, a app volta ao fluxo normal. Terminar sessão não volta a iniciar sessão até recarregar a página.
+- Com `VITE_LOCAL_AUTH_BYPASS=false` (ou omitido) o fluxo original mantém-se.
+- Para remover: apagar `src/features/auth/localBypass.ts` e o bloco correspondente em `AuthProvider.tsx`.

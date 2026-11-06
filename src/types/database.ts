@@ -82,6 +82,8 @@ export interface GameSessionRow {
   game_id: string;
   user_id: string;
   played_at: string;
+  started_at: string | null;
+  ended_at: string | null;
   duration_minutes: number | null;
   players_count: number | null;
   rating: number | null;

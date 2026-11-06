@@ -22,7 +22,18 @@ test.describe('O Sorteio do Destino', () => {
       await expect(page.getByRole('heading', { level: 1, name: 'O Sorteio do Destino' })).toBeVisible();
       await expect(page.getByText('«Nove cartas. Duas facções. Um destino.»')).toBeVisible();
       await expect(fate.start()).toBeVisible();
+      await expect(fate.skip()).toBeVisible();
       await expect(page.getByText(/Escolhe a tua (carta|facção)|Confia no teu instinto/)).toHaveCount(0);
+    });
+
+    test('permite saltar o sorteio por agora e iniciá-lo mais tarde no perfil', async ({ page, backend }) => {
+      const fate = new FatePage(page);
+      await fate.goto();
+      await fate.skip().click();
+
+      await expect(page).toHaveURL(/\/profile$/);
+      await expect(page.getByRole('link', { name: 'Descobre o teu destino' })).toBeVisible();
+      expect(backend.calls(/POST \/rest\/v1\/rpc\/draw_fate_card/)).toHaveLength(0);
     });
 
     test('mostra nove cartas viradas e a frase "Não escolhes o teu destino"', async ({ page }) => {
@@ -148,7 +159,7 @@ test.describe('O Sorteio do Destino', () => {
       await expect(page.getByText('You do not choose your destiny. The cards reveal it.')).toBeVisible();
       await page.getByRole('button', { name: 'Reveal card 1 of 9' }).click();
       await expect(page.getByRole('heading', { name: 'Temperance', level: 2 })).toBeVisible({ timeout: REVEAL_TIMEOUT });
-      await expect(page.getByText('You belong to the Arcanos')).toBeVisible();
+      await expect(page.getByText('You belong to the Arcanists')).toBeVisible();
     });
   });
 

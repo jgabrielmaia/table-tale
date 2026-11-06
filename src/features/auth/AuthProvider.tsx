@@ -1,9 +1,10 @@
-import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { useQueryClient } from '@tanstack/react-query';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import * as authApi from './api';
 import type { OAuthProvider } from './providers';
+import { resolveLocalBypass } from './localBypass';
 
 export interface AuthContextValue {
   session: Session | null;
@@ -23,12 +24,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(isSupabaseConfigured);
 
+  // One automatic dev sign-in per page load; an explicit sign-out must not log straight back in.
+  const bypassAttempted = useRef(false);
+
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     let active = true;
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (!active) return;
-      setSession(data.session);
+      let current = data.session;
+      const bypass = current || bypassAttempted.current ? null : resolveLocalBypass();
+      if (bypass) {
+        bypassAttempted.current = true;
+        console.info('[auth] LocalAuthBypass active: signing in the local dev account (development + localhost only).');
+        const result = await supabase.auth.signInWithPassword(bypass);
+        if (result.error) console.warn('[auth] LocalAuthBypass sign-in failed; falling back to the normal login flow.', result.error.message);
+        else current = result.data.session;
+        if (!active) return;
+      }
+      setSession(current);
       setIsLoading(false);
     });
     const { data } = supabase.auth.onAuthStateChange((event, next) => {
@@ -46,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   const signOut = useCallback(async () => {
+    bypassAttempted.current = true;
     await authApi.signOut();
     queryClient.clear();
   }, [queryClient]);

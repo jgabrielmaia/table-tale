@@ -8,11 +8,11 @@ test.describe('Lore: Arcanos & Elementais', () => {
     test('explica o princípio central, as duas facções e que nenhuma é superior @smoke', async ({ page }) => {
       await page.goto('lore');
       await expect(page.getByRole('heading', { level: 1 })).toHaveText('Arcanos & Elementais');
-      await expect(page.getByText('Não escolhes a tua facção. A tua carta revela onde pertences.')).toBeVisible();
-      await expect(page.getByText('As cartas decidem o teu destino.')).toBeVisible();
+      await expect(page.getByText('Tu não escolhes. És escolhido.')).toBeVisible();
+      await expect(page.getByText('Nove cartas. Uma é tua.')).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Os Arcanos', level: 2 })).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Os Elementais', level: 2 })).toBeVisible();
-      await expect(page.getByText('Nenhuma facção é superior, boa ou má por natureza')).toBeVisible();
+      await expect(page.getByText('Nenhum lado é o vilão. Ambos são necessários.')).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Os Arcanos acreditam que:' })).toBeVisible();
       await expect(page.getByRole('img', { name: 'Duas filosofias, um mundo' })).toBeVisible();
     });
@@ -39,8 +39,8 @@ test.describe('Lore: Arcanos & Elementais', () => {
     test('a tabela de tensão tem cabeçalhos e uma linha por questão', async ({ page }) => {
       await page.goto('lore');
       const rows = page.getByRole('table').getByRole('row');
-      await expect(rows).toHaveCount(7);
-      await expect(page.getByRole('rowheader', { name: 'Onde nasce o poder?' })).toBeVisible();
+      await expect(rows).toHaveCount(5);
+      await expect(page.getByRole('rowheader', { name: 'O que faz o mundo avançar?' })).toBeVisible();
     });
 
     test('mostra erro e recupera quando as facções não carregam', async ({ page, backend }) => {
@@ -56,8 +56,8 @@ test.describe('Lore: Arcanos & Elementais', () => {
       await page.goto('lore');
       await new AppShell(page).openMenuIfCollapsed();
       await new AppShell(page).switchLanguage('EN');
-      await expect(page.getByText('You do not choose your faction. Your card reveals where you belong.')).toBeVisible();
-      await expect(page.getByRole('heading', { name: 'The Arcanos believe that:' })).toBeVisible();
+      await expect(page.getByText("You don't choose. You're chosen.")).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'The Arcanists believe that:' })).toBeVisible();
       await expect(page.getByText('Knowledge is power.').first()).toBeVisible();
     });
   });

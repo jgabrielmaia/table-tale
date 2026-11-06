@@ -4,6 +4,7 @@ export class FatePage {
   constructor(readonly page: Page) {}
 
   readonly start = () => this.page.getByRole('button', { name: 'Descobre o teu destino' });
+  readonly skip = () => this.page.getByRole('button', { name: 'Saltar por agora' });
   readonly deck = () => this.page.getByRole('group', { name: 'Nove cartas viradas para baixo' });
   readonly cards = () => this.deck().getByRole('button');
   readonly continue = () => this.page.getByRole('button', { name: 'Continuar' });

@@ -21,7 +21,7 @@ export const PAGES: readonly PageSeo[] = [
     title: { pt: 'Table Tale – Biblioteca de jogos de tabuleiro e comunidade', en: 'Table Tale – Board Game Library, Stories and Community' },
     description: {
       pt: 'Explora a biblioteca viva de jogos de tabuleiro da Table Tale, regista as tuas sessões e descobre o universo dos Arcanos e Elementais.',
-      en: 'Explore the living board game library of Table Tale, log your game sessions and discover the universe of the Arcanos and the Elementais.',
+      en: 'Explore the living board game library of Table Tale, log your game sessions and discover the universe of the Arcanists and the Elementals.',
     },
   },
   {
@@ -36,10 +36,10 @@ export const PAGES: readonly PageSeo[] = [
   {
     path: '/lore',
     index: true,
-    title: { pt: 'Lore – Arcanos e Elementais, o universo | Table Tale', en: 'Lore – Arcanos and Elementais Universe | Table Tale' },
+    title: { pt: 'Lore – Arcanos e Elementais, o universo | Table Tale', en: 'Lore – Arcanists and Elementals Universe | Table Tale' },
     description: {
       pt: 'Conhece o universo da Table Tale: as facções Arcanos e Elementais, as nove cartas do Sorteio do Destino e a filosofia de cada uma.',
-      en: 'Discover the Table Tale universe: the Arcanos and Elementais factions, the nine cards of the Fate Draw and the philosophy behind each of them.',
+      en: 'Discover the Table Tale universe: the Arcanists and Elementals factions, the nine cards of the Fate Draw and the philosophy behind each of them.',
     },
   },
   { path: '/events', index: false, title: { pt: 'Eventos | Table Tale', en: 'Events | Table Tale' }, description: { pt: 'Eventos da comunidade Table Tale.', en: 'Table Tale community events.' } },

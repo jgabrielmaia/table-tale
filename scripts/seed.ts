@@ -6,7 +6,6 @@
  */
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
-import { coverSvg } from '../src/lib/cover';
 import * as data from './seed-data';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -43,22 +42,15 @@ async function main() {
   ));
   console.log(`✓ ${data.arcanas.length} Arcanos, ${data.elementals.length} Elementais`);
 
-  // Capas no Supabase Storage + jogos
+  // Arte de editora por URL quando disponível; o cliente gera a capa de marca quando faltar.
   const games = [];
   for (const g of data.games) {
-    const svg = coverSvg({ slug: g.slug, title: g.title, tone: g.cover.tone, symbol: g.cover.symbol });
-    const path = `${g.slug}.svg`;
-    check(`cover ${g.slug}`, await db.storage.from('game-covers').upload(path, new Blob([svg], { type: 'image/svg+xml' }), {
-      upsert: true,
-      contentType: 'image/svg+xml',
-      cacheControl: '86400',
-    }));
-    const { data: pub } = db.storage.from('game-covers').getPublicUrl(path);
+    const coverUrl = g.cover.imageUrl ?? null;
     const { cover: _cover, copies: _copies, ...row } = g;
-    games.push({ ...row, cover_url: pub.publicUrl });
+    games.push({ ...row, cover_url: coverUrl });
   }
   check('games', await db.from('games').upsert(games, { onConflict: 'slug' }));
-  console.log(`✓ ${games.length} jogos (com capas no storage)`);
+  console.log(`✓ ${games.length} jogos (com capas)`);
 
   check('achievements', await db.from('achievements').upsert(data.achievements, { onConflict: 'slug' }));
   if (data.events.length) check('events', await db.from('events').upsert(data.events, { onConflict: 'slug' }));

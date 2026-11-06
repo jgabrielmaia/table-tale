@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { COVER_TONES, coverSvg, gameStyle, svgToDataUri } from '@/lib/cover';
 import { t } from '@/i18n';
 import { cn } from '@/lib/format';
@@ -17,16 +17,20 @@ export function GameCover({ slug, title, genre, coverUrl, className, loading = '
   const [failed, setFailed] = useState(false);
   const style = gameStyle(slug, genre);
   const fallback = useMemo(() => svgToDataUri(coverSvg({ slug, title, tone: style.tone, symbol: style.symbol })), [slug, title, style.tone, style.symbol]);
-  const src = coverUrl && !failed ? coverUrl : fallback;
+  const hasArtwork = Boolean(coverUrl && !failed);
+  const src = hasArtwork ? coverUrl! : fallback;
+
+  useEffect(() => setFailed(false), [coverUrl]);
+
   return (
     <img
       src={src}
-      alt={t('cover.alt', { title, tone: t(`tone.${style.tone}`) })}
+      alt={hasArtwork ? t('cover.productAlt', { title }) : t('cover.alt', { title, tone: t(`tone.${style.tone}`) })}
       width={600}
       height={400}
       loading={loading}
       decoding="async"
-      className={cn(className)}
+      className={cn(className, hasArtwork && 'game-cover-real')}
       onError={() => setFailed(true)}
     />
   );

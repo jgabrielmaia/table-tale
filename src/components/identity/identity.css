@@ -36,14 +36,6 @@
 .idf[data-card='fire'] .idf__plate { clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%); padding-inline: 1em; }
 .idf[data-card='air'] .idf__plate { border-radius: 2px; outline: 1px solid color-mix(in srgb, var(--a) 55%, transparent); outline-offset: 2px; }
 
-.idf__tip {
-  position: absolute; left: 50%; bottom: 100%; z-index: 20; translate: -50% 0; padding: 0.3em 0.7em; border-radius: 4px;
-  font: 600 11px/1.2 var(--font-display, serif); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;
-  color: #fff; background: #07080e; border: 1px solid var(--a); box-shadow: 0 0 12px color-mix(in srgb, var(--a) 40%, transparent);
-  opacity: 0; pointer-events: none; transition: opacity 0.2s;
-}
-.idf:hover .idf__tip, .idf[data-open] .idf__tip { opacity: 1; }
-
 .idf__motion { transform-origin: 0 0; }
 .idf__motion--spin { animation: idf-spin 28s linear infinite; }
 .idf__motion--flow { animation: idf-spin 36s linear infinite; }
