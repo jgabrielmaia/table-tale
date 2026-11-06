@@ -89,8 +89,6 @@ export const contentPt: Content = {
     arcanos: { motto: 'O conhecimento é poder.' },
     elementais: { motto: 'A força é poder.' },
   },
-  genres: {},
-  complexities: {},
   games: {},
   events: {},
   achievements: {},

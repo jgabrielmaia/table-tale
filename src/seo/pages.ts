@@ -29,8 +29,8 @@ export const PAGES: readonly PageSeo[] = [
     index: true,
     title: { pt: 'Biblioteca – Jogos de tabuleiro da comunidade | Table Tale', en: 'Library – Community Board Game Collection | Table Tale' },
     description: {
-      pt: 'Consulta a coleção de jogos de tabuleiro e de cartas da Table Tale: filtra por género e complexidade, vê jogadores e duração e guarda os teus favoritos.',
-      en: 'Browse the Table Tale collection of board and card games: filter by genre and complexity, check players and duration and save your favourites.',
+      pt: 'Consulta a coleção de jogos de tabuleiro e de cartas da Table Tale: filtra por categoria e mecânica do BoardGameGeek, vê jogadores e duração e guarda favoritos.',
+      en: 'Browse the Table Tale collection of board and card games: filter by BoardGameGeek category and mechanic, check players and duration, save favourites.',
     },
   },
   {
@@ -66,23 +66,27 @@ export function truncate(text: string, max: number): string {
 
 export interface GameSeoInput {
   title: string;
-  genre: string;
-  minPlayers: number;
-  maxPlayers: number;
-  durationMinutes: number;
-  complexity: string;
+  categories: string[];
+  minPlayers: number | null;
+  maxPlayers: number | null;
+  durationMinutes: number | null;
   description: string;
 }
 
 export function gameSeo(g: GameSeoInput, lang: SeoLang): { title: string; description: string } {
-  const range = g.minPlayers === g.maxPlayers ? `${g.minPlayers}` : `${g.minPlayers}–${g.maxPlayers}`;
-  const facts = lang === 'pt'
-    ? `${g.title} (${g.genre}): ${range} jogadores, ${g.durationMinutes} min, dificuldade ${g.complexity.toLowerCase()}.`
-    : `${g.title} (${g.genre}): ${range} players, ${g.durationMinutes} min, ${g.complexity.toLowerCase()} complexity.`;
-  const full = lang === 'pt' ? `${g.title} – Jogadores, duração e dificuldade | ${SITE_NAME}` : `${g.title} – Players, length and complexity | ${SITE_NAME}`;
-  const short = lang === 'pt' ? `${g.title} – Jogadores e duração | ${SITE_NAME}` : `${g.title} – Players and length | ${SITE_NAME}`;
+  const lo = g.minPlayers ?? g.maxPlayers;
+  const hi = g.maxPlayers ?? g.minPlayers;
+  const range = lo === null || hi === null ? null : lo === hi ? `${lo}` : `${lo}–${hi}`;
+  const pt = lang === 'pt';
+  const parts = [
+    range && (pt ? `${range} jogadores` : `${range} players`),
+    g.durationMinutes !== null && `${g.durationMinutes} min`,
+  ].filter(Boolean);
+  const category = g.categories[0] ? ` (${g.categories[0]})` : '';
+  const facts = parts.length ? `${g.title}${category}: ${parts.join(', ')}.` : `${g.title}${category}.`;
+  const title = lang === 'pt' ? `${g.title} – Jogadores e duração | ${SITE_NAME}` : `${g.title} – Players and length | ${SITE_NAME}`;
   return {
-    title: full.length <= 60 ? full : short,
+    title,
     description: truncate(`${facts} ${g.description}`, 160),
   };
 }

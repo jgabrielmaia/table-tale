@@ -5,19 +5,19 @@ import { GameGrid } from '@/components/games/GameGrid';
 import { GameSessionForm } from '@/components/games/GameSessionForm';
 import { GameTimer, type TimedSession } from '@/components/games/GameTimer';
 import { statusOptions } from '@/components/games/GameStatusBadge';
-import { Badge, BrandSymbol, Button, Card, EmptyState, ErrorState, Icon, LoadingState, useToast } from '@/components/ui';
+import { BggFacts } from '@/components/bgg/BggFacts';
+import { Button, Card, EmptyState, ErrorState, Icon, LoadingState, useToast } from '@/components/ui';
 import { PlayerAvatar } from '@/components/identity/PlayerAvatar';
 import { LoginRequiredNotice } from '@/features/auth/LoginPage';
 import { useAuth } from '@/hooks/useAuth';
 import { useGame } from '@/hooks/useGame';
 import { useGameSessions } from '@/hooks/useGameSessions';
 import { useUpdateGameState } from '@/hooks/useGames';
-import { complexityLabel, genreLabel, getLang, localizeGame, useI18n } from '@/i18n';
+import { getLang, localizeGame, useI18n } from '@/i18n';
 import { gameSeo, NOT_FOUND_SEO } from '@/seo/pages';
 import { usePageSeo } from '@/seo/RouteSeo';
-import { gameStyle } from '@/lib/cover';
 import { errorMessage } from '@/lib/errors';
-import { statusLabel, formatDate, playersLabel, todayIso } from '@/lib/format';
+import { statusLabel, formatDate, minutesText, playersText, todayIso } from '@/lib/format';
 import type { GameStatus } from '@/types/domain';
 import { relatedGames } from './filters';
 import type { SessionFormValues } from './schemas';
@@ -31,7 +31,7 @@ export function GameDetailPage() {
   const lang = getLang();
   usePageSeo(game
     ? {
-        ...gameSeo({ title: game.title, genre: genreLabel(game.genre), minPlayers: game.minPlayers, maxPlayers: game.maxPlayers, durationMinutes: game.durationMinutes, complexity: complexityLabel(game.complexity), description: game.description }, lang),
+        ...gameSeo({ title: game.title, categories: game.categories, minPlayers: game.minPlayers, maxPlayers: game.maxPlayers, durationMinutes: game.durationMinutes, description: game.description }, lang),
         path: `/games/${game.slug}`,
       }
     : { title: NOT_FOUND_SEO.title[lang], description: NOT_FOUND_SEO.description[lang], path: `/games/${slug}`, noindex: !isLoading });
@@ -51,7 +51,7 @@ export function GameDetailPage() {
 
   const related = relatedGames(game, allGames);
   const copies = game.owners.reduce((sum, o) => sum + o.copies, 0);
-  const style = { '--accent': coverAccent(game.slug, game.genre) } as CSSProperties;
+  const style = { '--accent': coverAccent(game.slug) } as CSSProperties;
   const timeFormatter = new Intl.DateTimeFormat(getLang() === 'pt' ? 'pt-PT' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
 
   const setStatus = (status: GameStatus) =>
@@ -71,7 +71,7 @@ export function GameDetailPage() {
 
   const markPlayedToday = () =>
     create.mutate(
-      { gameId: game.id, playedAt: todayIso(), durationMinutes: game.durationMinutes },
+      { gameId: game.id, playedAt: todayIso(), durationMinutes: game.durationMinutes ?? undefined },
       {
         onSuccess: () => {
           if (game.status === 'unplayed') updateState.mutate({ gameId: game.id, status: 'in_progress' });
@@ -116,19 +116,15 @@ export function GameDetailPage() {
           <Link className="back-link" to="/library"><Icon name="back" />{t('common.backToLibrary')}</Link>
           <article className="detail-grid" aria-labelledby="game-title">
             <figure className="detail-media">
-              <GameCover slug={game.slug} title={game.title} genre={game.genre} coverUrl={game.coverUrl} loading="eager" />
-              <figcaption>
-                <Badge tone="accent" color={coverAccent(game.slug, game.genre)} icon={<BrandSymbol name={gameStyle(game.slug, game.genre).symbol} />}>{genreLabel(game.genre)}</Badge>
-              </figcaption>
+              <GameCover slug={game.slug} title={game.title} coverUrl={game.coverUrl} loading="eager" />
             </figure>
             <div className="detail-info">
-              <p className="eyebrow">{genreLabel(game.genre)} · {complexityLabel(game.complexity)}</p>
+              {game.categories.length > 0 && <p className="eyebrow">{game.categories.slice(0, 3).join(' · ')}</p>}
               <h1 id="game-title">{game.title}</h1>
-              <p className="lead">{game.description}</p>
+              <p className="lead bgg-description">{game.description}</p>
               <dl className="facts">
-                <div><dt>{t('game.players')}</dt><dd>{playersLabel(game.minPlayers, game.maxPlayers)}</dd></div>
-                <div><dt>{t('game.avgDuration')}</dt><dd>{t('common.minutesApprox', { n: game.durationMinutes })}</dd></div>
-                <div><dt>{t('game.complexity')}</dt><dd>{complexityLabel(game.complexity)}</dd></div>
+                <div><dt>{t('game.players')}</dt><dd>{playersText(game.minPlayers, game.maxPlayers)}</dd></div>
+                <div><dt>{t('game.avgDuration')}</dt><dd>{minutesText(game.durationMinutes)}</dd></div>
                 <div>
                   <dt>{t('game.owner')}</dt>
                   <dd>
@@ -179,11 +175,17 @@ export function GameDetailPage() {
         </div>
       </div>
 
+      {game.bgg && (
+        <div className="container section detail-bgg">
+          <BggFacts thing={game.bgg} headingLevel={2} />
+        </div>
+      )}
+
       <div className="container section detail-lower">
         <Card className="sessions" title={t('game.diaryTitle')} titleId="sessions-title" description={t('game.diaryDesc')}>
           {user ? (
             <>
-              <GameSessionForm defaultDuration={game.durationMinutes} onSubmit={submitSession} />
+              <GameSessionForm defaultDuration={game.durationMinutes ?? undefined} onSubmit={submitSession} />
               {sessionsQuery.isLoading ? (
                 <LoadingState variant="lines" count={4} label={t('game.loadingSessions')} />
               ) : sessionsQuery.isError ? (

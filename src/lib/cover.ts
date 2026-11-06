@@ -10,18 +10,6 @@ export const COVER_TONES: Record<CoverTone, { name: string; from: string; to: st
   steel: { name: 'cinza frio', from: '#3b4f5c', to: '#0B1E2D', accent: '#8CA3B0' },
 };
 
-const GENRE_STYLE: Record<string, { tone: CoverTone; symbol: SymbolName }> = {
-  'Música': { tone: 'dusk', symbol: 'music' },
-  'Cartas': { tone: 'ember', symbol: 'cards' },
-  'Cooperativo': { tone: 'petrol', symbol: 'wave' },
-  'Festa': { tone: 'moss', symbol: 'palette' },
-  'Narrativo': { tone: 'dusk', symbol: 'star' },
-  'Blefe': { tone: 'ember', symbol: 'crown' },
-  'Estratégia': { tone: 'moss', symbol: 'mountain' },
-  'Duelo': { tone: 'steel', symbol: 'shield' },
-  'Clássico': { tone: 'steel', symbol: 'cards' },
-};
-
 const TONE_KEYS = Object.keys(COVER_TONES) as CoverTone[];
 
 export function hashString(value: string): number {
@@ -30,10 +18,8 @@ export function hashString(value: string): number {
   return h;
 }
 
-/** Visual style for a game, derived from its genre (falls back to a stable hash). */
-export function gameStyle(slug: string, genre: string): { tone: CoverTone; symbol: SymbolName } {
-  const known = GENRE_STYLE[genre];
-  if (known) return known;
+/** Visual style for a game, derived from a stable hash of its slug. */
+export function gameStyle(slug: string): { tone: CoverTone; symbol: SymbolName } {
   const h = hashString(slug);
   const symbols = Object.keys(SYMBOLS) as SymbolName[];
   return { tone: TONE_KEYS[h % TONE_KEYS.length] ?? 'petrol', symbol: symbols[h % symbols.length] ?? 'dice' };

@@ -56,8 +56,10 @@ export interface Db {
 
 export function baseDb(): Db {
   const gameRows = games.map((g, i) => ({
-    id: uuid('8000', i + 1), title: g.title, slug: g.slug, description: g.description, cover_url: null, genre: g.genre,
-    min_players: g.min_players, max_players: g.max_players, duration_minutes: g.duration_minutes, complexity: g.complexity,
+    id: uuid('8000', i + 1), title: g.title, slug: g.slug, description: g.description, cover_url: null,
+    categories: g.categories, mechanics: g.mechanics, bgg_id: null, bgg_data: null, bgg_synced_at: null, year_published: null, min_age: null,
+    bgg_rating: null, bgg_rating_count: null, bgg_rank: null, bgg_weight: null,
+    min_players: g.min_players, max_players: g.max_players, duration_minutes: g.duration_minutes,
   }));
   const ownerships = games.flatMap((g, i) =>
     Array.from({ length: g.copies }, (_, c) => ({ user_id: OWNER.id, game_id: gameRows[i]!.id, copy_number: c + 1, condition: 'good' })),
