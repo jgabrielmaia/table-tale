@@ -57,6 +57,8 @@ Jogadores e duração passam a poder ser nulos: o BGG envia `0` quando não sabe
 
 ### 2. Segredo e função
 
+O deploy da função e das migrações é automático (ver «Automação» abaixo). O segredo do BGG é o único passo manual, uma só vez:
+
 ```bash
 npx supabase secrets set BGG_API_TOKEN=<token> --project-ref afrwnvusaxpflbezepik
 npx supabase functions deploy bgg --project-ref afrwnvusaxpflbezepik
@@ -75,7 +77,7 @@ A app em produção ainda lê `genre` e `complexity`; por isso a remoção é fe
 2. **Publicar a nova app** (merge do PR em `main` → deploy da Vercel) e **fazer o deploy da função** `bgg` (passo 2 acima).
    A nova app já não usa `genre` nem `complexity`.
 3. **Contract**: só depois de confirmar que a nova app está em produção, aplicar
-   `supabase/contract/20261107000002_drop_genre_complexity.sql`. Remove as duas colunas e o índice `games_genre_idx` e atualiza a
+   `supabase/contract/20261107000002_drop_genre_complexity.sql` (automático: ver «Automação»). Remove as duas colunas e o índice `games_genre_idx` e atualiza a
    função das conquistas para contar só categorias BGG. Reversão: `…drop_genre_complexity.down.sql` (os valores antigos perdem-se).
    O ficheiro está fora de `supabase/migrations/` de propósito, para um `supabase db push` não o aplicar antes do tempo; num PR
    seguinte, mover-o (`git mv`) para `supabase/migrations/` com o mesmo nome.
@@ -88,6 +90,20 @@ A CI (`scripts/db-check.sh`) migra, reverte e volta a migrar, e ainda aplica e r
   coleção (ou na comunidade) escolhida.
 - Os erros mostrados ao utilizador: 429 («a limitar pedidos»), 502 («ligação não autorizada» se o token for inválido),
   503 (BGG indisponível ou token em falta).
+
+## Automação (migrações e função)
+
+O workflow `production-deploy.yml` (só corre depois de um merge em `main` com a CI verde) faz, por esta ordem:
+`supabase db push` (migrações pendentes de `supabase/migrations/`) → deploy da app na Vercel → deploy das Edge Functions.
+Se a migração falhar, o deploy pára antes de chegar aos utilizadores. Por isso toda a migração tem de ser compatível com a app que ainda está em produção (expand/contract).
+
+**Pré-requisitos, uma só vez** (antes do primeiro merge com este workflow):
+
+1. Segredos do ambiente `production` no GitHub: `SUPABASE_ACCESS_TOKEN` (token de conta Supabase) e `SUPABASE_DB_PASSWORD`; variável `SUPABASE_PROJECT_REF` = `afrwnvusaxpflbezepik`.
+2. **Reparar o histórico de migrações de produção.** Hoje `db push --remote --dry-run` falha com `DbPushMissingLocalError`: a produção regista quatro versões que não existem no repositório (`20261103174609`, `20261103193453`, `20261103193500`, `20261103212707`) e não regista `20261103000009` a `…012`, que foram aplicadas por outro caminho. Depois de confirmar que o esquema de produção já inclui o que essas migrações fazem, corrigir o histórico com `supabase migration repair` (`--status reverted` para as quatro versões remotas; `--status applied` para `20261103000009`–`012`) e voltar a correr `supabase db push --remote --dry-run` até listar apenas as migrações novas.
+3. Segredo `BGG_API_TOKEN` na função (passo 2).
+
+A fase contract passa a ser um PR seguinte que move o ficheiro de `supabase/contract/` para `supabase/migrations/`: o merge aplica-a sozinho, já com a nova app em produção.
 
 ## O que não foi verificado
 
