@@ -118,6 +118,6 @@ reset role;
 delete from communities where slug like 'ci-%';
 do $$
 begin
-  if (select count(*) from games) <> 3 then raise exception 'catalog changed'; end if;
+  if (select count(*) from games where slug not like 'ci-bgg%') <> 3 then raise exception 'catalog changed'; end if;
   if (select count(*) from user_games) <> 4 then raise exception 'personal collections changed'; end if;
 end $$;
