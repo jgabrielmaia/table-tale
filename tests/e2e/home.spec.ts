@@ -6,7 +6,7 @@ test.describe('Página inicial', () => {
     const stats = page.getByRole('term').filter({ hasText: 'Jogos na estante' });
     await expect(stats).toBeVisible();
     await expect(page.getByText('Jogos na estante').locator('xpath=following-sibling::dd')).toHaveText('9');
-    await expect(page.getByText('Géneros').locator('xpath=following-sibling::dd')).toHaveText('9');
+    await expect(page.getByText('Categorias').locator('xpath=following-sibling::dd')).toHaveText('6');
     await expect(page.getByText('Facções').locator('xpath=following-sibling::dd')).toHaveText('2');
 
     const highlights = page.getByRole('region', { name: 'Destaques' });

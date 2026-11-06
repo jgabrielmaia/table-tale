@@ -14,6 +14,14 @@ export const formatNumber = (value: number) => value.toLocaleString(getLocale())
 export const playersLabel = (min: number, max: number) =>
   min === max ? tn('common.players', min) : t('common.playersRange', { min, max });
 
+/** BGG does not always know players or duration (stored as null): show a dash instead of inventing a value. */
+export const playersText = (min: number | null, max: number | null) => {
+  if (min === null && max === null) return '—';
+  const lo = min ?? max!;
+  return playersLabel(lo, max ?? lo);
+};
+export const minutesText = (n: number | null) => (n === null ? '—' : t('common.minutesApprox', { n }));
+
 export const initials = (name: string) =>
   name.trim().split(/\s+/).filter(Boolean).map((p) => p[0]).slice(0, 2).join('').toUpperCase() || '?';
 

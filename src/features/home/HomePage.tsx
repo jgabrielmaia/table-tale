@@ -34,7 +34,7 @@ export function HomePage() {
             <Logo variant="primary" className="hero-logo" />
             <dl className="hero-stats" aria-label={t('home.statsAria')}>
               <div><dt>{t('home.statGames')}</dt><dd>{isLoading ? '…' : games.length}</dd></div>
-              <div><dt>{t('home.statGenres')}</dt><dd>{isLoading ? '…' : new Set(games.map((g) => g.genre)).size}</dd></div>
+              <div><dt>{t('home.statCategories')}</dt><dd>{isLoading ? '…' : new Set(games.flatMap((g) => g.categories)).size}</dd></div>
               <div><dt>{user ? t('home.statFavorites') : t('home.statFactions')}</dt><dd>{user ? favourites : 2}</dd></div>
             </dl>
           </div>

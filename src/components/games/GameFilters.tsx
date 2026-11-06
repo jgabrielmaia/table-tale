@@ -1,11 +1,13 @@
 import { Button, Icon, Input, Select } from '@/components/ui';
 import type { DurationFilter, GameFilterValues, PlayersFilter } from '@/features/games/filters';
-import { genreLabel, t } from '@/i18n';
+import { t } from '@/i18n';
 import { statusOptions } from './GameStatusBadge';
 
 export interface GameFiltersProps {
   values: GameFilterValues;
-  genres: string[];
+  /** BGG categories and mechanics present in the catalogue. */
+  categories: string[];
+  mechanics: string[];
   onChange: (values: GameFilterValues) => void;
   onReset: () => void;
   showPersonalFilters: boolean;
@@ -27,7 +29,7 @@ const durationOptions = (): { value: DurationFilter; label: string }[] => [
   { value: 'epic', label: t('filters.durationEpic') },
 ];
 
-export function GameFilters({ values, genres, onChange, onReset, showPersonalFilters }: GameFiltersProps) {
+export function GameFilters({ values, categories, mechanics, onChange, onReset, showPersonalFilters }: GameFiltersProps) {
   const set = <K extends keyof GameFilterValues>(key: K, value: GameFilterValues[K]) => onChange({ ...values, [key]: value });
 
   return (
@@ -43,10 +45,16 @@ export function GameFilters({ values, genres, onChange, onReset, showPersonalFil
         leadingIcon={<Icon name="search" />}
       />
       <Select
-        label={t('filters.genre')}
-        value={values.genre}
-        onChange={(e) => set('genre', e.target.value)}
-        options={[{ value: '', label: t('filters.all') }, ...genres.map((g) => ({ value: g, label: genreLabel(g) }))]}
+        label={t('filters.category')}
+        value={values.category}
+        onChange={(e) => set('category', e.target.value)}
+        options={[{ value: '', label: t('filters.all') }, ...categories.map((c) => ({ value: c, label: c }))]}
+      />
+      <Select
+        label={t('filters.mechanic')}
+        value={values.mechanic}
+        onChange={(e) => set('mechanic', e.target.value)}
+        options={[{ value: '', label: t('filters.all') }, ...mechanics.map((m) => ({ value: m, label: m }))]}
       />
       <Select label={t('filters.players')} value={values.players} onChange={(e) => set('players', e.target.value as PlayersFilter)} options={playerOptions()} />
       <Select label={t('filters.duration')} value={values.duration} onChange={(e) => set('duration', e.target.value as DurationFilter)} options={durationOptions()} />

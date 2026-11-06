@@ -1,6 +1,8 @@
 /** Row shapes of the Supabase/PostgreSQL tables (snake_case, as returned by PostgREST).
  *  Regenerate the full client types with: npx supabase gen types typescript --project-id <ref> */
 
+import type { BggThing } from './bgg';
+
 export type GameStatusRow = 'unplayed' | 'in_progress' | 'completed';
 export type OwnershipCondition = 'new' | 'good' | 'worn' | 'damaged';
 export type AchievementRequirement = 'sessions' | 'games_played' | 'completed' | 'favorites' | 'events' | 'genres' | 'fate_draw';
@@ -49,11 +51,22 @@ export interface GameRow {
   slug: string;
   description: string;
   cover_url: string | null;
-  genre: string;
-  min_players: number;
-  max_players: number;
-  duration_minutes: number;
-  complexity: string;
+  /** null when BGG does not know the value (BGG sends 0). */
+  min_players: number | null;
+  max_players: number | null;
+  duration_minutes: number | null;
+  bgg_id: number | null;
+  /** Full BGG item as returned; only selected on the game page. */
+  bgg_data?: BggThing | null;
+  bgg_synced_at: string | null;
+  categories: string[];
+  mechanics: string[];
+  year_published: number | null;
+  min_age: number | null;
+  bgg_rating: number | null;
+  bgg_rating_count: number | null;
+  bgg_rank: number | null;
+  bgg_weight: number | null;
   created_at: string;
   updated_at: string;
 }

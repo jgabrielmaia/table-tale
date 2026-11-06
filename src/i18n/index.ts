@@ -9,9 +9,6 @@ export { LANGS, LOCALES, getContent, getLang, getLocale, type Lang, type Message
 export const t = translate;
 export const tn = translatePlural;
 
-export const genreLabel = (genre: string) => getContent().genres[genre] ?? genre;
-export const complexityLabel = (value: string) => getContent().complexities[value] ?? value;
-
 export function localizeGame<T extends { slug: string; description: string }>(game: T): T {
   const o = getContent().games[game.slug];
   return o ? { ...game, description: o.description } : game;

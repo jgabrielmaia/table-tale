@@ -16,6 +16,7 @@ const LoginPage = lazy(() => import('@/features/auth/LoginPage').then((m) => ({ 
 const AuthCallbackPage = lazy(() => import('@/features/auth/AuthCallbackPage').then((m) => ({ default: m.AuthCallbackPage })));
 const LibraryPage = lazy(() => import('@/features/games/LibraryPage').then((m) => ({ default: m.LibraryPage })));
 const GameDetailPage = lazy(() => import('@/features/games/GameDetailPage').then((m) => ({ default: m.GameDetailPage })));
+const BggImportPage = lazy(() => import('@/features/bgg/BggImportPage').then((m) => ({ default: m.BggImportPage })));
 const LorePage = lazy(() => import('@/features/lore/LorePage').then((m) => ({ default: m.LorePage })));
 const ProfilePage = lazy(() => import('@/features/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })));
 const EventsPage = lazy(() => import('@/features/events/EventsPage').then((m) => ({ default: m.EventsPage })));
@@ -47,6 +48,7 @@ function ShellRoutes() {
           <Route path="/register" element={<LoginPage mode="register" />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/library" element={<LibraryPage />} />
+          <Route path="/library/import" element={<RequireAuth><BggImportPage /></RequireAuth>} />
           <Route path="/games/:slug" element={<GameDetailPage />} />
           <Route path="/lore" element={<LorePage />} />
           <Route path="/events" element={<EventsPage />} />

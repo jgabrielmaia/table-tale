@@ -2,8 +2,8 @@ import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { BrandSymbol, Icon } from '@/components/ui';
 import { PlayerAvatar } from '@/components/identity/PlayerAvatar';
-import { complexityLabel, genreLabel, t, tn } from '@/i18n';
-import { playersLabel } from '@/lib/format';
+import { t, tn } from '@/i18n';
+import { minutesText, playersText } from '@/lib/format';
 import type { GameStatus, LibraryGame } from '@/types/domain';
 import { gameStyle } from '@/lib/cover';
 import { GameCover, coverAccent } from './GameCover';
@@ -23,17 +23,17 @@ export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   const owner = game.owners[0];
   const copies = game.owners.reduce((sum, o) => sum + o.copies, 0);
-  const style = { '--accent': coverAccent(game.slug, game.genre) } as CSSProperties;
+  const style = { '--accent': coverAccent(game.slug) } as CSSProperties;
   const statusId = `status-${game.id}`;
 
   return (
     <li className="game-card" style={style}>
       <Link className="game-card-link" to={`/games/${game.slug}`}>
         <div className="game-card-media">
-          <GameCover slug={game.slug} title={game.title} genre={game.genre} coverUrl={game.coverUrl} />
+          <GameCover slug={game.slug} title={game.title} coverUrl={game.coverUrl} />
           {game.coverUrl && (
             <span className="game-cover-symbol" aria-hidden="true">
-              <BrandSymbol name={gameStyle(game.slug, game.genre).symbol} />
+              <BrandSymbol name={gameStyle(game.slug).symbol} />
             </span>
           )}
           {!compact && <GameStatusBadge status={game.status} />}
@@ -45,14 +45,16 @@ export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact
           )}
         </div>
         <div className="game-card-body">
-          <p className="game-card-genre">
-            <span className="dot" aria-hidden="true" />
-            {genreLabel(game.genre)} · {complexityLabel(game.complexity)}
-          </p>
+          {game.categories.length > 0 && (
+            <p className="game-card-categories">
+              <span className="dot" aria-hidden="true" />
+              {game.categories.slice(0, 2).join(' · ')}
+            </p>
+          )}
           <Heading className="game-card-title">{game.title}</Heading>
           <ul className="meta-list">
-            <li><Icon name="users" />{playersLabel(game.minPlayers, game.maxPlayers)}</li>
-            <li><Icon name="clock" />{t('common.minutesApprox', { n: game.durationMinutes })}</li>
+            <li><Icon name="users" />{playersText(game.minPlayers, game.maxPlayers)}</li>
+            <li><Icon name="clock" />{minutesText(game.durationMinutes)}</li>
           </ul>
           {owner && (
             <p className="owner">
