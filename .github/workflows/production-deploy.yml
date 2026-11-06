@@ -45,7 +45,7 @@ jobs:
       - run: npm ci
       - run: npm install --global vercel@65.11.0
       - name: Deploy to Vercel production
-        run: vercel deploy --prod --yes --scope "$VERCEL_ORG_ID" --project "$VERCEL_PROJECT_ID"
+        run: vercel deploy --prod --yes
         env:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
