@@ -1,0 +1,49 @@
+name: Vercel rewrite test (temporary)
+
+on:
+  push:
+    branches: [fix/spa-deep-links]
+    paths: [.github/workflows/vercel-rewrite-test.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  rewrites:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm install --global vercel@65.11.0
+      - name: Preview deploys of candidate rewrites (never --prod)
+        run: |
+          set +e
+          base='{ "source": "/table-tale", "destination": "/table-tale/index.html" }'
+          variant() {
+            name="$1"; rewrites="$2"
+            node -e '
+              const fs = require("fs");
+              const c = JSON.parse(fs.readFileSync("vercel.json", "utf8"));
+              c.rewrites = JSON.parse(process.argv[1]);
+              fs.writeFileSync("vercel.json", JSON.stringify(c, null, 2));
+            ' "$rewrites"
+            url=$(vercel deploy --yes 2>deploy.err | tail -1)
+            echo "=== VARIANT $name -> $url"
+            if [ -z "$url" ]; then echo "deploy failed:"; tail -5 deploy.err; return; fi
+            for p in /table-tale/ /table-tale/library/ /table-tale/zzz/ /table-tale/communities/ /table-tale/communities/some-slug/ /table-tale/library/import/ /table-tale/communities/new/; do
+              code=$(vercel curl "$p" --deployment "$url" -- -s -o /dev/null -w '%{http_code}' 2>/dev/null | tail -1)
+              echo "  $p -> $code"
+            done
+            git checkout -q vercel.json
+          }
+          variant A_current "[$base, { \"source\": \"/table-tale/:path*\", \"destination\": \"/table-tale/index.html\" }]"
+          variant B_trailing_slash_source "[$base, { \"source\": \"/table-tale/:path*/\", \"destination\": \"/table-tale/index.html\" }]"
+          variant C_regex "[$base, { \"source\": \"/table-tale/(.*)\", \"destination\": \"/table-tale/index.html\" }]"
+          variant D_both "[$base, { \"source\": \"/table-tale/:path*\", \"destination\": \"/table-tale/index.html\" }, { \"source\": \"/table-tale/:path*/\", \"destination\": \"/table-tale/index.html\" }]"
