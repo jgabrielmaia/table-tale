@@ -1033,3 +1033,25 @@ section + section > .medal-group { margin-top: 1.75rem; }
 .form-actions { display: flex; gap: .75rem; }
 .container.narrow { max-width: 40rem; }
 @media (max-width: 720px) { .filters-communities { grid-template-columns: 1fr; } }
+
+/* City search combobox (community form). Own rules only: the shared input styles are untouched. */
+.city-combobox { min-width: 0; }
+.city-input-wrap { position: relative; }
+.city-options {
+  position: absolute; z-index: 20; left: 0; min-width: min(20rem, calc(100vw - 2rem)); max-width: calc(100vw - 2rem); top: calc(100% + 4px); margin: 0; padding: .25rem; list-style: none;
+  max-height: min(18rem, 50vh); overflow-y: auto; overscroll-behavior: contain;
+  background: var(--surface); border: 1px solid rgba(212, 168, 90, .45); border-radius: var(--radius-sm); box-shadow: var(--shadow-sm);
+}
+.city-options[hidden] { display: none; }
+.city-option {
+  display: flex; align-items: center; gap: .65rem; min-height: 48px; padding: .5rem .7rem; border-radius: var(--radius-sm); cursor: pointer;
+}
+.city-option .ui-icon { flex: none; width: 18px; height: 18px; color: var(--dourado); }
+.city-option-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.city-option-text strong { color: var(--creme); font-weight: 600; overflow-wrap: anywhere; }
+.city-option-text span { color: var(--text-2); font-size: .85rem; overflow-wrap: anywhere; }
+.city-option:hover, .city-option[data-active] { background: rgba(212, 168, 90, .16); }
+.city-option[data-active] { outline: 2px solid var(--teal); outline-offset: -2px; }
+.city-status { margin: .35rem 0 0; min-height: 0; font-size: .85rem; color: var(--text-2); }
+.city-status:empty { display: none; }
+.city-status-warn { color: #ffd28a; }

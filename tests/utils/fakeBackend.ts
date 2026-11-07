@@ -58,6 +58,12 @@ export class FakeBackend {
   oauthError: { code: string; description: string } | null = null;
   /** Card the Fate Draw will hand out. */
   nextCard: { id: string; faction: 'arcanos' | 'elementais' } = { id: 'temperance', faction: 'arcanos' };
+  /** Cities the mocked `city-search` function knows (country as ISO code, like the real function). */
+  cities: { name: string; country: string; latitude: number; longitude: number }[] = [
+    { name: 'Coimbra', country: 'PT', latitude: 40.2111, longitude: -8.4292 },
+    { name: 'Porto', country: 'PT', latitude: 41.1496, longitude: -8.6109 },
+    { name: 'Portimão', country: 'PT', latitude: 37.1386, longitude: -8.5376 },
+  ];
   private rules: Rule[] = [];
 
   // ---- test controls -------------------------------------------------------------------------------------------
@@ -110,6 +116,15 @@ export class FakeBackend {
     await context.route(/https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/, (route) => route.abort());
   }
 
+  /** Mirrors the `city-search` Edge Function: sign-in required, 2-60 characters, contains-match, ISO country codes. */
+  private citySearch(body: unknown, uid: string | null): Result {
+    const query = String((body as { query?: unknown } | undefined)?.query ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+    if (!uid) return { status: 401, body: { error: { code: 'unauthenticated', message: 'Sign in to search cities' } } };
+    if (query.length < 2 || query.length > 60) return { status: 400, body: { error: { code: 'bad_request', message: 'bad query' } } };
+    const results = this.cities.filter((c) => c.name.toLowerCase().includes(query));
+    return { status: 200, body: { results } };
+  }
+
   private id(kind: string) {
     this.db.counter += 1;
     return `00000000-0000-4000-${kind}-${String(this.db.counter + 100).padStart(12, '0')}`;
@@ -147,6 +162,7 @@ export class FakeBackend {
     if (url.pathname.startsWith('/rest/v1/')) {
       return this.json(route, this.rest(req.method(), url, body, uid, accept.includes('vnd.pgrst.object'), prefer.includes('return=representation')));
     }
+    if (url.pathname === '/functions/v1/city-search') return this.json(route, this.citySearch(body, uid));
     if (url.pathname.startsWith('/auth/v1/')) return this.auth(route, req.method(), url, body, uid);
     if (url.pathname.startsWith('/storage/v1/')) {
       if (req.method() === 'POST') return this.json(route, { status: 200, body: { Key: url.pathname.replace('/storage/v1/object/', ''), Id: this.id('2000') } });
