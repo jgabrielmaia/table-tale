@@ -4,6 +4,8 @@ import { OWNER } from '../data/seed';
 const card = (page: import('@playwright/test').Page, name: string) =>
   page.getByRole('listitem').filter({ has: page.getByRole('heading', { name, exact: true }) });
 
+const results = (page: import('@playwright/test').Page) => page.getByRole('listbox', { name: 'Resultados da pesquisa' });
+
 test.describe('Comunidades', () => {
   test('descoberta: lista, pesquisa por texto e filtra por cidade e bairro @smoke', async ({ page }) => {
     await page.goto('communities');
@@ -60,6 +62,87 @@ test.describe('Comunidades', () => {
       const created = backend.db.communities.find((c) => c.name === 'Dados e Tabuleiros')!;
       expect(created).toMatchObject({ city: 'Coimbra', district: 'Baixa', country: 'Portugal', latitude: 40.2, longitude: -8.4, created_by: PLAYER.id });
       expect(backend.db.memberships.find((m) => m.community_id === created.id)).toMatchObject({ user_id: PLAYER.id, role: 'owner', status: 'active' });
+    });
+
+    test.describe('pesquisa de cidade', () => {
+      test('escolher uma cidade preenche cidade, país e coordenadas; o bairro fica por preencher e tudo é editável @responsive', async ({ page, backend }) => {
+        await page.goto('communities/new');
+        await page.getByLabel('Nome', { exact: true }).fill('Dados e Tabuleiros');
+        await page.getByLabel('Cidade').fill('Coim');
+        const option = results(page).getByRole('option', { name: /Coimbra/ });
+        await expect(option).toBeVisible();
+        await expect(option).toContainText('Portugal · 40.2111, -8.4292');
+        await option.click();
+
+        await expect(page.getByLabel('Cidade')).toHaveValue('Coimbra');
+        await expect(page.getByLabel('País')).toHaveValue('Portugal');
+        await expect(page.getByLabel('Latitude')).toHaveValue('40.2111');
+        await expect(page.getByLabel('Longitude')).toHaveValue('-8.4292');
+        await expect(page.getByLabel('Bairro / distrito')).toHaveValue('');
+        await expect(page.getByLabel('Bairro / distrito')).toBeFocused();
+        await expect(results(page)).toBeHidden();
+        // Sem scroll horizontal, em qualquer largura.
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+
+        // Continua tudo editável depois da escolha.
+        await page.getByLabel('País').fill('Portugal (continental)');
+        await page.getByLabel('Bairro / distrito').fill('Baixa');
+        await page.getByRole('button', { name: 'Criar' }).click();
+        await expect(page).toHaveURL(/\/communities\/dados-e-tabuleiros-/);
+        expect(backend.db.communities.find((c) => c.name === 'Dados e Tabuleiros')).toMatchObject({
+          city: 'Coimbra', district: 'Baixa', country: 'Portugal (continental)', latitude: 40.2111, longitude: -8.4292,
+        });
+        expect(backend.requests.filter((r) => r.path === '/functions/v1/city-search').length).toBeGreaterThan(0);
+        // A chave nunca viaja no browser: o pedido só leva o texto escrito.
+        expect(backend.requests.filter((r) => r.path === '/functions/v1/city-search').every((r) => JSON.stringify(r.body) === '{"query":"Coim"}')).toBe(true);
+      });
+
+      test('teclado: setas escolhem, Enter confirma sem submeter, Escape fecha', async ({ page }) => {
+        await page.goto('communities/new');
+        const city = page.getByLabel('Cidade');
+        await city.fill('Port');
+        await expect(results(page).getByRole('option')).toHaveCount(2);
+        await expect(city).toHaveAttribute('aria-expanded', 'true');
+        await city.press('ArrowDown');
+        await city.press('ArrowDown');
+        await expect(results(page).getByRole('option', { name: /Portimão/ })).toHaveAttribute('aria-selected', 'true');
+        await city.press('Enter');
+        await expect(city).toHaveValue('Portimão');
+        await expect(page.getByLabel('Latitude')).toHaveValue('37.1386');
+        // Enter na escolha não submeteu o formulário.
+        await expect(page.getByText('Indica o bairro ou distrito.')).toHaveCount(0);
+
+        await city.fill('Por');
+        await expect(results(page).getByRole('option')).toHaveCount(2);
+        await city.press('Escape');
+        await expect(results(page)).toBeHidden();
+        await expect(city).toHaveValue('Por');
+      });
+
+      test('sem resultados avisa e deixa preencher à mão', async ({ page }) => {
+        await page.goto('communities/new');
+        await page.getByLabel('Cidade').fill('Xyzzy');
+        await expect(page.getByText('Nenhuma cidade encontrada. Preenche os campos à mão.')).toBeVisible();
+      });
+
+      test('se a pesquisa falha, avisa sem bloquear e o formulário funciona à mão', async ({ page, backend }) => {
+        backend.fail(/POST \/functions\/v1\/city-search/, { status: 503, body: { error: { code: 'unavailable', message: 'x' } } });
+        await page.goto('communities/new');
+        await page.getByLabel('Nome', { exact: true }).fill('Dados e Tabuleiros');
+        await page.getByLabel('Cidade').fill('Coimbra');
+        await expect(page.getByText(/A pesquisa de cidades não está disponível neste momento\. Podes preencher os campos à mão\./)).toBeVisible();
+        await page.getByLabel('Bairro / distrito').fill('Baixa');
+        await page.getByLabel('País').fill('Portugal');
+        await page.getByRole('button', { name: 'Criar' }).click();
+        await expect(page).toHaveURL(/\/communities\/dados-e-tabuleiros-/);
+      });
+
+      test('limite de pedidos mostra uma mensagem própria', async ({ page, backend }) => {
+        backend.fail(/POST \/functions\/v1\/city-search/, { status: 429, body: { error: { code: 'rate_limited', message: 'x' } } });
+        await page.goto('communities/new');
+        await page.getByLabel('Cidade').fill('Coimbra');
+        await expect(page.getByText('Demasiadas pesquisas, tenta daqui a pouco.', { exact: false })).toBeVisible();
+      });
     });
 
     test('entra numa comunidade pública de imediato e pode sair', async ({ page, backend }) => {
