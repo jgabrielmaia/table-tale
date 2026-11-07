@@ -12,8 +12,8 @@ import {
 import type { LibraryGame } from '@/types/domain';
 
 const SAMPLE_GAME: LibraryGame = {
-  id: 'demo', slug: 'dixit', title: 'Dixit', genre: 'Narrativo', complexity: 'Leve', description: '', coverUrl: null,
-  minPlayers: 3, maxPlayers: 6, durationMinutes: 30, status: 'in_progress', isFavorite: true,
+  id: 'demo', slug: 'dixit', title: 'Dixit', categories: ['Card Game', 'Party Game'], mechanics: [], description: '', coverUrl: null,
+  minPlayers: 3, maxPlayers: 6, durationMinutes: 30, yearPublished: null, minAge: null, bggId: null, rating: null, ratingCount: null, rank: null, weight: null, bgg: null, status: 'in_progress', isFavorite: true,
   owners: [{ userId: 'u', displayName: 'Gabriel Maia', avatarUrl: null, copies: 1, condition: 'good' }],
 };
 

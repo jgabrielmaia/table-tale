@@ -169,18 +169,6 @@ export const contentEn: Content = {
       },
     },
   },
-  genres: {
-    'Música': 'Music',
-    Cartas: 'Cards',
-    Cooperativo: 'Cooperative',
-    Festa: 'Party',
-    Narrativo: 'Narrative',
-    Blefe: 'Bluffing',
-    'Estratégia': 'Strategy',
-    Duelo: 'Duel',
-    'Clássico': 'Classic',
-  },
-  complexities: { Leve: 'Light', 'Média': 'Medium', 'Variável': 'Variable', 'Pesada': 'Heavy' },
   games: {
     'cartas-classico': { description: 'The classic 52-card deck for sueca, solitaire, bisca, poker and countless other timeless games.' },
     'cores-com-dicas': { description: 'Give a one- or two-word clue so the others can find your colour on a board with hundreds of shades.' },

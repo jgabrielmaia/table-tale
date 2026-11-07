@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button, ButtonLink, Card, EmptyState, ErrorState, Icon, LoadingState, Select, useToast } from '@/components/ui';
 import { useGames } from '@/hooks/useGames';
 import { useMyCommunities, useMyLibrary } from '@/hooks/useCommunities';
-import { genreLabel, useI18n } from '@/i18n';
+import { useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { MembershipBadge } from './CommunitiesPage';
 
@@ -80,7 +80,7 @@ export function MyLibraryCard() {
           {lib.entries.map((e) => (
             <li key={e.gameId} className="panel library-item">
               <h3><Link to={`/games/${e.game.slug}`}>{e.game.title}</Link></h3>
-              <p className="muted">{genreLabel(e.game.genre)} · {tn('communities.copies', e.copies)}</p>
+              <p className="muted">{[...e.game.categories.slice(0, 2), tn('communities.copies', e.copies)].join(' · ')}</p>
               <Button size="sm" variant="ghost" aria-label={t('communities.myLibraryRemove', { title: e.game.title })} icon={<Icon name="trash" />} onClick={() => void act(() => lib.remove.mutateAsync(e.gameId))} />
             </li>
           ))}

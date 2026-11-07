@@ -5,7 +5,8 @@ export class LibraryPage {
 
   readonly filters = () => this.page.getByRole('search', { name: 'Pesquisar e filtrar jogos' });
   readonly search = () => this.filters().getByRole('searchbox', { name: 'Pesquisar por nome' });
-  readonly genre = () => this.filters().getByLabel('Género');
+  readonly category = () => this.filters().getByLabel('Categoria');
+  readonly mechanic = () => this.filters().getByLabel('Mecânica');
   readonly players = () => this.filters().getByLabel('Jogadores');
   readonly duration = () => this.filters().getByLabel('Duração');
   readonly status = () => this.filters().getByLabel('Estado', { exact: true });

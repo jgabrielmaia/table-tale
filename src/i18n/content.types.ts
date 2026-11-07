@@ -27,8 +27,6 @@ export interface Content {
   /** Short meaning of each card within the Table Tale universe (used on the share poster). */
   cardLore: Record<CardArtKey, string>;
   factionLore: Record<FactionSlug, FactionLoreText>;
-  genres: Record<string, string>;
-  complexities: Record<string, string>;
   games: Record<string, { description: string }>;
   events: Record<string, { name?: string; description?: string; location?: string }>;
   achievements: Record<string, { name: string; description: string }>;

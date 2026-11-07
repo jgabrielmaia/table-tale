@@ -2,15 +2,18 @@ import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { GameFilters } from '@/components/games/GameFilters';
 import { GameGrid } from '@/components/games/GameGrid';
-import { Button, EmptyState, ErrorState, LoadingState, useToast } from '@/components/ui';
+import { BggCredit } from '@/components/bgg/BggCredit';
+import { Button, ButtonLink, EmptyState, ErrorState, Icon, LoadingState, useToast } from '@/components/ui';
 import { LoginRequiredNotice } from '@/features/auth/LoginPage';
 import { useAuth } from '@/hooks/useAuth';
 import { useGames, useUpdateGameState } from '@/hooks/useGames';
-import { genreLabel, getLocale, useI18n } from '@/i18n';
+import { getLocale, useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { statusLabel } from '@/lib/format';
 import type { GameStatus, LibraryGame } from '@/types/domain';
 import { EMPTY_FILTERS, filterGames, hasActiveFilters, type GameFilterValues } from './filters';
+
+const uniqueSorted = (values: string[]) => [...new Set(values)].sort((a, b) => a.localeCompare(b, getLocale()));
 
 export function LibraryPage() {
   const { t, tn } = useI18n();
@@ -21,7 +24,8 @@ export function LibraryPage() {
   const [params, setParams] = useSearchParams();
   const [filters, setFilters] = useState<GameFilterValues>({ ...EMPTY_FILTERS, query: params.get('q') ?? '' });
 
-  const genres = useMemo(() => [...new Set(games.map((g) => g.genre))].sort((a, b) => genreLabel(a).localeCompare(genreLabel(b), getLocale())), [games]);
+  const categories = useMemo(() => uniqueSorted(games.flatMap((g) => g.categories)), [games]);
+  const mechanics = useMemo(() => uniqueSorted(games.flatMap((g) => g.mechanics)), [games]);
   const visible = useMemo(() => filterGames(games, filters), [games, filters]);
 
   const changeFilters = (next: GameFilterValues) => {
@@ -60,11 +64,12 @@ export function LibraryPage() {
             {tn('library.found', visible.length)}
           </p>
         )}
+        {user && <ButtonLink to="/library/import" variant="gold" icon={<Icon name="search" />}>{t('bgg.link')}</ButtonLink>}
       </div>
 
       {!user && <LoginRequiredNotice message={t('library.loginNotice')} />}
 
-      <GameFilters values={filters} genres={genres} onChange={changeFilters} onReset={reset} showPersonalFilters={Boolean(user)} />
+      <GameFilters values={filters} categories={categories} mechanics={mechanics} onChange={changeFilters} onReset={reset} showPersonalFilters={Boolean(user)} />
 
       {isLoading ? (
         <LoadingState variant="cards" label={t('library.loading')} />
@@ -92,6 +97,8 @@ export function LibraryPage() {
           busyId={updateState.isPending ? updateState.variables?.gameId : null}
         />
       )}
+
+      {games.some((g) => g.bggId !== null) && <p className="mt-6 text-center"><BggCredit /></p>}
 
       <p className="mt-10 text-center text-sm text-muted">
         {t('library.loreCta')} <Link to="/lore">{t('nav.lore')}</Link>

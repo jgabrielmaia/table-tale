@@ -24,8 +24,8 @@ const ld = (data: unknown) => `<script type="application/ld+json">${JSON.stringi
 
 const players = (min: number, max: number) => (min === max ? `${min}` : `${min} a ${max}`);
 const gameSeoInput = (g: (typeof games)[number]) => ({
-  title: g.title, genre: g.genre, minPlayers: g.min_players, maxPlayers: g.max_players,
-  durationMinutes: g.duration_minutes, complexity: g.complexity, description: g.description,
+  title: g.title, categories: g.categories, minPlayers: g.min_players, maxPlayers: g.max_players,
+  durationMinutes: g.duration_minutes, description: g.description,
 });
 
 const ORG_ID = `${SITE}/#organization`;
@@ -53,7 +53,7 @@ const FOOTER = `<footer><p>${SITE_NAME} — ${esc(pt['footer.tagline'])}</p></fo
 const shell = (main: string) => `<div class="seo-shell" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">${NAV}<main>${main}</main>${FOOTER}</div>`;
 
 const gameLi = (g: (typeof games)[number]) =>
-  `<li><h3><a href="${href(`/games/${g.slug}`)}">${esc(g.title)}</a></h3><p>${esc(g.genre)} · ${players(g.min_players, g.max_players)} jogadores · ${g.duration_minutes} min · ${esc(g.complexity)}</p><p>${esc(g.description)}</p></li>`;
+  `<li><h3><a href="${href(`/games/${g.slug}`)}">${esc(g.title)}</a></h3><p>${esc(g.categories.join(', '))} · ${players(g.min_players, g.max_players)} jogadores · ${g.duration_minutes} min</p><p>${esc(g.description)}</p></li>`;
 
 const CARD_IDS = ['magician', 'high-priestess', 'star', 'world', 'temperance', 'earth', 'water', 'fire', 'air'] as const;
 const FACTIONS = [
@@ -110,7 +110,7 @@ function gamePage(g: (typeof games)[number]): Page {
   const seo = gameSeo(gameSeoInput(g), 'pt');
   const path = `/games/${g.slug}`;
   const body = shell(
-    `<h1>${esc(g.title)}</h1><p>${esc(g.genre)} · ${esc(pt['game.complexity'])}: ${esc(g.complexity)}</p>` +
+    `<h1>${esc(g.title)}</h1><p>${esc(g.categories.join(', '))}</p>` +
     `<dl><dt>${esc(pt['game.players'])}</dt><dd>${players(g.min_players, g.max_players)}</dd><dt>${esc(pt['game.avgDuration'])}</dt><dd>${g.duration_minutes} min</dd></dl>` +
     `<p>${esc(g.description)}</p><p><a href="${href('/library')}">${esc(pt['common.backToLibrary'])}</a></p>`,
   );
@@ -207,7 +207,7 @@ write(join(OUT, 'llms.txt'),
   `- [Início](${url('/')}): ${byPath('/').description.pt}\n` +
   `- [Biblioteca](${url('/library')}): ${byPath('/library').description.pt}\n` +
   `- [Lore: Arcanos e Elementais](${url('/lore')}): ${byPath('/lore').description.pt}\n\n` +
-  `## Jogos da biblioteca\n\n${games.map((g) => `- [${g.title}](${url(`/games/${g.slug}`)}): ${g.genre}, ${players(g.min_players, g.max_players)} jogadores, ${g.duration_minutes} min.`).join('\n')}\n\n` +
+  `## Jogos da biblioteca\n\n${games.map((g) => `- [${g.title}](${url(`/games/${g.slug}`)}): ${g.categories.join(', ')}, ${players(g.min_players, g.max_players)} jogadores, ${g.duration_minutes} min.`).join('\n')}\n\n` +
   `## Universo\n\n` +
   `- Arcanos: "${pt['faction.arcanos.motto']}" ${pt['faction.arcanos.line']}\n` +
   `- Elementais: "${pt['faction.elementais.motto']}" ${pt['faction.elementais.line']}\n` +

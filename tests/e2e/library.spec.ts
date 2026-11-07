@@ -45,14 +45,19 @@ test.describe('Biblioteca', () => {
       await expect(library.search()).toHaveValue('');
     });
 
-    test('filtra por género, número de jogadores e duração', async ({ page }) => {
+    test('filtra por categoria e mecânica do BGG, número de jogadores e duração', async ({ page }) => {
       const library = new LibraryPage(page);
       await library.goto();
 
-      await library.genre().selectOption({ label: 'Cooperativo' });
+      await library.category().selectOption({ label: 'Music' });
+      await expect(library.count()).toHaveText('1 jogo encontrado');
+      await expect(library.card('Hitster')).toBeVisible();
+      await library.category().selectOption({ label: 'Todos' });
+
+      await library.mechanic().selectOption({ label: 'Cooperative Game' });
       await expect(library.count()).toHaveText('1 jogo encontrado');
       await expect(library.card('Tranquility')).toBeVisible();
-      await library.genre().selectOption({ label: 'Todos' });
+      await library.mechanic().selectOption({ label: 'Todos' });
 
       await library.players().selectOption({ label: '2 jogadores' });
       await expect(library.count()).toHaveText('7 jogos encontrados');
