@@ -7,7 +7,7 @@
   "trailingSlash": true,
   "rewrites": [
     { "source": "/table-tale", "destination": "/table-tale/index.html" },
-    { "source": "/table-tale/:path*", "destination": "/table-tale/index.html" }
+    { "source": "/table-tale/:path*/", "destination": "/table-tale/index.html" }
   ],
   "headers": [
     {
