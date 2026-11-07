@@ -954,8 +954,24 @@ section + section > .medal-group { margin-top: 1.75rem; }
 .section-actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .filters-communities { grid-template-columns: 2fr 1fr 1fr auto; }
 .community-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 1.25rem; }
-.community-card { padding: 1.25rem; display: flex; flex-direction: column; gap: .5rem; }
+.community-card {
+  position: relative; padding: 1.25rem; display: flex; flex-direction: column; gap: .5rem;
+  cursor: pointer; -webkit-tap-highlight-color: rgba(212, 168, 90, .15);
+  transition: transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s;
+}
 .community-card h2 { margin: 0; font-size: 1.2rem; }
+/* Stretched link: the title link covers the whole card, so the entire card is one tap/click target. */
+.community-card h2 a { color: inherit; text-decoration: none; }
+.community-card h2 a::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.community-card h2 a:focus-visible { outline: none; }
+.community-card:has(h2 a:focus-visible) { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(45, 212, 191, .45); }
+/* Hover only where there is a real pointer; on touch it would stick after a tap. */
+@media (hover: hover) {
+  .community-card:hover { transform: translateY(-3px); border-color: rgba(231, 111, 60, .55); box-shadow: var(--shadow), var(--glow); }
+  .community-card:hover h2 a { color: var(--gold-hover); }
+}
+.community-card:active { transform: scale(.985); }
+@media (prefers-reduced-motion: reduce) { .community-card, .community-card:hover, .community-card:active { transition: none; transform: none; } }
 .community-place { display: flex; align-items: center; gap: .4rem; margin: 0; color: var(--text-2); }
 .community-meta { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; margin-top: auto; }
 .community-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; }
@@ -963,6 +979,21 @@ section + section > .medal-group { margin-top: 1.75rem; }
 .member-row { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; padding: .6rem .8rem; border: 1px solid var(--line); border-radius: var(--radius-md, .75rem); }
 .member-name { font-weight: 600; }
 .member-actions { display: inline-flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-left: auto; }
+/* Members as cards: avatar on top (fixed slot so differently framed avatars line up), name, role, actions at the bottom. */
+.member-grid { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: .75rem; }
+@media (min-width: 40rem) { .member-grid { grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 1rem; } }
+.member-card {
+  display: flex; flex-direction: column; align-items: center; gap: .5rem; text-align: center;
+  padding: 1rem .75rem; min-width: 0;
+  background: linear-gradient(180deg, var(--surface), var(--surface-3));
+  border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+}
+.member-card[data-role="owner"] { border-color: var(--line-strong); }
+.member-avatar { display: flex; align-items: center; justify-content: center; min-height: 4.5rem; }
+.member-card .member-name { font-weight: 600; overflow-wrap: anywhere; }
+.member-badges { display: flex; flex-wrap: wrap; gap: .35rem; justify-content: center; }
+.member-card .member-actions { flex-direction: column; align-items: stretch; width: 100%; margin: .25rem 0 0; }
+.member-card .member-actions > *, .member-card > button { width: 100%; }
 .community-library { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1rem; }
 .library-item { padding: 1rem; display: flex; flex-direction: column; gap: .35rem; }
 .library-item h3 { margin: 0; font-size: 1.05rem; }

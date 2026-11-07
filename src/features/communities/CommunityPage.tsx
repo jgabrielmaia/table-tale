@@ -174,11 +174,13 @@ function MembersPanel({ community, c, userId, run }: { community: Community; c: 
   const row = (x: CommunityMember) => {
     const manage = canManageMember(m, x, userId);
     return (
-      <li key={x.id} className="member-row">
-        <PlayerAvatar playerId={x.userId} name={x.displayName} src={x.avatarUrl} size="sm" decorative />
+      <li key={x.id} className="member-card" data-role={x.role}>
+        <span className="member-avatar"><PlayerAvatar playerId={x.userId} name={x.displayName} src={x.avatarUrl} size="sm" decorative /></span>
         <span className="member-name">{x.displayName}</span>
-        <Badge tone={x.role === 'member' ? 'neutral' : 'accent'}>{t(`communities.role.${x.role}`)}</Badge>
-        {x.status !== 'active' && <Badge tone="progress">{t(`communities.status.${x.status}`)}</Badge>}
+        <span className="member-badges">
+          <Badge tone={x.role === 'member' ? 'neutral' : 'accent'}>{t(`communities.role.${x.role}`)}</Badge>
+          {x.status !== 'active' && <Badge tone="progress">{t(`communities.status.${x.status}`)}</Badge>}
+        </span>
         {manage && (
           <span className="member-actions">
             {x.status === 'pending' && (
@@ -227,10 +229,10 @@ function MembersPanel({ community, c, userId, run }: { community: Community; c: 
       {canManageMembers(m) && pending.length > 0 && (
         <section aria-label={t('communities.status.pending')}>
           <h3>{t('communities.status.pending')}</h3>
-          <ul className="member-list" role="list">{pending.map(row)}</ul>
+          <ul className="member-grid" role="list">{pending.map(row)}</ul>
         </section>
       )}
-      <ul className="member-list" role="list" aria-label={community.name}>{(canManageMembers(m) ? rest : list).map(row)}</ul>
+      <ul className="member-grid" role="list" aria-label={community.name}>{(canManageMembers(m) ? rest : list).map(row)}</ul>
     </div>
   );
 }
