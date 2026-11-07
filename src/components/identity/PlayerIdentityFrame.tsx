@@ -5,7 +5,7 @@ import { FrameArt } from './frameArt';
 import { FRAME_THEMES, compactTitle } from './frameThemes';
 import './identity.css';
 
-export type FrameSize = 'xs' | 'sm' | 'xl';
+export type FrameSize = 'xs' | 'sm' | 'lg' | 'xl';
 
 interface PlayerIdentityFrameProps {
   cardId: string;

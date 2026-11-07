@@ -13,6 +13,7 @@
 }
 .idf[data-size='xs'] { --s: 24px; }
 .idf[data-size='sm'] { --s: 32px; }
+.idf[data-size='lg'] { --s: 76px; }
 .idf[data-size='xl'] { --s: 116px; }
 @media (max-width: 600px) { .idf[data-size='xl'] { --s: 92px; } }
 
