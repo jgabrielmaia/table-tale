@@ -34,13 +34,18 @@ export function useFate() {
   return { season, identities, active, history, state, draw, canDraw: Boolean(season.data) && !active };
 }
 
-/** Active-season identity of any player, or null. Shared cache: one request feeds every avatar. */
-export function useActiveIdentity(playerId: string | null | undefined): PlayerIdentity | null {
-  const query = useQuery({
+/** Active-season identities of every player, keyed by player id. Shared cache: one request feeds every avatar. */
+export function useActiveIdentities() {
+  return useQuery({
     queryKey: queryKeys.activeIdentities,
     queryFn: fetchActiveIdentities,
     enabled: isSupabaseConfigured,
     staleTime: 60_000,
   });
+}
+
+/** Active-season identity of any player, or null. */
+export function useActiveIdentity(playerId: string | null | undefined): PlayerIdentity | null {
+  const query = useActiveIdentities();
   return (playerId && query.data?.[playerId]) || null;
 }
