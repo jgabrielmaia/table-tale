@@ -20,7 +20,8 @@
     "test:e2e:report": "playwright show-report",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "seed:communities": "tsx scripts/seed-communities.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.1",

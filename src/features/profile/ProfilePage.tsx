@@ -13,6 +13,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { errorMessage } from '@/lib/errors';
 import { useI18n } from '@/i18n';
 import { ProfileEditModal } from './ProfileEditModal';
+import { MyCommunitiesCard, MyLibraryCard } from '@/features/communities/ProfileCommunities';
 import { OAUTH_PROVIDERS, PROVIDER_NAMES, providerName, type OAuthProvider } from '@/features/auth/providers';
 
 export function ProfilePage() {
@@ -94,6 +95,9 @@ export function ProfilePage() {
         ) : (
           <ProfileStats stats={stats.data} achievementsTotal={achievementList.length} />
         )}
+
+        <MyCommunitiesCard />
+        <MyLibraryCard />
 
         <Card title={t('profile.achievements')} titleId="ach-title" description={t('profile.achievementsDesc', { done: stats.data?.achievementsUnlocked ?? 0, total: achievementList.length })} className="achievements">
           {achievements.isLoading ? (

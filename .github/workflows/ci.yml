@@ -34,6 +34,33 @@ jobs:
       - run: npm ci
       - run: npm test
 
+  # Applies every migration to a throwaway Postgres, rolls the community migrations back with
+  # supabase/rollbacks/*.down.sql, then migrates again. See scripts/db-check.sh.
+  migrations:
+    name: migrations
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/db-check.sh
+
   e2e-smoke:
     name: e2e-smoke
     runs-on: ubuntu-latest

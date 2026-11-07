@@ -58,7 +58,8 @@ export interface GameRow {
   updated_at: string;
 }
 
-export interface GameOwnershipRow {
+/** Personal collection (table `user_games`, formerly `game_ownerships`). */
+export interface UserGameRow {
   id: string;
   game_id: string;
   user_id: string;
@@ -152,6 +153,46 @@ export interface DrawFateCardRow {
   r_selected_at: string;
   r_is_active: boolean;
   r_already_drawn: boolean;
+}
+
+export type CommunityVisibility = 'public' | 'private';
+export type CommunityRole = 'owner' | 'admin' | 'moderator' | 'member';
+export type MembershipStatus = 'pending' | 'active' | 'suspended';
+
+export interface CommunityRow {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  visibility: CommunityVisibility;
+  city: string;
+  district: string;
+  country: string;
+  latitude: number | null;
+  longitude: number | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CommunityMembershipRow {
+  id: string;
+  user_id: string;
+  community_id: string;
+  role: CommunityRole;
+  status: MembershipStatus;
+  joined_at: string;
+}
+
+export interface CommunityGameRow {
+  id: string;
+  community_id: string;
+  game_id: string;
+  added_by: string | null;
+  copies: number;
+  condition: OwnershipCondition;
+  notes: string | null;
+  added_at: string;
 }
 
 export interface ProfileStatsRow {

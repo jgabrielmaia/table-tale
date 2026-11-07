@@ -153,3 +153,57 @@ export interface ActivityItem {
   detail?: string;
   href?: string;
 }
+
+export type CommunityVisibility = 'public' | 'private';
+export type CommunityRole = 'owner' | 'admin' | 'moderator' | 'member';
+export type MembershipStatus = 'pending' | 'active' | 'suspended';
+
+export interface Community {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  visibility: CommunityVisibility;
+  city: string;
+  district: string;
+  country: string;
+  latitude: number | null;
+  longitude: number | null;
+  createdBy: string;
+  memberCount: number;
+}
+
+/** The signed-in user's relation to a community (absent when not a participant). */
+export interface MyMembership {
+  communityId: string;
+  role: CommunityRole;
+  status: MembershipStatus;
+}
+
+export interface CommunityMember {
+  id: string;
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  role: CommunityRole;
+  status: MembershipStatus;
+  joinedAt: string;
+}
+
+export type GameBrief = Pick<Game, 'id' | 'title' | 'slug' | 'coverUrl' | 'genre' | 'minPlayers' | 'maxPlayers' | 'durationMinutes' | 'complexity'>;
+
+export interface CommunityGameEntry {
+  id: string;
+  copies: number;
+  condition: OwnershipCondition;
+  notes: string | null;
+  game: GameBrief;
+}
+
+/** One game in the user's personal collection (copies grouped). */
+export interface UserGameEntry {
+  gameId: string;
+  copies: number;
+  condition: OwnershipCondition;
+  game: GameBrief;
+}

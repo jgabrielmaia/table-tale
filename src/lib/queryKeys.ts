@@ -12,6 +12,12 @@ export const queryKeys = {
   myIdentities: (userId: string | null) => ['identities', 'mine', userId] as const,
   activeIdentities: ['identities', 'active'] as const,
   factions: ['factions'] as const,
+  communities: ['communities'] as const,
+  community: (slug: string) => ['communities', slug] as const,
+  communityMembers: (id: string | null) => ['community-members', id] as const,
+  communityGames: (id: string | null) => ['community-games', id] as const,
+  myMemberships: (userId: string | null) => ['my-memberships', userId] as const,
+  myUserGames: (userId: string | null) => ['my-user-games', userId] as const,
 };
 
 /** Keys whose data depends on the user's progress (refreshed after any activity change). */
