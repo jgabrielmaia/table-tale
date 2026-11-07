@@ -4,11 +4,15 @@ import { t } from '@/i18n';
 import type { GameRow, GameSessionRow, OwnershipCondition, UserGameStatusRow } from '@/types/database';
 import type { Game, GameOwner, GameSession, GameStatus, GameUserState } from '@/types/domain';
 
-const GAME_SELECT =
-  'id,title,slug,description,cover_url,genre,min_players,max_players,duration_minutes,complexity,' +
-  'user_games(user_id,copy_number,condition,profiles(id,display_name,avatar_url))';
+const LIST_COLUMNS =
+  'id,title,slug,description,cover_url,min_players,max_players,duration_minutes,bgg_id,bgg_synced_at,categories,mechanics,' +
+  'year_published,min_age,bgg_rating,bgg_rating_count,bgg_rank,bgg_weight';
+const OWNERS = 'user_games(user_id,copy_number,condition,profiles(id,display_name,avatar_url))';
+const GAME_SELECT = `${LIST_COLUMNS},${OWNERS}`;
+/** The game page also loads the full BGG item (designers, artists, publishers...). */
+const GAME_DETAIL_SELECT = `${LIST_COLUMNS},bgg_data,${OWNERS}`;
 
-type GameQueryRow = Omit<GameRow, 'created_at' | 'updated_at'> & {
+export type GameQueryRow = Omit<GameRow, 'created_at' | 'updated_at'> & {
   user_games: {
     user_id: string;
     copy_number: number;
@@ -37,11 +41,19 @@ export function mapGame(row: GameQueryRow): Game {
     slug: row.slug,
     description: row.description,
     coverUrl: row.cover_url,
-    genre: row.genre,
     minPlayers: row.min_players,
     maxPlayers: row.max_players,
     durationMinutes: row.duration_minutes,
-    complexity: row.complexity,
+    categories: row.categories ?? [],
+    mechanics: row.mechanics ?? [],
+    yearPublished: row.year_published,
+    minAge: row.min_age,
+    bggId: row.bgg_id,
+    rating: row.bgg_rating,
+    ratingCount: row.bgg_rating_count,
+    rank: row.bgg_rank,
+    weight: row.bgg_weight,
+    bgg: row.bgg_data ?? null,
     owners: [...owners.values()],
   };
 }
@@ -67,7 +79,7 @@ export async function fetchGames(): Promise<Game[]> {
 
 export async function fetchGameBySlug(slug: string): Promise<Game | null> {
   const row = unwrap(
-    await supabase.from('games').select(GAME_SELECT).eq('slug', slug).maybeSingle(),
+    await supabase.from('games').select(GAME_DETAIL_SELECT).eq('slug', slug).maybeSingle(),
     t('games.err.game'),
   );
   return row ? mapGame(row as unknown as GameQueryRow) : null;

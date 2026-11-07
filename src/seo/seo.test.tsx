@@ -20,7 +20,7 @@ describe('page metadata table', () => {
   });
 
   it('builds unique, bounded game metadata', () => {
-    const g = { title: 'Duelo por Cardia', genre: 'Duelo', minPlayers: 2, maxPlayers: 2, durationMinutes: 15, complexity: 'Leve', description: 'Duelo de cartas para dois jogadores: em cada ronda, ambos revelam um personagem e o mais forte vence — mas cada habilidade pode virar o resultado.' };
+    const g = { title: 'Duelo por Cardia', categories: ['Card Game'], minPlayers: 2, maxPlayers: 2, durationMinutes: 15, description: 'Duelo de cartas para dois jogadores: em cada ronda, ambos revelam um personagem e o mais forte vence — mas cada habilidade pode virar o resultado.' };
     const seo = gameSeo(g, 'pt');
     expect(seo.title.length).toBeLessThanOrEqual(60);
     expect(seo.description.length).toBeLessThanOrEqual(160);

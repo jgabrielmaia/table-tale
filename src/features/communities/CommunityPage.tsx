@@ -5,7 +5,7 @@ import { Badge, BrandSymbol, Button, ButtonLink, EmptyState, ErrorState, Icon, L
 import { useAuth } from '@/hooks/useAuth';
 import { useCommunity } from '@/hooks/useCommunities';
 import { useGames } from '@/hooks/useGames';
-import { genreLabel, useI18n } from '@/i18n';
+import { useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { CommunityForm } from './CommunityForm';
 import { FactionBalance } from './FactionBalance';
@@ -249,6 +249,7 @@ function LibraryPanel({ c, run }: { c: CommunityState; run: Run }) {
             options={[{ value: '', label: t('communities.pickGame') }, ...options]}
             onChange={(e) => setPick(e.target.value)}
           />
+          <ButtonLink to={`/library/import?community=${c.community.data?.slug ?? ''}`} variant="ghost">{t('bgg.link')}</ButtonLink>
           <Button
             variant="gold"
             disabled={!pick}
@@ -266,7 +267,7 @@ function LibraryPanel({ c, run }: { c: CommunityState; run: Run }) {
           {entries.map((e) => (
             <li key={e.id} className="panel library-item">
               <h3><Link to={`/games/${e.game.slug}`}>{e.game.title}</Link></h3>
-              <p className="muted">{genreLabel(e.game.genre)} · {tn('communities.copies', e.copies)}</p>
+              <p className="muted">{[...e.game.categories.slice(0, 2), tn('communities.copies', e.copies)].join(' · ')}</p>
               {manage && (
                 <Button size="sm" variant="ghost" aria-label={t('communities.removeGame', { title: e.game.title })} icon={<Icon name="trash" />} onClick={() => void run(() => c.removeGame.mutateAsync(e.id), t('communities.memberUpdated'))} />
               )}

@@ -10,7 +10,20 @@ begin
     raise exception 'game_ownerships must be the original base table again';
   end if;
   if (select count(*) from game_ownerships) <> 4 then raise exception 'personal collection rows lost in rollback'; end if;
-  if (select count(*) from games) <> 3 then raise exception 'catalog changed in rollback'; end if;
+  if (select count(*) from games where slug <> 'ci-bgg') <> 3 then raise exception 'catalog changed in rollback'; end if;
+  -- the BGG-imported game survives with placeholders for what the old schema required
+  if not exists (select 1 from games where slug = 'ci-bgg' and genre = 'Economic' and complexity = 'Leve' and min_players = 1 and max_players = 1 and duration_minutes = 60) then
+    raise exception 'rollback must keep BGG-imported games and fill their required columns';
+  end if;
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'games' and column_name in ('bgg_id', 'bgg_data', 'categories', 'mechanics')) then
+    raise exception 'rollback left BGG columns behind';
+  end if;
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'games' and column_name in ('genre', 'complexity', 'min_players', 'max_players', 'duration_minutes') and is_nullable = 'YES') then
+    raise exception 'rollback must restore NOT NULL on the legacy game columns';
+  end if;
+  if pg_get_functiondef('public.compute_user_metrics(uuid)'::regprocedure) like '%categories%' then
+    raise exception 'compute_user_metrics was not restored to the original';
+  end if;
   if exists (select 1 from pg_type where typnamespace = 'public'::regnamespace and typname in ('community_visibility', 'community_role', 'membership_status')) then
     raise exception 'rollback left community enum types behind';
   end if;

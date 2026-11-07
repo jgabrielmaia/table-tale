@@ -38,6 +38,7 @@ psql_ -f supabase/ci/prelude.sql
 echo "== migrate (with seed data before the community migrations)"
 migrate seed
 psql_ -f supabase/ci/assert-migrated.sql
+psql_ -f supabase/ci/assert-bgg.sql
 echo "ok: migrated"
 
 echo "== rollback"
@@ -48,4 +49,18 @@ echo "ok: rolled back"
 echo "== migrate again (round trip)"
 migrate noseed
 psql_ -f supabase/ci/assert-migrated.sql
+psql_ -c "delete from public.games where slug = 'ci-bgg'"
+psql_ -f supabase/ci/assert-bgg.sql
 echo "ok: round trip"
+
+# Contract phase (drop genre/complexity), last because dropping the columns discards the legacy values. It lives outside supabase/migrations on purpose, so it is only
+# applied by hand after the new app is deployed; here we prove it applies and reverts cleanly.
+echo "== contract (drop genre/complexity) and its rollback"
+psql_ -1 -f supabase/contract/20261107000002_drop_genre_complexity.sql
+psql_ -f supabase/ci/assert-contracted.sql
+psql_ -1 -f supabase/contract/20261107000002_drop_genre_complexity.down.sql
+if [ "$(psql_ -tA -c "select genre from public.games where slug = 'ci-bgg'")" != "Economic" ]; then
+  echo "contract rollback did not refill genre from the BGG category" >&2
+  exit 1
+fi
+echo "ok: contract round trip"

@@ -1,3 +1,4 @@
+import type { BggThing } from './bgg';
 import type { AchievementRequirement, GameStatusRow, OwnershipCondition } from './database';
 
 export type GameStatus = GameStatusRow;
@@ -65,11 +66,22 @@ export interface Game {
   slug: string;
   description: string;
   coverUrl: string | null;
-  genre: string;
-  minPlayers: number;
-  maxPlayers: number;
-  durationMinutes: number;
-  complexity: string;
+  minPlayers: number | null;
+  maxPlayers: number | null;
+  durationMinutes: number | null;
+  /** BoardGameGeek categories and mechanics, shown as BGG returns them. */
+  categories: string[];
+  mechanics: string[];
+  yearPublished: number | null;
+  minAge: number | null;
+  bggId: number | null;
+  rating: number | null;
+  ratingCount: number | null;
+  rank: number | null;
+  /** BGG "weight" (1-5 average complexity votes). */
+  weight: number | null;
+  /** Full BGG item; only loaded by the game page. */
+  bgg: BggThing | null;
   owners: GameOwner[];
 }
 
@@ -190,7 +202,7 @@ export interface CommunityMember {
   joinedAt: string;
 }
 
-export type GameBrief = Pick<Game, 'id' | 'title' | 'slug' | 'coverUrl' | 'genre' | 'minPlayers' | 'maxPlayers' | 'durationMinutes' | 'complexity'>;
+export type GameBrief = Pick<Game, 'id' | 'title' | 'slug' | 'coverUrl' | 'categories' | 'minPlayers' | 'maxPlayers' | 'durationMinutes'>;
 
 export interface CommunityGameEntry {
   id: string;

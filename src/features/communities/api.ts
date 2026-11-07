@@ -18,19 +18,18 @@ import type { CommunityFormValues } from './schemas';
 
 type CountEmbed = { community_memberships: { count: number }[] | null };
 
-const GAME_BRIEF = 'id,title,slug,cover_url,genre,min_players,max_players,duration_minutes,complexity';
-type GameBriefRow = Pick<GameRow, 'id' | 'title' | 'slug' | 'cover_url' | 'genre' | 'min_players' | 'max_players' | 'duration_minutes' | 'complexity'>;
+const GAME_BRIEF = 'id,title,slug,cover_url,categories,min_players,max_players,duration_minutes';
+type GameBriefRow = Pick<GameRow, 'id' | 'title' | 'slug' | 'cover_url' | 'categories' | 'min_players' | 'max_players' | 'duration_minutes'>;
 
 const mapBrief = (g: GameBriefRow): GameBrief => ({
   id: g.id,
   title: g.title,
   slug: g.slug,
   coverUrl: g.cover_url,
-  genre: g.genre,
+  categories: g.categories ?? [],
   minPlayers: g.min_players,
   maxPlayers: g.max_players,
   durationMinutes: g.duration_minutes,
-  complexity: g.complexity,
 });
 
 export const mapCommunity = (r: CommunityRow & Partial<CountEmbed>): Community => ({

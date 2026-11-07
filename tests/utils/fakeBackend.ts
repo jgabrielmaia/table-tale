@@ -1,4 +1,7 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import type { BrowserContext, Route } from '@playwright/test';
+import { parseThings, slugify, toGameColumns } from '../../supabase/functions/_shared/bggParse';
 import { AVATAR_URL, FAKE_SUPABASE_URL } from './constants';
 import { fakeJwt, subjectOf } from './jwt';
 import { PLAYER, SEASON, baseDb, type Db, type Row } from '../data/seed';
@@ -39,6 +42,9 @@ interface Result {
   status: number;
   body?: unknown;
 }
+
+/** The same recorded-shape XML the parser unit tests use, so the fake function runs the real parser and mapping. */
+const BGG_ITEMS = parseThings(readFileSync(resolve(process.cwd(), 'supabase/functions/_shared/fixtures/thing.xml'), 'utf8'));
 
 const RESERVED = new Set(['select', 'order', 'limit', 'offset', 'on_conflict', 'columns']);
 
@@ -159,6 +165,7 @@ export class FakeBackend {
     const uid = subjectOf(req.headers().authorization);
     const accept = req.headers().accept ?? '';
     const prefer = req.headers().prefer ?? '';
+    if (url.pathname === '/functions/v1/bgg') return this.json(route, this.bggFunction(body, uid));
     if (url.pathname.startsWith('/rest/v1/')) {
       return this.json(route, this.rest(req.method(), url, body, uid, accept.includes('vnd.pgrst.object'), prefer.includes('return=representation')));
     }
@@ -169,6 +176,36 @@ export class FakeBackend {
       return route.fulfill({ status: 200, headers: { ...CORS, 'content-type': 'image/png' }, body: PNG });
     }
     return this.json(route, { status: 404, body: { message: 'not found' } });
+  }
+
+  // ---- bgg Edge Function (search / preview / import), backed by recorded-shape fixtures ------------------------------
+
+  private bggFunction(body: unknown, uid: string | null): Result {
+    const error = (status: number, code: string): Result => ({ status, body: { error: { code, message: code } } });
+    if (!uid) return error(401, 'unauthenticated');
+    const { action, query, id } = (body ?? {}) as { action?: string; query?: string; id?: number };
+    const known = (bggId: number) => this.db.games.find((g) => g.bgg_id === bggId);
+    if (action === 'search') {
+      const q = (query ?? '').trim().toLowerCase();
+      if (q.length < 2) return error(400, 'bad_request');
+      const results = BGG_ITEMS.filter((t) => t.name.toLowerCase().includes(q) || t.alternateNames.some((n) => n.toLowerCase().includes(q)))
+        .map((t) => ({ id: t.id, name: t.name, yearPublished: t.yearPublished || null, type: t.type, gameSlug: known(t.id)?.slug ?? null }));
+      return { status: 200, body: { results } };
+    }
+    const thing = BGG_ITEMS.find((t) => t.id === id);
+    if (!thing) return error(404, 'not_found');
+    if (action === 'preview') return { status: 200, body: { thing, gameSlug: known(thing.id)?.slug ?? null } };
+    if (action === 'import') {
+      const columns = toGameColumns(thing, '2026-11-06T12:00:00.000Z');
+      const existing = known(thing.id);
+      if (existing) return { status: 200, body: { game: Object.assign(existing, columns) } };
+      const taken = this.db.games.some((g) => g.slug === slugify(thing.name, thing.id));
+      const slug = taken ? `${slugify(thing.name, thing.id)}-${thing.id}` : slugify(thing.name, thing.id);
+      const game = { id: this.id('8000'), slug, created_at: '2026-11-06T12:00:00.000Z', updated_at: '2026-11-06T12:00:00.000Z', ...columns };
+      this.db.games.push(game);
+      return { status: 201, body: { game } };
+    }
+    return error(400, 'bad_request');
   }
 
   // ---- auth ----------------------------------------------------------------------------------------------------
@@ -599,7 +636,7 @@ export class FakeBackend {
     const mySessions = sessions.filter((s) => s.user_id === userId);
     const myStatus = gameStatus.filter((s) => s.user_id === userId);
     const played = new Set([...mySessions.map((s) => s.game_id), ...myStatus.filter((s) => s.status !== 'unplayed').map((s) => s.game_id)]);
-    const genres = new Set(mySessions.map((s) => games.find((g) => g.id === s.game_id)?.genre));
+    const genres = new Set(mySessions.flatMap((s) => games.find((g) => g.id === s.game_id)?.categories ?? []));
     return {
       sessions: mySessions.length,
       games_played: played.size,

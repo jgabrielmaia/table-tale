@@ -6,16 +6,15 @@ import { cn } from '@/lib/format';
 export interface GameCoverProps {
   slug: string;
   title: string;
-  genre: string;
   coverUrl: string | null;
   className?: string;
   loading?: 'lazy' | 'eager';
 }
 
 /** Game cover from storage, falling back to the generated brand illustration. */
-export function GameCover({ slug, title, genre, coverUrl, className, loading = 'lazy' }: GameCoverProps) {
+export function GameCover({ slug, title, coverUrl, className, loading = 'lazy' }: GameCoverProps) {
   const [failed, setFailed] = useState(false);
-  const style = gameStyle(slug, genre);
+  const style = gameStyle(slug);
   const fallback = useMemo(() => svgToDataUri(coverSvg({ slug, title, tone: style.tone, symbol: style.symbol })), [slug, title, style.tone, style.symbol]);
   const hasArtwork = Boolean(coverUrl && !failed);
   const src = hasArtwork ? coverUrl! : fallback;
@@ -36,4 +35,4 @@ export function GameCover({ slug, title, genre, coverUrl, className, loading = '
   );
 }
 
-export const coverAccent = (slug: string, genre: string) => COVER_TONES[gameStyle(slug, genre).tone].accent;
+export const coverAccent = (slug: string) => COVER_TONES[gameStyle(slug).tone].accent;

@@ -7,19 +7,21 @@ import { GameFilters } from './GameFilters';
 
 function Harness({ showPersonalFilters, onReset = vi.fn() }: { showPersonalFilters: boolean; onReset?: () => void }) {
   const [values, setValues] = useState<GameFilterValues>(EMPTY_FILTERS);
-  return <GameFilters values={values} genres={['Cartas', 'Música']} onChange={setValues} onReset={onReset} showPersonalFilters={showPersonalFilters} />;
+  return <GameFilters values={values} categories={['Card Game', 'Music']} mechanics={['Dice Rolling']} onChange={setValues} onReset={onReset} showPersonalFilters={showPersonalFilters} />;
 }
 
 describe('GameFilters', () => {
-  it('updates the search and genre controls', async () => {
+  it('updates the search and category controls', async () => {
     const user = userEvent.setup();
     render(<Harness showPersonalFilters />);
 
     await user.type(screen.getByRole('searchbox', { name: 'Pesquisar por nome' }), 'Dixit');
     expect(screen.getByRole('searchbox', { name: 'Pesquisar por nome' })).toHaveValue('Dixit');
 
-    await user.selectOptions(screen.getByLabelText('Género'), 'Cartas');
-    expect(screen.getByLabelText('Género')).toHaveValue('Cartas');
+    await user.selectOptions(screen.getByLabelText('Categoria'), 'Card Game');
+    expect(screen.getByLabelText('Categoria')).toHaveValue('Card Game');
+    await user.selectOptions(screen.getByLabelText('Mecânica'), 'Dice Rolling');
+    expect(screen.getByLabelText('Mecânica')).toHaveValue('Dice Rolling');
   });
 
   it('keeps personal filters disabled until login and exposes reset', async () => {

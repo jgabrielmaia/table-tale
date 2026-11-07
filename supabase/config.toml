@@ -45,6 +45,11 @@ secret = "env(GITHUB_CLIENT_SECRET)"
 enabled = true
 file_size_limit = "2MiB"
 
+# Edge Function do BoardGameGeek (o token BGG_API_TOKEN é um segredo da função: `supabase secrets set`).
+[functions.bgg]
+enabled = true
+verify_jwt = true
+
 [functions.city-search]
 enabled = true
 verify_jwt = true
