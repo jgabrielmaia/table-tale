@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PlayerAvatar } from '@/components/identity/PlayerAvatar';
-import { Badge, Button, ButtonLink, Card, EmptyState, ErrorState, Icon, LoadingState, Select, Tabs, useToast } from '@/components/ui';
+import { Badge, BrandSymbol, Button, ButtonLink, EmptyState, ErrorState, Icon, LoadingState, Select, Tabs, useToast } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommunity } from '@/hooks/useCommunities';
 import { useGames } from '@/hooks/useGames';
 import { useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { CommunityForm } from './CommunityForm';
+import { FactionBalance } from './FactionBalance';
 import { MembershipBadge } from './CommunitiesPage';
 import {
   assignableRoles,
@@ -22,12 +23,12 @@ import type { Community, CommunityMember, CommunityRole } from '@/types/domain';
 
 export function CommunityPage() {
   const { slug = '' } = useParams();
-  const { t, tn } = useI18n();
+  const { t } = useI18n();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { notify } = useToast();
   const c = useCommunity(slug);
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useState('members');
 
   if (c.community.isLoading) return <div className="container section"><LoadingState /></div>;
   if (c.community.isError) {
@@ -86,30 +87,16 @@ export function CommunityPage() {
     </>
   );
 
-  const overview = (
-    <div className="community-overview">
-      <Card title={t('communities.overview.where')} titleId="where-title">
-        <p><Icon name="pin" /> {community.district}, {community.city} · {community.country}</p>
-        {community.latitude !== null && community.longitude !== null && (
-          <p className="muted">{community.latitude}, {community.longitude}</p>
-        )}
-      </Card>
-      <Card title={t('communities.overview.stats')} titleId="stats-title">
-        <p>{tn('communities.members', community.memberCount)}</p>
-        {c.canSeeContent && <p>{t('communities.overview.games')}: {c.games.data?.length ?? 0}</p>}
-      </Card>
-    </div>
-  );
-
   const body = !c.canSeeContent ? (
     <p className="notice" role="note">{t('communities.privateNotice')}</p>
   ) : (
+    <>
+    {c.members.data && <FactionBalance members={c.members.data} />}
     <Tabs
       label={t('communities.tabs')}
       value={tab}
       onChange={setTab}
       items={[
-        { id: 'overview', label: t('communities.tab.overview'), content: overview },
         { id: 'members', label: t('communities.tab.members'), content: <MembersPanel community={community} c={c} userId={user?.id ?? null} run={run} /> },
         { id: 'library', label: t('communities.tab.library'), content: <LibraryPanel c={c} run={run} /> },
         ...(canEditCommunity(m)
@@ -136,6 +123,7 @@ export function CommunityPage() {
           : []),
       ]}
     />
+    </>
   );
 
   return (
@@ -150,7 +138,10 @@ export function CommunityPage() {
             {community.visibility === 'public' ? t('communities.public') : t('communities.private')}
           </Badge>
         </div>
-        <div className="section-actions">{joinControl}</div>
+        <div className="section-actions">
+          <ButtonLink to="/library" variant="secondary" icon={<BrandSymbol name="book" />}>{t('communities.goToLibrary')}</ButtonLink>
+          {joinControl}
+        </div>
       </div>
       {body}
     </div>
@@ -175,7 +166,7 @@ function MembersPanel({ community, c, userId, run }: { community: Community; c: 
     const manage = canManageMember(m, x, userId);
     return (
       <li key={x.id} className="member-card" data-role={x.role}>
-        <span className="member-avatar"><PlayerAvatar playerId={x.userId} name={x.displayName} src={x.avatarUrl} size="sm" decorative /></span>
+        <span className="member-avatar"><PlayerAvatar playerId={x.userId} name={x.displayName} src={x.avatarUrl} size="lg" decorative /></span>
         <span className="member-name">{x.displayName}</span>
         <span className="member-badges">
           <Badge tone={x.role === 'member' ? 'neutral' : 'accent'}>{t(`communities.role.${x.role}`)}</Badge>

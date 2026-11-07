@@ -49,3 +49,7 @@ file_size_limit = "2MiB"
 [functions.bgg]
 enabled = true
 verify_jwt = true
+
+[functions.city-search]
+enabled = true
+verify_jwt = true

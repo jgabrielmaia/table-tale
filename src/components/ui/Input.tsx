@@ -32,7 +32,7 @@ export function Field({ id, label, error, hint, optional, className, children }:
 type BaseProps = { label: ReactNode; error?: string; hint?: string; optional?: boolean; wrapperClassName?: string; leadingIcon?: ReactNode };
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & BaseProps>(function Input(
-  { label, error, hint, optional, wrapperClassName, leadingIcon, id, ...rest },
+  { label, error, hint, optional, wrapperClassName, leadingIcon, id, type = 'text', ...rest },
   ref,
 ) {
   const autoId = useId();
@@ -40,7 +40,8 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
   return (
     <Field id={inputId} label={label} error={error} hint={hint} optional={optional} className={wrapperClassName}>
       {(describedBy) => {
-        const input = <input ref={ref} id={inputId} aria-invalid={error ? true : undefined} aria-describedby={describedBy} {...rest} />;
+        // Always an explicit type: the shared field styles target input[type="..."].
+        const input = <input ref={ref} id={inputId} type={type} aria-invalid={error ? true : undefined} aria-describedby={describedBy} {...rest} />;
         return leadingIcon ? <div className="input-icon">{leadingIcon}{input}</div> : input;
       }}
     </Field>

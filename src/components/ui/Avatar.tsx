@@ -2,7 +2,7 @@ import { useState, type CSSProperties } from 'react';
 import { cn, initials } from '@/lib/format';
 import { t } from '@/i18n';
 
-export type AvatarSize = 'xs' | 'sm' | 'xl';
+export type AvatarSize = 'xs' | 'sm' | 'lg' | 'xl';
 
 export interface AvatarProps {
   name: string;
