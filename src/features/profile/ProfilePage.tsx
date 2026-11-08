@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AchievementCard } from '@/components/profile/AchievementCard';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileStats } from '@/components/profile/ProfileStats';
@@ -24,6 +25,7 @@ export function ProfilePage() {
   const lore = useLore();
   const fate = useFate();
   const { notify } = useToast();
+  const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
 
   if (profile.isLoading) return <div className="container section"><LoadingState label={t('profile.loading')} /></div>;
@@ -48,6 +50,16 @@ export function ProfilePage() {
   const hidden = achievementList.filter((a) => !a.unlockedAt).sort((a, b) => b.progress / b.requirementValue - a.progress / a.requirementValue);
   // GitHub sign-in stays available on the login page, but linking it from the profile is not offered.
   const unlinked = OAUTH_PROVIDERS.filter((pr) => pr !== 'github' && !providers.includes(pr));
+
+  // TEMPORARY (dev builds only): clears this season's card and goes back to the draw.
+  const resetCard = async () => {
+    try {
+      await fate.devReset.mutateAsync();
+      navigate('/fate');
+    } catch (e) {
+      notify(errorMessage(e), { tone: 'error' });
+    }
+  };
 
   const save = async (values: Parameters<typeof update.mutateAsync>[0]) => {
     try {
@@ -85,7 +97,9 @@ export function ProfilePage() {
         />
 
         {fate.state !== 'loading' && (
-          <SeasonalIdentityProfile active={fate.active} history={fate.history} seasonOpen={Boolean(fate.season.data)} />
+          <SeasonalIdentityProfile active={fate.active} history={fate.history} seasonOpen={Boolean(fate.season.data)}
+            onDevReset={import.meta.env.DEV ? () => void resetCard() : undefined}
+          />
         )}
 
         {stats.isLoading ? (

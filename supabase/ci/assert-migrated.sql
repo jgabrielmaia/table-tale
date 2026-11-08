@@ -121,3 +121,25 @@ begin
   if (select count(*) from games where slug not like 'ci-bgg%') <> 3 then raise exception 'catalog changed'; end if;
   if (select count(*) from user_games) <> 4 then raise exception 'personal collections changed'; end if;
 end $$;
+
+-- dev_reset_my_card: only the owner or accounts listed in app_config.dev_reset_emails may call it
+reset role;
+select set_config('request.jwt.sub', '', false);
+delete from app_config where key = 'dev_reset_emails';
+set role authenticated;
+select set_config('request.jwt.sub', '00000000-0000-0000-0000-00000000000c', false);
+do $$
+begin
+  begin
+    perform dev_reset_my_card();
+    raise exception 'an unlisted account must not be able to reset its card';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+insert into app_config (key, value) values ('dev_reset_emails', ' B@ci.test , c@ci.test ');
+set role authenticated;
+select set_config('request.jwt.sub', '00000000-0000-0000-0000-00000000000c', false);
+select dev_reset_my_card();
+reset role;
+delete from app_config where key = 'dev_reset_emails';

@@ -395,6 +395,7 @@ export const pt = {
   'idp.cta': 'Descobre o teu destino',
   'idp.history': 'Histórico de temporadas',
   'idp.pastSeason': 'Temporada anterior',
+  'idp.devReset': 'Repetir o sorteio (temporário)',
 
   // fate draw
   'fate.introTitle': 'O Sorteio do Destino',

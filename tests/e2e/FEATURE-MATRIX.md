@@ -9,7 +9,7 @@ Inventário feito a partir das rotas em `src/App.tsx`, das páginas em `src/feat
 | **Visitante** | Sem sessão | Ver início, biblioteca (pesquisa e filtros), detalhe de jogo, Lore, eventos e páginas de entrada/registo. Não pode registar nada. |
 | **Jogador** | Sessão Supabase (Google, GitHub ou link mágico) | Tudo o anterior, mais: favoritos e estados dos jogos, diário de sessões, inscrição em eventos, perfil, Sorteio do Destino, poster, coleção de cartas do Lore, conquistas. |
 
-Não existe perfil de administrador na interface.
+Não existe perfil de administrador na interface. A função `dev_reset_my_card` (apenas o dono e as contas de teste em `app_config.dev_reset_emails`) e o botão correspondente (apenas em *dev builds*) não existem na build de produção, por isso não são testados (ver "Fora de âmbito").
 
 ## Matriz
 
@@ -49,6 +49,6 @@ Estado: **Coberto** = fluxo principal + validações/erros relevantes; **Parcial
 
 - **Entrega real de e-mail e consentimento no Google/GitHub**: dependem de serviços externos. Substituímos o fornecedor pelo seu efeito observável (ver `README.md`, secção "Backend simulado").
 - **Políticas RLS, funções SQL e triggers do Supabase**: não são interface. Estão mapeados nas migrações; o simulador reproduz as regras de que a aplicação depende (XP, conquistas, facção a partir da carta) apenas para tornar os fluxos realistas.
-- **Rota `/ui`** (galeria de componentes, só em desenvolvimento): não existe na build de produção.
+- **Botão "Repetir o sorteio" (temporário, só dev)** e rota `/ui`: não existem na build de produção.
 - **Contraste de cores**: o tema usa gradientes e transparências; o axe não os avalia de forma fiável.
 - **Cópia do poster para a área de transferência** e **partilha nativa em dispositivos reais**: dependem de permissões do navegador/SO.

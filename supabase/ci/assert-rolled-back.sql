@@ -47,3 +47,11 @@ begin
     raise exception 'original game_ownerships index not restored';
   end if;
 end $$;
+
+reset role;
+do $$
+begin
+  if exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'dev_reset_my_card') then
+    raise exception 'rollback left dev_reset_my_card behind';
+  end if;
+end $$;
