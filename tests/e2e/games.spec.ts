@@ -346,14 +346,14 @@ test.describe('Jogos', () => {
     test('altera o estado de um jogo e filtra por esse estado', async ({ page }) => {
       const games = new GamesPage(page);
       await games.goto();
-      await games.statusSelect('Dixit').selectOption({ label: 'Concluído' });
-      await expect(new AppShell(page).toast('Dixit: Concluído')).toBeVisible();
-      await games.status().selectOption({ label: 'Concluído' });
+      await games.statusSelect('Dixit').selectOption({ label: 'Já jogado' });
+      await expect(new AppShell(page).toast('Dixit: Já jogado')).toBeVisible();
+      await games.status().selectOption({ label: 'Já jogado' });
       await expect(games.count()).toHaveText('1 jogo encontrado');
       await expect(games.card('Dixit')).toBeVisible();
 
       await page.reload();
-      await games.status().selectOption({ label: 'Concluído' });
+      await games.status().selectOption({ label: 'Já jogado' });
       await expect(games.card('Dixit')).toBeVisible();
     });
 

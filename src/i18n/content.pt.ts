@@ -91,5 +91,8 @@ export const contentPt: Content = {
   },
   games: {},
   events: {},
-  achievements: {},
+  achievements: {
+    // The database still says "Conclui 3 jogos da biblioteca."; the app wording follows the "Já jogado" status.
+    'mestre-do-compasso': { name: 'Mestre do Compasso', description: 'Marca 3 jogos como já jogados.' },
+  },
 };
