@@ -120,13 +120,14 @@ function compareShelves(a: GameShelf, b: GameShelf): number {
 export type GamesSort = 'title' | 'nearest' | 'bgg';
 
 /** Sorts a copy of the list. Unknown values (no distance, no BGG rating) always go last; ties fall back to the title. */
-export function sortShelfGames(games: ShelfGame[], sort: GamesSort, locale?: string): ShelfGame[] {
-  const byTitle = (a: ShelfGame, b: ShelfGame) => a.title.localeCompare(b.title, locale);
+/** Works on any game list; "nearest" only applies to games that carry a distance (shelf games). */
+export function sortShelfGames<T extends LibraryGame & { nearestKm?: number | null }>(games: T[], sort: GamesSort, locale?: string): T[] {
+  const byTitle = (a: T, b: T) => a.title.localeCompare(b.title, locale);
   const lastIfNull = (a: number | null, b: number | null, cmp: (x: number, y: number) => number) =>
     a === null && b === null ? 0 : a === null ? 1 : b === null ? -1 : cmp(a, b);
   return [...games].sort((a, b) => {
     const primary =
-      sort === 'nearest' ? lastIfNull(a.nearestKm, b.nearestKm, (x, y) => x - y)
+      sort === 'nearest' ? lastIfNull(a.nearestKm ?? null, b.nearestKm ?? null, (x, y) => x - y)
       : sort === 'bgg' ? lastIfNull(a.rating, b.rating, (x, y) => y - x)
       : 0;
     return primary || byTitle(a, b);

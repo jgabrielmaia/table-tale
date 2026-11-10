@@ -9,9 +9,12 @@ export interface GameGridProps {
   onStatusChange?: (game: LibraryGame, status: GameStatus) => void;
   busyId?: string | null;
   label?: string;
+  /** Community page: copies per game, and (for owners) a remove action. */
+  copiesOf?: (game: LibraryGame) => number | undefined;
+  onRemove?: (game: LibraryGame) => void;
 }
 
-export function GameGrid({ games, compact, onToggleFavorite, onStatusChange, busyId, label }: GameGridProps) {
+export function GameGrid({ games, compact, onToggleFavorite, onStatusChange, busyId, label, copiesOf, onRemove }: GameGridProps) {
   return (
     <ul className={cn('game-grid', compact && 'game-grid-compact')} role="list" aria-label={label}>
       {games.map((g) => (
@@ -22,6 +25,8 @@ export function GameGrid({ games, compact, onToggleFavorite, onStatusChange, bus
           onToggleFavorite={onToggleFavorite}
           onStatusChange={onStatusChange}
           busy={busyId === g.id}
+          copies={copiesOf?.(g)}
+          onRemove={onRemove}
         />
       ))}
     </ul>

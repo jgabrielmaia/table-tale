@@ -10,9 +10,11 @@ export interface ProfileHeaderProps {
   profile: Profile;
   faction: Faction | null;
   actions?: ReactNode;
+  /** False on another player's page: hides the tips on how to earn XP. */
+  self?: boolean;
 }
 
-export function ProfileHeader({ profile, faction: rawFaction, actions }: ProfileHeaderProps) {
+export function ProfileHeader({ profile, faction: rawFaction, actions, self = true }: ProfileHeaderProps) {
   const faction = rawFaction ? localizeFaction(rawFaction) : null;
   const progress = levelProgress(profile.experiencePoints);
   const factionStyle = faction ? ({ '--c': faction.color } as CSSProperties) : undefined;
@@ -47,7 +49,7 @@ export function ProfileHeader({ profile, faction: rawFaction, actions }: Profile
         </div>
         <ProgressBar value={progress.into} max={progress.needed} label={t('profile.xpAria', { n: progress.level + 1 })} />
         <p className="xp-hint">
-          {t('profile.xpTotal', { xp: profile.experiencePoints })}
+          {self ? t('profile.xpTotal', { xp: profile.experiencePoints }) : t('player.xpTotal', { xp: profile.experiencePoints })}
         </p>
       </div>
     </section>

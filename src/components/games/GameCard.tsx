@@ -18,9 +18,14 @@ export interface GameCardProps {
   busy?: boolean;
   compact?: boolean;
   headingLevel?: 2 | 3;
+  /** On a community page: the copies this community has (replaces the shelves/owner line). */
+  copies?: number;
+  /** On a community page, for its owners: removes the game from the community. */
+  onRemove?: (game: LibraryGame) => void;
+  removeLabel?: string;
 }
 
-export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact, headingLevel = 3 }: GameCardProps) {
+export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact, headingLevel = 3, copies: shelfCopies, onRemove, removeLabel }: GameCardProps) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   const shelves = 'shelves' in game ? (game as ShelfGame).shelves : null;
   const owner = game.owners[0];
@@ -58,7 +63,9 @@ export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact
             <li><Icon name="users" />{playersText(game.minPlayers, game.maxPlayers)}</li>
             <li><Icon name="clock" />{minutesText(game.durationMinutes)}</li>
           </ul>
-          {shelves ? (
+          {shelfCopies !== undefined ? (
+            <p className="game-card-copies">{tn('communities.copies', shelfCopies)}</p>
+          ) : shelves ? (
             <ShelfList shelves={shelves} />
           ) : owner && (
             <p className="owner">
@@ -73,7 +80,7 @@ export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact
         </div>
       </Link>
 
-      {(onToggleFavorite || onStatusChange) && (
+      {(onToggleFavorite || onStatusChange || onRemove) && (
         <div className="game-card-actions">
           {onToggleFavorite && (
             <button
@@ -102,6 +109,11 @@ export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact
                 ))}
               </select>
             </>
+          )}
+          {onRemove && (
+            <button type="button" className="icon-btn game-card-remove" aria-label={removeLabel ?? t('communities.removeGame', { title: game.title })} disabled={busy} onClick={() => onRemove(game)}>
+              <Icon name="trash" />
+            </button>
           )}
         </div>
       )}

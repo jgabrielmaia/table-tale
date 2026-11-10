@@ -12,9 +12,11 @@ interface SeasonalIdentityProfileProps {
   active: PlayerIdentity | null;
   history: PlayerIdentity[];
   seasonOpen: boolean;
+  /** False on another player's page: neutral wording and no call to draw a card. */
+  self?: boolean;
 }
 
-export function SeasonalIdentityProfile({ active, history, seasonOpen }: SeasonalIdentityProfileProps) {
+export function SeasonalIdentityProfile({ active, history, seasonOpen, self = true }: SeasonalIdentityProfileProps) {
   const { t } = useI18n();
   const card = active ? getFateCard(active.cardId) : undefined;
   const faction = card ? getFaction(card.faction) : null;
@@ -22,7 +24,7 @@ export function SeasonalIdentityProfile({ active, history, seasonOpen }: Seasona
 
   return (
     <section className="my-8" aria-labelledby="identity-title">
-      <h2 id="identity-title" className="fate-profile-heading">{t('idp.title')}</h2>
+      <h2 id="identity-title" className="fate-profile-heading">{t(self ? 'idp.title' : 'idp.titleOther')}</h2>
       {card && faction && theme && active ? (
         <div className="sid" data-has-card="true" style={{ '--a': theme.a } as CSSProperties}>
           <div className="sid__card"><img src={card.image} alt={card.numeral ? `${card.numeral} — ${cardTitle(card)}` : cardTitle(card)} /></div>
@@ -43,7 +45,9 @@ export function SeasonalIdentityProfile({ active, history, seasonOpen }: Seasona
         </div>
       ) : (
         <div className="sid sid__empty">
-          {seasonOpen ? (
+          {!self ? (
+            <p className="sid__desc">{t('idp.noneOther')}</p>
+          ) : seasonOpen ? (
             <>
               <p className="sid__desc">
                 {history.length ? t('idp.newSeason') : t('idp.none')}

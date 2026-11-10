@@ -3,15 +3,13 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { GameFilters } from '@/components/games/GameFilters';
 import { GameGrid } from '@/components/games/GameGrid';
 import { BggCredit } from '@/components/bgg/BggCredit';
-import { Button, ButtonLink, EmptyState, ErrorState, Icon, LoadingState, Select, useToast } from '@/components/ui';
+import { Button, ButtonLink, EmptyState, ErrorState, Icon, LoadingState, Select } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { useUpdateGameState } from '@/hooks/useGames';
+import { useGameCardActions } from '@/hooks/useGameCardActions';
 import { useShelfGames } from '@/hooks/useShelfGames';
 import { useViewerLocation } from '@/hooks/useViewerLocation';
 import { getLocale, useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
-import { statusLabel } from '@/lib/format';
-import type { GameStatus, LibraryGame } from '@/types/domain';
 import { EMPTY_FILTERS, filterGames, hasActiveFilters, type GameFilterValues } from './filters';
 import { RADIUS_OPTIONS_KM, shelfCommunities, sortShelfGames, type GamesSort } from './shelves';
 
@@ -20,8 +18,7 @@ const uniqueSorted = (values: string[]) => [...new Set(values)].sort((a, b) => a
 export function GamesPage() {
   const { t, tn } = useI18n();
   const { user } = useAuth();
-  const updateState = useUpdateGameState();
-  const { notify } = useToast();
+  const cardActions = useGameCardActions();
   const [params, setParams] = useSearchParams();
   const [filters, setFilters] = useState<GameFilterValues>({ ...EMPTY_FILTERS, query: params.get('q') ?? '' });
   const [communityId, setCommunityId] = useState('');
@@ -46,24 +43,6 @@ export function GamesPage() {
     changeFilters(EMPTY_FILTERS);
     setCommunityId('');
   };
-
-  const toggleFavorite = (game: LibraryGame) =>
-    updateState.mutate(
-      { gameId: game.id, isFavorite: !game.isFavorite },
-      {
-        onSuccess: () => notify(game.isFavorite ? t('games.favRemoved') : t('games.favAdded'), { icon: 'heart' }),
-        onError: (e) => notify(errorMessage(e), { tone: 'error' }),
-      },
-    );
-
-  const changeStatus = (game: LibraryGame, status: GameStatus) =>
-    updateState.mutate(
-      { gameId: game.id, status },
-      {
-        onSuccess: () => notify(`${game.title}: ${statusLabel(status)}`),
-        onError: (e) => notify(errorMessage(e), { tone: 'error' }),
-      },
-    );
 
   const locating = location.status === 'locating' || location.status === 'idle';
   const needsCity = location.status === 'denied' || location.status === 'unavailable';
@@ -158,9 +137,7 @@ export function GamesPage() {
         <GameGrid
           games={visible}
           label={t('games.gamesLabel')}
-          onToggleFavorite={user ? toggleFavorite : undefined}
-          onStatusChange={user ? changeStatus : undefined}
-          busyId={updateState.isPending ? updateState.variables?.gameId : null}
+          {...cardActions}
         />
       )}
 

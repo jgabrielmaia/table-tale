@@ -412,6 +412,15 @@ export const en: Record<MessageKey, string> = {
   'idp.cta': 'Discover your fate',
   'idp.history': 'Season history',
   'idp.pastSeason': 'Past season',
+  'idp.titleOther': 'Table Tale Identity',
+  'idp.noneOther': "This player's destiny has not been revealed this season.",
+  // player (another player's public page)
+  'player.notFoundTitle': 'Player not found',
+  'player.notFoundText': 'This player does not exist or the address is incorrect.',
+  'player.backToCommunities': 'See communities',
+  'player.seoDescription': '{name} on Table Tale: level, faction and Fate card.',
+  'player.xpTotal': '{xp} XP in total.',
+  'communities.openPlayer': "View {name}'s profile",
 
   // fate draw
   'fate.introTitle': 'The Fate Draw',
@@ -562,7 +571,6 @@ export const en: Record<MessageKey, string> = {
   'communities.citySearch.err.rateLimited': 'Too many searches, try again in a moment.',
   'communities.citySearch.err.unauthenticated': 'Sign in to search cities.',
   'communities.location': 'Location',
-  'communities.goToGames': 'See all games',
   'communities.join': 'Join',
   'communities.requestJoin': 'Request to join',
   'communities.leave': 'Leave community',

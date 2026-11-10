@@ -4,6 +4,8 @@ export const queryKeys = {
   gameStates: (userId: string | null) => ['game-states', userId] as const,
   sessions: (userId: string | null, gameId?: string) => ['sessions', userId, gameId ?? 'all'] as const,
   profile: (userId: string | null) => ['profile', userId] as const,
+  /** Another player's public profile (players/:id). */
+  player: (playerId: string) => ['player', playerId] as const,
   stats: (userId: string | null) => ['stats', userId] as const,
   achievements: (userId: string | null) => ['achievements', userId] as const,
   events: (userId: string | null) => ['events', userId] as const,
