@@ -15,3 +15,15 @@ insert into auth.users (id, email) values
 
 insert into public.game_ownerships (game_id, user_id)
 select id, '00000000-0000-0000-0000-00000000000b' from public.games where slug = 'dixit';
+
+-- Rated sessions, so the reviews backfill has something to bring back: C rated Catan 4 then 5 (latest wins),
+-- the owner rated Catan 3; C's Azul session has no rating. (B has no sessions: assert-bgg counts B's genres.)
+insert into public.game_sessions (game_id, user_id, played_at, rating)
+select g.id, s.user_id::uuid, s.played_at::date, s.rating
+from (values
+  ('catan', '00000000-0000-0000-0000-00000000000c', '2026-01-10', 4),
+  ('catan', '00000000-0000-0000-0000-00000000000c', '2026-02-10', 5),
+  ('catan', '00000000-0000-0000-0000-00000000000a', '2026-01-20', 3),
+  ('azul',  '00000000-0000-0000-0000-00000000000c', '2026-01-15', null)
+) as s(slug, user_id, played_at, rating)
+join public.games g on g.slug = s.slug;

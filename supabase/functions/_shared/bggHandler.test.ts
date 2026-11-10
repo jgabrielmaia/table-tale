@@ -2,7 +2,7 @@ import searchXml from './fixtures/search.xml?raw';
 import thingXml from './fixtures/thing.xml?raw';
 import { describe, expect, it, vi } from 'vitest';
 import { BggError, createBggClient } from './bggClient';
-import { handleBgg, type GameRecord, type GameStore, type HandlerDeps } from './bggHandler';
+import { handleBgg, normaliseQuery, type CachedSearch, type GameRecord, type GameStore, type HandlerDeps } from './bggHandler';
 
 const NOW = Date.parse('2026-11-06T12:00:00Z');
 
@@ -64,6 +64,53 @@ describe('bgg handler', () => {
     const { results } = await res.json();
     expect(results[0]).toMatchObject({ id: 13, name: 'CATAN', gameSlug: 'catan' });
     expect(results[1]).toMatchObject({ id: 27710, gameSlug: null });
+  });
+
+  describe('search cache', () => {
+    const memoryCache = (entries: Record<string, CachedSearch> = {}) => ({
+      entries,
+      get: vi.fn(async (q: string) => entries[q] ?? null),
+      put: vi.fn(async (q: string, results: CachedSearch['results']) => {
+        entries[q] = { results, fetchedAt: new Date(NOW).toISOString() };
+      }),
+    });
+
+    it('normalises the query into the cache key', () => {
+      expect(normaliseQuery('  CATAN   Seafarers ')).toBe('catan seafarers');
+      expect(normaliseQuery('x'.repeat(300))).toHaveLength(200);
+    });
+
+    it('stores a BGG answer and serves the same search from the cache for a week, with fresh catalogue slugs', async () => {
+      const cache = memoryCache();
+      const { d, fetchFn, rows } = deps({ xml: [searchXml], searchCache: cache });
+      await call(d, { action: 'search', query: 'Catan' });
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+      expect(cache.put).toHaveBeenCalledWith('catan', expect.any(Array));
+
+      rows.push({ id: 'g1', slug: 'catan', bgg_id: 13, bgg_synced_at: null });
+      const res = await call(d, { action: 'search', query: '  CATAN ' });
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+      expect((await res.json()).results[0]).toMatchObject({ id: 13, gameSlug: 'catan' });
+    });
+
+    it('asks BGG again once the cached search is a week old', async () => {
+      const stale = new Date(NOW - 8 * 24 * 60 * 60 * 1000).toISOString();
+      const cache = memoryCache({ catan: { results: [], fetchedAt: stale } });
+      const { d, fetchFn } = deps({ xml: [searchXml], searchCache: cache });
+      const { results } = await (await call(d, { action: 'search', query: 'catan' })).json();
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+      expect(results.length).toBeGreaterThan(0);
+    });
+
+    it('still searches when the cache fails, and rejects a blank query', async () => {
+      const cache = { get: vi.fn(async () => { throw new Error('db down'); }), put: vi.fn(async () => { throw new Error('db down'); }) };
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const { d, fetchFn } = deps({ xml: [searchXml], searchCache: cache });
+      expect((await call(d, { action: 'search', query: 'catan' })).status).toBe(200);
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+      expect((await call(d, { action: 'search', query: '   ' })).status).toBe(400);
+      error.mockRestore();
+    });
   });
 
   it('previews the full BGG item without writing', async () => {

@@ -3,6 +3,9 @@
 reset role;
 do $$
 begin
+  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name in ('game_reviews', 'game_review_stats', 'bgg_search_cache')) then
+    raise exception 'rollback left reviews or the BGG search cache behind';
+  end if;
   if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name in ('communities', 'community_memberships', 'community_games', 'user_games')) then
     raise exception 'rollback left community tables or user_games behind';
   end if;

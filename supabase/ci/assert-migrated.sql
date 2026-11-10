@@ -27,8 +27,8 @@ end $$;
 -- Creating a community makes the creator its owner; a user can create several
 set role authenticated;
 select set_config('request.jwt.sub', '00000000-0000-0000-0000-00000000000b', false);
-insert into communities (slug, name, city, district, country) values ('ci-lisbon', 'CI Lisbon', 'Lisboa', 'Alvalade', 'Portugal');
-insert into communities (slug, name, city, district, country) values ('ci-porto', 'CI Porto', 'Porto', 'Boavista', 'Portugal');
+insert into communities (slug, name, city, district, country, latitude, longitude) values ('ci-lisbon', 'CI Lisbon', 'Lisboa', 'Alvalade', 'Portugal', 38.75, -9.14);
+insert into communities (slug, name, city, district, country, latitude, longitude) values ('ci-porto', 'CI Porto', 'Porto', 'Boavista', 'Portugal', 41.16, -8.65);
 do $$
 begin
   if (select count(*) from community_memberships m join communities c on c.id = m.community_id
@@ -41,12 +41,12 @@ end $$;
 do $$
 begin
   begin
-    insert into communities (slug, name, city, district, country) values ('ci-bad', 'Bad', '', 'd', 'p');
+    insert into communities (slug, name, city, district, country, latitude, longitude) values ('ci-bad', 'Bad', '', 'd', 'p', 0, 0);
     raise exception 'empty city must be rejected';
   exception when check_violation then null;
   end;
   begin
-    insert into communities (slug, name, city, district, country) values ('ci-lisbon', 'Dup', 'x', 'y', 'z');
+    insert into communities (slug, name, city, district, country, latitude, longitude) values ('ci-lisbon', 'Dup', 'x', 'y', 'z', 0, 0);
     raise exception 'duplicate slug must be rejected';
   exception when unique_violation then null;
   end;
@@ -99,7 +99,7 @@ begin
 end $$;
 
 -- Private communities are invisible to outsiders and anonymous users
-insert into communities (slug, name, city, district, country, visibility) values ('ci-secret', 'CI Secret', 'Faro', 'Centro', 'Portugal', 'private');
+insert into communities (slug, name, city, district, country, visibility, latitude, longitude) values ('ci-secret', 'CI Secret', 'Faro', 'Centro', 'Portugal', 'private', 37.02, -7.93);
 select set_config('request.jwt.sub', '00000000-0000-0000-0000-00000000000c', false);
 do $$
 begin
