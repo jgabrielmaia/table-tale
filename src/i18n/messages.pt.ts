@@ -35,8 +35,8 @@ export const pt = {
   // layout
   'nav.home': 'Início',
   'nav.games': 'Jogos',
-  'nav.lore': 'Arcanos & Elementais',
-  'nav.loreShort': 'Arcanos',
+  'nav.lore': 'História',
+  'nav.loreShort': 'História',
   'nav.events': 'Eventos',
   'nav.profile': 'Perfil',
   'nav.main': 'Principal',

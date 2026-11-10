@@ -7,7 +7,7 @@ test.describe('Lore: Arcanos & Elementais', () => {
   test.describe('visitante', () => {
     test('explica o princípio central, as duas facções e que nenhuma é superior @smoke', async ({ page }) => {
       await page.goto('lore');
-      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Arcanos & Elementais');
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('História');
       await expect(page.getByText('Tu não escolhes. És escolhido.')).toBeVisible();
       await expect(page.getByText('Nove cartas. Uma é tua.')).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Os Arcanos', level: 2 })).toBeVisible();

@@ -191,23 +191,27 @@ strong { color: var(--creme); }
   background: linear-gradient(90deg, transparent, var(--dourado) 50%, transparent); opacity: .5;
 }
 .header-inner { display: flex; align-items: center; gap: 1.5rem; min-height: var(--header-h); }
-.brand { display: inline-flex; flex-direction: column; align-items: center; gap: .1rem; text-decoration: none; }
-.brand-version { font-size: .65rem; line-height: 1; letter-spacing: .08em; color: var(--dourado); opacity: .7; font-variant-numeric: tabular-nums; }
+/* The version hangs under the logo without taking space, so the logo stays centred with the rest of the header. */
+.brand { position: relative; display: inline-flex; align-items: center; flex-shrink: 0; text-decoration: none; }
+.brand-version {
+  position: absolute; top: calc(100% + 3px); left: 50%; transform: translateX(-50%); white-space: nowrap;
+  font-size: .65rem; line-height: 1; letter-spacing: .08em; color: var(--dourado); opacity: .7; font-variant-numeric: tabular-nums;
+}
 .brand-logo { height: 44px; }
 :where(.logo) { display: block; width: auto; max-width: 100%; object-fit: contain; user-select: none; }
 .logo-pulse { animation: logo-pulse 2.4s ease-in-out infinite; }
 @keyframes logo-pulse { 50% { opacity: .45; } }
 @media (prefers-reduced-motion: reduce) { .logo-pulse { animation: none; } }
 
-.site-nav { display: flex; align-items: center; gap: 1.5rem; margin-left: auto; }
-.site-nav ul { display: flex; gap: .25rem; list-style: none; margin: 0; padding: 0; }
+.site-nav { display: flex; align-items: center; gap: 1rem; margin-left: auto; }
+.site-nav ul { display: flex; align-items: center; gap: .25rem; list-style: none; margin: 0; padding: 0; }
 .site-nav ul a {
-  position: relative; display: block; padding: .55rem .9rem;
+  position: relative; display: block; padding: .55rem .75rem; white-space: nowrap;
   font-family: var(--font-display); font-weight: 600; font-size: .9rem; letter-spacing: .06em;
   color: var(--text-2); text-decoration: none; transition: color .2s;
 }
 .site-nav ul a::after {
-  content: ""; position: absolute; left: .9rem; right: .9rem; bottom: .2rem; height: 2px; border-radius: 2px;
+  content: ""; position: absolute; left: .75rem; right: .75rem; bottom: .2rem; height: 2px; border-radius: 2px;
   background: linear-gradient(90deg, transparent, var(--laranja), transparent);
   transform: scaleX(0); transition: transform .25s var(--ease);
 }
@@ -220,6 +224,21 @@ strong { color: var(--creme); }
 .auth-user { display: inline-flex; align-items: center; gap: .5rem; color: var(--creme); text-decoration: none; font-size: .875rem; padding: .2rem .6rem .2rem .2rem; border-radius: 999px; }
 .auth-user:hover { color: #fff; background: rgba(244, 235, 208, .07); }
 .auth-email { max-width: 16ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Smaller desktops: the avatar (with its card badge) stands for the player and the name hides, so the signed-in header
+   fits on one line. The name stays as the link's accessible label, and shows from 1366px and in the collapsed menu. */
+@media (min-width: 1100px) and (max-width: 1365px) {
+  .auth-email { display: none; }
+  .auth-user { padding: .2rem; }
+}
+
+/* Below 1232px the container is narrower than its 1200px cap: links tighten before the menu collapses at 1099px. */
+@media (max-width: 1231px) and (min-width: 1100px) {
+  .header-inner { gap: 1rem; }
+  .site-nav { gap: 1rem; }
+  .site-nav ul { gap: 0; }
+  .site-nav ul a { padding: .55rem .6rem; font-size: .85rem; letter-spacing: .04em; }
+  .site-nav ul a::after { left: .6rem; right: .6rem; }
+}
 
 .nav-toggle {
   display: none; margin-left: auto; width: 44px; height: 44px;
@@ -858,8 +877,8 @@ section + section > .medal-group { margin-top: 1.75rem; }
   .stats { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (max-width: 860px) {
-  :root { --header-h: 64px; }
+/* The header collapses into the menu button below 1100px: the full set of links (in Cinzel) needs that much room. */
+@media (max-width: 1099px) {
   .nav-toggle { display: inline-grid; place-items: center; }
   .site-nav {
     position: absolute; left: 0; right: 0; top: 100%;
@@ -877,7 +896,10 @@ section + section > .medal-group { margin-top: 1.75rem; }
      the button's 100% width push it outside the mobile menu. */
   .auth-slot > .btn-gold { flex: 1 1 0; min-width: 0; width: auto; white-space: nowrap; }
   .auth-email { max-width: none; }
+}
 
+@media (max-width: 860px) {
+  :root { --header-h: 64px; }
   .hero-inner { grid-template-columns: 1fr; gap: 2rem; }
   .hero-art { flex-direction: row; align-items: center; }
   .hero-logo { width: 200px; flex: none; }

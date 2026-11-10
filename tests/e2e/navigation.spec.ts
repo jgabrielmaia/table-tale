@@ -20,10 +20,10 @@ test.describe('Navigation e estrutura', () => {
     await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', /apple-touch-icon\.png$/);
   });
 
-  test('o menu segue a ordem Perfil, Jogos, Arcanos & Elementais, Eventos, Comunidades', async ({ page, isMobile }) => {
+  test('o menu segue a ordem Perfil, Jogos, História, Eventos, Comunidades', async ({ page, isMobile }) => {
     test.skip(isMobile, 'O menu colapsado é coberto pelo teste responsivo.');
     await page.goto('');
-    expect(await new AppShell(page).navLabels()).toEqual(['Perfil', 'Jogos', 'Arcanos & Elementais', 'Eventos', 'Comunidades']);
+    expect(await new AppShell(page).navLabels()).toEqual(['Perfil', 'Jogos', 'História', 'Eventos', 'Comunidades']);
   });
 
   test('cada entrada do menu leva à página certa e marca-se como atual', async ({ page, signIn, isMobile }) => {
@@ -33,7 +33,7 @@ test.describe('Navigation e estrutura', () => {
     const shell = new AppShell(page);
     for (const [label, path, heading] of [
       ['Jogos', /\/games$/, 'Jogos'],
-      ['Arcanos & Elementais', /\/lore$/, 'Arcanos & Elementais'],
+      ['História', /\/lore$/, 'História'],
       ['Eventos', /\/events$/, 'Eventos'],
       ['Perfil', /\/profile$/, 'Ana Teste'],
     ] as const) {
@@ -127,7 +127,7 @@ test.describe('Navigation e estrutura', () => {
 
   test('o rodapé liga ao Lore', async ({ page }) => {
     await page.goto('');
-    await page.getByRole('contentinfo').getByRole('link', { name: 'Arcanos & Elementais' }).click();
+    await page.getByRole('contentinfo').getByRole('link', { name: 'História' }).click();
     await expect(page).toHaveURL(/\/lore$/);
   });
 });
