@@ -39,6 +39,7 @@ echo "== migrate (with seed data before the community migrations)"
 migrate seed
 psql_ -f supabase/ci/assert-migrated.sql
 psql_ -f supabase/ci/assert-bgg.sql
+psql_ -f supabase/ci/assert-owner-achievement.sql
 echo "ok: migrated"
 
 echo "== rollback"
@@ -51,6 +52,7 @@ migrate noseed
 psql_ -f supabase/ci/assert-migrated.sql
 psql_ -c "delete from public.games where slug = 'ci-bgg'"
 psql_ -f supabase/ci/assert-bgg.sql
+psql_ -f supabase/ci/assert-owner-achievement.sql
 echo "ok: round trip"
 
 # Contract phase (drop genre/complexity), last because dropping the columns discards the legacy values. It lives outside supabase/migrations on purpose, so it is only

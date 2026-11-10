@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PlayerAvatar } from '@/components/identity/PlayerAvatar';
-import { Badge, Button, ButtonLink, EmptyState, ErrorState, Icon, LoadingState, Select, Tabs, useToast } from '@/components/ui';
+import { Badge, BrandSymbol, Button, ButtonLink, EmptyState, ErrorState, Icon, LoadingState, Select, Tabs, useToast } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommunity } from '@/hooks/useCommunities';
 import { BggCredit } from '@/components/bgg/BggCredit';
@@ -177,7 +177,7 @@ function MembersPanel({ community, c, userId, run }: { community: Community; c: 
         {/* Stretched link: the whole card opens the player (your own card opens your profile). */}
         <Link className="member-name" to={x.userId === userId ? '/profile' : `/players/${x.userId}`} aria-label={t('communities.openPlayer', { name: x.displayName })}>{x.displayName}</Link>
         <span className="member-badges">
-          <Badge tone={x.role === 'member' ? 'neutral' : 'accent'}>{t(`communities.role.${x.role}`)}</Badge>
+          <Badge tone={x.role === 'member' ? 'neutral' : 'accent'} className={x.role === 'owner' ? 'role-owner' : undefined} icon={x.role === 'owner' ? <BrandSymbol name="crown" /> : undefined}>{t(`communities.role.${x.role}`)}</Badge>
           {x.status !== 'active' && <Badge tone="progress">{t(`communities.status.${x.status}`)}</Badge>}
         </span>
         {manage && (

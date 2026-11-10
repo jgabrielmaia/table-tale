@@ -5,7 +5,7 @@ import type { BggThing } from './bgg';
 
 export type GameStatusRow = 'unplayed' | 'in_progress' | 'completed';
 export type OwnershipCondition = 'new' | 'good' | 'worn' | 'damaged';
-export type AchievementRequirement = 'sessions' | 'games_played' | 'completed' | 'favorites' | 'events' | 'genres' | 'fate_draw';
+export type AchievementRequirement = 'sessions' | 'games_played' | 'completed' | 'favorites' | 'events' | 'genres' | 'fate_draw' | 'community_owner';
 
 export interface FactionRow {
   id: string;
