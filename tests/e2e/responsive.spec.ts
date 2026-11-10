@@ -13,6 +13,39 @@ const VIEWPORTS = [
 const overflow = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 
 test.describe('Responsividade @responsive', () => {
+  // From 1100px (below it the menu collapses) the header shows every link. Signed in it is at its tightest: the avatar
+  // carries the card badge and the name is long. Every link stays on one line, everything shares one vertical centre,
+  // and nothing spills past the screen, in both languages. Real fonts are let through: Cinzel is wider than the fallback.
+  for (const lang of ['pt', 'en'] as const) {
+    test(`o cabeçalho com sessão cabe numa linha e fica alinhado em ecrãs de portátil (${lang})`, async ({ page, signIn, backend }) => {
+      backend.giveCard();
+      backend.profile().display_name = 'Jonas Gabriel Maia';
+      await page.route(/https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/, (route) => route.continue());
+      await page.addInitScript((l) => localStorage.setItem('table-tale-lang', l), lang);
+      await signIn();
+      for (const width of [1100, 1231, 1270, 1365, 1366, 1440]) {
+        await page.setViewportSize({ width, height: 400 });
+        await page.goto('');
+        await expect(page.getByRole('button', { name: lang === 'pt' ? 'Sair' : 'Sign out' })).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        const header = await page.evaluate(() => {
+          const mid = (el: Element) => { const r = el.getBoundingClientRect(); return Math.round((r.top + r.bottom) / 2); };
+          const inner = document.querySelector('.header-inner')!;
+          const links = [...document.querySelectorAll('.site-nav ul a')];
+          const parts = [document.querySelector('.brand-logo')!, ...links, ...document.querySelectorAll('.auth-slot > *')];
+          return {
+            overflow: inner.scrollWidth - inner.clientWidth,
+            heights: new Set(links.map((a) => Math.round(a.getBoundingClientRect().height))).size,
+            centres: [...new Set(parts.map(mid))],
+          };
+        });
+        expect(header.overflow, `header spills past the screen at ${width}px`).toBeLessThanOrEqual(0);
+        expect(header.heights, `a link wraps at ${width}px`).toBe(1);
+        expect(Math.max(...header.centres) - Math.min(...header.centres), `header parts are misaligned at ${width}px`).toBeLessThanOrEqual(1);
+      }
+    });
+  }
+
   for (const vp of VIEWPORTS) {
     test(`sem scroll horizontal nas páginas principais (${vp.name}, ${vp.width}px)`, async ({ page, signIn }) => {
       await signIn();
@@ -31,7 +64,7 @@ test.describe('Responsividade @responsive', () => {
     await page.goto('');
     const quick = page.getByRole('navigation', { name: 'Navegação rápida' });
     await expect(quick).toBeVisible();
-    expect((await quick.getByRole('link').allInnerTexts()).map((t) => t.trim())).toEqual(['Início', 'Perfil', 'Jogos', 'Arcanos', 'Eventos']);
+    expect((await quick.getByRole('link').allInnerTexts()).map((t) => t.trim())).toEqual(['Início', 'Perfil', 'Jogos', 'História', 'Eventos']);
     await quick.getByRole('link', { name: 'Jogos' }).click();
     await expect(page).toHaveURL(/\/games$/);
     await expect(quick.getByRole('link', { name: 'Jogos' })).toHaveAttribute('aria-current', 'page');
