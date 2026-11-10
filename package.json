@@ -1,7 +1,7 @@
 {
   "name": "table-tale",
   "private": true,
-  "version": "0.3.0-alpha",
+  "version": "0.4.0-alpha",
   "type": "module",
   "description": "Table Tale — biblioteca viva de jogos de tabuleiro (React + Supabase).",
   "scripts": {
