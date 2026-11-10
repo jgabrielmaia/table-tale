@@ -44,7 +44,7 @@ export function GameDetailPage() {
   if (notFound || !game) {
     return (
       <div className="container section">
-        <EmptyState headingLevel={2} title={t('game.notFoundTitle')} description={t('game.notFoundText')} action={<Link className="btn btn-primary" to="/library">{t('common.backToLibrary')}</Link>} />
+        <EmptyState headingLevel={2} title={t('game.notFoundTitle')} description={t('game.notFoundText')} action={<Link className="btn btn-primary" to="/games">{t('common.backToGames')}</Link>} />
       </div>
     );
   }
@@ -64,7 +64,7 @@ export function GameDetailPage() {
     updateState.mutate(
       { gameId: game.id, isFavorite: !game.isFavorite },
       {
-        onSuccess: () => notify(game.isFavorite ? t('library.favRemoved') : t('library.favAdded'), { icon: 'heart' }),
+        onSuccess: () => notify(game.isFavorite ? t('games.favRemoved') : t('games.favAdded'), { icon: 'heart' }),
         onError: (e) => notify(errorMessage(e), { tone: 'error' }),
       },
     );
@@ -113,7 +113,7 @@ export function GameDetailPage() {
     <>
       <div className="detail-backdrop" style={style}>
         <div className="container section">
-          <Link className="back-link" to="/library"><Icon name="back" />{t('common.backToLibrary')}</Link>
+          <Link className="back-link" to="/games"><Icon name="back" />{t('common.backToGames')}</Link>
           <article className="detail-grid" aria-labelledby="game-title">
             <figure className="detail-media">
               <GameCover slug={game.slug} title={game.title} coverUrl={game.coverUrl} loading="eager" />

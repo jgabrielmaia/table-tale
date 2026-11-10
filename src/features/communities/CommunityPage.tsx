@@ -98,7 +98,7 @@ export function CommunityPage() {
       onChange={setTab}
       items={[
         { id: 'members', label: t('communities.tab.members'), content: <MembersPanel community={community} c={c} userId={user?.id ?? null} run={run} /> },
-        { id: 'library', label: t('communities.tab.library'), content: <LibraryPanel c={c} run={run} /> },
+        { id: 'games', label: t('communities.tab.games'), content: <LibraryPanel c={c} run={run} /> },
         ...(canEditCommunity(m)
           ? [{
               id: 'manage',
@@ -139,7 +139,7 @@ export function CommunityPage() {
           </Badge>
         </div>
         <div className="section-actions">
-          <ButtonLink to="/library" variant="secondary" icon={<BrandSymbol name="book" />}>{t('communities.goToLibrary')}</ButtonLink>
+          <ButtonLink to="/games" variant="secondary" icon={<BrandSymbol name="book" />}>{t('communities.goToGames')}</ButtonLink>
           {joinControl}
         </div>
       </div>
@@ -249,7 +249,7 @@ function LibraryPanel({ c, run }: { c: CommunityState; run: Run }) {
             options={[{ value: '', label: t('communities.pickGame') }, ...options]}
             onChange={(e) => setPick(e.target.value)}
           />
-          <ButtonLink to={`/library/import?community=${c.community.data?.slug ?? ''}`} variant="ghost">{t('bgg.link')}</ButtonLink>
+          <ButtonLink to={`/games/import?community=${c.community.data?.slug ?? ''}`} variant="ghost">{t('bgg.link')}</ButtonLink>
           <Button
             variant="gold"
             disabled={!pick}

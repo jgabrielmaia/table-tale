@@ -1,5 +1,6 @@
 import { expect, test, PLAYER } from '../fixtures';
 import { OWNER } from '../data/seed';
+import { GamesPage } from '../pages/GamesPage';
 
 const card = (page: import('@playwright/test').Page, name: string) =>
   page.getByRole('listitem').filter({ has: page.getByRole('heading', { name, exact: true }) });
@@ -32,6 +33,18 @@ test.describe('Comunidades', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tabuleiros do Porto');
     await expect(page.getByRole('link', { name: 'Entrar para participar' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Membros' })).toBeVisible();
+  });
+
+  test('o separador Jogos mostra a estante da comunidade com exemplares e ligação ao jogo', async ({ page }) => {
+    await page.goto('communities/tabuleiros-do-porto');
+    await page.getByRole('tab', { name: 'Jogos' }).click();
+    const shelf = page.getByRole('tabpanel');
+    await expect(shelf.getByRole('heading', { level: 3 })).toHaveText(['Coup', 'Dixit', 'Vaalbara']);
+    await expect(shelf.getByRole('listitem').filter({ hasText: 'Coup' })).toContainText('3 exemplares');
+    // Quem não gere a comunidade não pode adicionar jogos.
+    await expect(page.getByRole('button', { name: 'Adicionar jogo' })).toHaveCount(0);
+    await shelf.getByRole('link', { name: 'Dixit' }).click();
+    await expect(page).toHaveURL(/\/games\/dixit$/);
   });
 
   test.describe('jogador com sessão', () => {
@@ -155,7 +168,7 @@ test.describe('Comunidades', () => {
       await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeVisible();
     });
 
-    test('pertence a várias comunidades e vê-as no perfil, separadas da biblioteca pessoal', async ({ page }) => {
+    test('pertence a várias comunidades e vê-as no perfil, separadas dos jogos pessoais', async ({ page }) => {
       await page.goto('communities/tabuleiros-do-porto');
       await page.getByRole('button', { name: 'Entrar', exact: true }).click();
       await expect(page.getByText('Entraste na comunidade.')).toBeVisible();
@@ -163,31 +176,31 @@ test.describe('Comunidades', () => {
       const mine = page.getByRole('region', { name: 'As minhas comunidades' });
       await expect(mine.getByRole('link', { name: 'Table Tale Lisboa' })).toBeVisible();
       await expect(mine.getByRole('link', { name: 'Tabuleiros do Porto' })).toBeVisible();
-      // A coleção pessoal não depende das comunidades.
-      await expect(page.getByText('Ainda não tens jogos na tua coleção.')).toBeVisible();
+      // Os jogos pessoais não dependem das comunidades.
+      await expect(page.getByText('Ainda não adicionaste nenhum jogo.')).toBeVisible();
     });
 
-    test('a biblioteca pessoal permite adicionar e remover jogos', async ({ page, backend }) => {
+    test('os meus jogos permitem adicionar e remover jogos', async ({ page, backend }) => {
       await page.goto('profile');
-      const lib = page.getByRole('region', { name: 'A minha biblioteca' });
-      await lib.getByLabel('Jogo').selectOption({ label: 'Dixit' });
-      await lib.getByRole('button', { name: 'Adicionar à coleção' }).click();
+      const lib = page.getByRole('region', { name: 'Os meus jogos' });
+      await lib.getByLabel('Jogo', { exact: true }).selectOption({ label: 'Dixit' });
+      await lib.getByRole('button', { name: 'Adicionar aos meus jogos' }).click();
       await expect(lib.getByRole('link', { name: 'Dixit' })).toBeVisible();
       expect(backend.db.ownerships.filter((o) => o.user_id === PLAYER.id)).toHaveLength(1);
-      await lib.getByRole('button', { name: 'Remover Dixit da coleção' }).click();
-      await expect(lib.getByText('Ainda não tens jogos na tua coleção.')).toBeVisible();
+      await lib.getByRole('button', { name: 'Remover Dixit dos meus jogos' }).click();
+      await expect(lib.getByText('Ainda não adicionaste nenhum jogo.')).toBeVisible();
       expect(backend.db.ownerships.filter((o) => o.user_id === PLAYER.id)).toHaveLength(0);
     });
 
-    test('um membro vê membros e biblioteca, mas não tem gestão', async ({ page }) => {
+    test('um membro vê membros e jogos, mas não tem gestão', async ({ page }) => {
       await page.goto('communities/table-tale');
       await expect(page.getByRole('tab', { name: 'Gestão' })).toHaveCount(0);
       await page.getByRole('tab', { name: 'Membros' }).click();
       await expect(page.getByText('Dono da Estante')).toBeVisible();
       await expect(page.getByRole('button', { name: 'Suspender' })).toHaveCount(0);
-      await page.getByRole('tab', { name: 'Biblioteca' }).click();
+      await page.getByRole('tab', { name: 'Jogos' }).click();
       await expect(page.getByRole('link', { name: /Hitster|Dixit|Catan/ }).first()).toBeVisible();
-      await expect(page.getByLabel('Jogo')).toHaveCount(0);
+      await expect(page.getByLabel('Jogo', { exact: true })).toHaveCount(0);
     });
 
     test('comunidade privada: sem pertencer não existe; com pedido pendente só se vê o aviso', async ({ page, backend }) => {
@@ -199,7 +212,7 @@ test.describe('Comunidades', () => {
       await page.goto('communities/clube-secreto-braga');
       await expect(page.getByRole('heading', { level: 1 })).toHaveText('Clube Secreto de Braga');
       await expect(page.getByText('Pedido pendente')).toBeVisible();
-      await expect(page.getByText('Esta comunidade é privada. Pede para entrar para ver os membros e a biblioteca.')).toBeVisible();
+      await expect(page.getByText('Esta comunidade é privada. Pede para entrar para ver os membros e os jogos.')).toBeVisible();
       await expect(page.getByRole('tab')).toHaveCount(0);
     });
   });
@@ -251,11 +264,38 @@ test.describe('Comunidades', () => {
       await expect.poll(() => backend.db.memberships.find((m) => m.id === 'm-other')?.status).toBe('suspended');
     });
 
-    test('o dono edita a localização e gere a biblioteca da comunidade', async ({ page, backend }) => {
+    test('um jogo posto na estante aparece em Jogos com a comunidade e sai quando é removido', async ({ page, locateAt }) => {
+      await locateAt('lisboa');
+      const games = new GamesPage(page);
+      await games.goto();
+      // Antes: só a estante de Lisboa tem Hitster.
+      await expect(games.shelves('Hitster')).toHaveText([/^Table Tale Lisboa/]);
+
       await page.goto('communities/clube-secreto-braga');
-      await page.getByRole('tab', { name: 'Biblioteca' }).click();
-      await page.getByLabel('Jogo').selectOption({ label: 'Dixit' });
-      await page.getByRole('button', { name: 'Adicionar à biblioteca' }).click();
+      await page.getByRole('tab', { name: 'Jogos' }).click();
+      await page.getByLabel('Jogo', { exact: true }).selectOption({ label: 'Hitster' });
+      await page.getByRole('button', { name: 'Adicionar jogo' }).click();
+      await expect(page.getByRole('tabpanel').getByRole('link', { name: 'Hitster' })).toBeVisible();
+
+      // A comunidade privada é do jogador, por isso conta mesmo a centenas de km.
+      await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Jogos' }).click();
+      await expect(games.shelves('Hitster')).toHaveText([/^Table Tale Lisboa/, /^Clube Secreto de Braga\s*\d{3} km$/]);
+      await games.community().selectOption({ label: 'Clube Secreto de Braga' });
+      expect(await games.titles()).toEqual(['Hitster', 'Uno']);
+
+      await page.goto('communities/clube-secreto-braga');
+      await page.getByRole('tab', { name: 'Jogos' }).click();
+      await page.getByRole('button', { name: 'Remover Hitster' }).click();
+      await expect(page.getByRole('tabpanel').getByRole('link', { name: 'Hitster' })).toHaveCount(0);
+      await games.goto();
+      await expect(games.shelves('Hitster')).toHaveText([/^Table Tale Lisboa/]);
+    });
+
+    test('o dono edita a localização e gere os jogos da comunidade', async ({ page, backend }) => {
+      await page.goto('communities/clube-secreto-braga');
+      await page.getByRole('tab', { name: 'Jogos' }).click();
+      await page.getByLabel('Jogo', { exact: true }).selectOption({ label: 'Dixit' });
+      await page.getByRole('button', { name: 'Adicionar jogo' }).click();
       await expect(page.getByRole('link', { name: 'Dixit' })).toBeVisible();
       expect(backend.db.communityGames.some((g) => g.added_by === PLAYER.id)).toBe(true);
       await page.getByRole('button', { name: 'Remover Dixit' }).click();

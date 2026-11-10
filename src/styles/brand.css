@@ -191,7 +191,8 @@ strong { color: var(--creme); }
   background: linear-gradient(90deg, transparent, var(--dourado) 50%, transparent); opacity: .5;
 }
 .header-inner { display: flex; align-items: center; gap: 1.5rem; min-height: var(--header-h); }
-.brand { display: inline-flex; align-items: center; text-decoration: none; }
+.brand { display: inline-flex; flex-direction: column; align-items: center; gap: .1rem; text-decoration: none; }
+.brand-version { font-size: .65rem; line-height: 1; letter-spacing: .08em; color: var(--dourado); opacity: .7; font-variant-numeric: tabular-nums; }
 .brand-logo { height: 44px; }
 :where(.logo) { display: block; width: auto; max-width: 100%; object-fit: contain; user-select: none; }
 .logo-pulse { animation: logo-pulse 2.4s ease-in-out infinite; }
@@ -287,14 +288,6 @@ strong { color: var(--creme); }
 .hero-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.75rem; }
 .hero-art { display: flex; flex-direction: column; align-items: center; gap: 1.75rem; }
 .hero-logo { width: clamp(240px, 30vw, 440px); height: auto; }
-.hero-stats {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin: 0; width: 100%;
-  background: var(--line); border: 1px solid var(--line-strong);
-  border-radius: var(--radius); overflow: hidden; backdrop-filter: blur(6px);
-}
-.hero-stats div { display: flex; flex-direction: column-reverse; align-items: center; text-align: center; padding: .85rem .5rem; background: rgba(7, 19, 29, .72); }
-.hero-stats dt { color: var(--text-2); font-size: .75rem; letter-spacing: .04em; }
-.hero-stats dd { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; color: var(--dourado); line-height: 1.2; }
 
 /* ---------- Biblioteca ---------- */
 .section-head { display: flex; justify-content: space-between; align-items: end; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
@@ -372,6 +365,17 @@ input[aria-invalid="true"] { border-color: #e0604f; }
 .meta-list li { display: inline-flex; align-items: center; gap: .35rem; }
 .meta-list .ui-icon { color: var(--dourado); }
 .owner { display: flex; align-items: center; gap: .5rem; margin: auto 0 0; padding-top: .75rem; border-top: 1px solid var(--line); font-size: .84rem; color: var(--text-2); }
+.game-card-shelves { display: flex; flex-wrap: wrap; gap: .35rem; list-style: none; margin: auto 0 0; padding: .75rem 0 0; border-top: 1px solid var(--line); }
+.shelf-chip { display: inline-flex; align-items: center; gap: .3rem; max-width: 100%; padding: .2rem .55rem; border: 1px solid var(--line); border-radius: 999px; font-size: .78rem; color: var(--text-2); }
+.shelf-chip .ui-icon { color: var(--dourado); flex: none; }
+.shelf-chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.shelf-chip-meta { flex: none; }
+.shelf-chip-more { border-style: dashed; }
+.games-reach { grid-template-columns: 2fr repeat(4, minmax(0, 1fr)); align-items: end; margin-bottom: 1rem; }
+.games-reach-where { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; align-self: center; }
+.games-reach-where p { margin: 0; display: inline-flex; align-items: center; gap: .4rem; }
+.games-reach-where .ui-icon { color: var(--dourado); }
+@media (max-width: 900px) { .games-reach { grid-template-columns: 1fr 1fr; } .games-reach-where { grid-column: 1 / -1; } }
 
 .status-badge {
   display: inline-flex; align-items: center; gap: .35rem;
@@ -925,7 +929,6 @@ section + section > .medal-group { margin-top: 1.75rem; }
 
 @media (max-width: 380px) {
   .filters { grid-template-columns: 1fr; }
-  .hero-stats { grid-template-columns: 1fr; }
   .stats { grid-template-columns: 1fr; }
 }
 

@@ -48,7 +48,7 @@ interface Page {
   body: string;
 }
 
-const NAV = `<header><p><a href="${href('/')}">${SITE_NAME}</a></p><nav aria-label="${esc(pt['nav.main'])}"><a href="${href('/library')}">${esc(pt['nav.library'])}: jogos de tabuleiro da comunidade</a> · <a href="${href('/lore')}">${esc(pt['nav.lore'])}: o universo Table Tale</a></nav></header>`;
+const NAV = `<header><p><a href="${href('/')}">${SITE_NAME}</a></p><nav aria-label="${esc(pt['nav.main'])}"><a href="${href('/games')}">${esc(pt['nav.games'])}: jogos de tabuleiro das comunidades</a> · <a href="${href('/lore')}">${esc(pt['nav.lore'])}: o universo Table Tale</a></nav></header>`;
 const FOOTER = `<footer><p>${SITE_NAME} — ${esc(pt['footer.tagline'])}</p></footer>`;
 const shell = (main: string) => `<div class="seo-shell" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">${NAV}<main>${main}</main>${FOOTER}</div>`;
 
@@ -65,18 +65,18 @@ function homePage(seo: (typeof PAGES)[number]): Page {
   const body = shell(
     `<h1>${esc(pt['home.title'])}</h1><p>${esc(pt['home.lead'])}</p>` +
     `<h2>${esc(pt['home.highlights'])}</h2><ul>${games.slice(0, 3).map(gameLi).join('')}</ul>` +
-    `<p><a href="${href('/library')}">${esc(pt['home.ctaExplore'])}</a> · <a href="${href('/lore')}">${esc(pt['home.ctaLore'])}</a></p>`,
+    `<p><a href="${href('/games')}">${esc(pt['home.ctaExplore'])}</a> · <a href="${href('/lore')}">${esc(pt['home.ctaLore'])}</a></p>`,
   );
   return { path: '/', title: seo.title.pt, description: seo.description.pt, index: true, ogType: 'website', jsonLd: [organization, website], body };
 }
 
-function libraryPage(seo: (typeof PAGES)[number]): Page {
-  const body = shell(`<h1>${esc(pt['library.title'])}</h1><p>${esc(pt['library.eyebrow'])}.</p><ul>${games.map(gameLi).join('')}</ul>`);
+function gamesPage(seo: (typeof PAGES)[number]): Page {
+  const body = shell(`<h1>${esc(pt['games.title'])}</h1><p>${esc(pt['games.eyebrow'])}.</p><ul>${games.map(gameLi).join('')}</ul>`);
   return {
-    path: '/library', title: seo.title.pt, description: seo.description.pt, index: true, ogType: 'website', body,
+    path: '/games', title: seo.title.pt, description: seo.description.pt, index: true, ogType: 'website', body,
     jsonLd: [
-      crumbs([[pt['nav.home'], '/'], [pt['library.title'], '/library']]),
-      { '@type': 'CollectionPage', '@id': `${url('/library')}#page`, url: url('/library'), name: seo.title.pt, isPartOf: { '@id': SITE_ID }, inLanguage: 'pt-PT',
+      crumbs([[pt['nav.home'], '/'], [pt['games.title'], '/games']]),
+      { '@type': 'CollectionPage', '@id': `${url('/games')}#page`, url: url('/games'), name: seo.title.pt, isPartOf: { '@id': SITE_ID }, inLanguage: 'pt-PT',
         mainEntity: { '@type': 'ItemList', numberOfItems: games.length, itemListElement: games.map((g, i) => ({ '@type': 'ListItem', position: i + 1, url: url(`/games/${g.slug}`), name: g.title })) } },
     ],
   };
@@ -112,12 +112,12 @@ function gamePage(g: (typeof games)[number]): Page {
   const body = shell(
     `<h1>${esc(g.title)}</h1><p>${esc(g.categories.join(', '))}</p>` +
     `<dl><dt>${esc(pt['game.players'])}</dt><dd>${players(g.min_players, g.max_players)}</dd><dt>${esc(pt['game.avgDuration'])}</dt><dd>${g.duration_minutes} min</dd></dl>` +
-    `<p>${esc(g.description)}</p><p><a href="${href('/library')}">${esc(pt['common.backToLibrary'])}</a></p>`,
+    `<p>${esc(g.description)}</p><p><a href="${href('/games')}">${esc(pt['common.backToGames'])}</a></p>`,
   );
   return {
     path, title: seo.title, description: seo.description, index: true, ogType: 'article', body,
     jsonLd: [
-      crumbs([[pt['nav.home'], '/'], [pt['library.title'], '/library'], [g.title, path]]),
+      crumbs([[pt['nav.home'], '/'], [pt['games.title'], '/games'], [g.title, path]]),
       { '@type': 'WebPage', '@id': `${url(path)}#page`, url: url(path), name: seo.title, description: seo.description, isPartOf: { '@id': SITE_ID }, inLanguage: 'pt-PT',
         mainEntity: { '@type': 'Game', name: g.title, description: g.description, numberOfPlayers: { '@type': 'QuantitativeValue', minValue: g.min_players, maxValue: g.max_players } } },
     ],
@@ -174,7 +174,7 @@ const byPath = (p: string) => {
 
 const pages: Page[] = [
   homePage(byPath('/')),
-  libraryPage(byPath('/library')),
+  gamesPage(byPath('/games')),
   lorePage(byPath('/lore')),
   ...games.map(gamePage),
   ...PAGES.filter((p) => !p.index).map(privatePage),
@@ -202,12 +202,12 @@ write(join(OUT, 'robots.txt'),
 write(join(OUT, 'llms.txt'),
   `# ${SITE_NAME}\n\n` +
   `> ${truncate(pt['home.lead'], 400)}\n\n` +
-  `${SITE_NAME} é uma biblioteca de jogos de tabuleiro e de cartas com diário de sessões, conquistas e um universo narrativo dividido em duas facções, Arcanos e Elementais. A página está em português (Portugal) com versão em inglês na própria aplicação.\n\n` +
+  `${SITE_NAME} junta comunidades de jogos de tabuleiro e de cartas, com diário de sessões, conquistas e um universo narrativo dividido em duas facções, Arcanos e Elementais. A página está em português (Portugal) com versão em inglês na própria aplicação.\n\n` +
   `## Páginas principais\n\n` +
   `- [Início](${url('/')}): ${byPath('/').description.pt}\n` +
-  `- [Biblioteca](${url('/library')}): ${byPath('/library').description.pt}\n` +
+  `- [Jogos](${url('/games')}): ${byPath('/games').description.pt}\n` +
   `- [Lore: Arcanos e Elementais](${url('/lore')}): ${byPath('/lore').description.pt}\n\n` +
-  `## Jogos da biblioteca\n\n${games.map((g) => `- [${g.title}](${url(`/games/${g.slug}`)}): ${g.categories.join(', ')}, ${players(g.min_players, g.max_players)} jogadores, ${g.duration_minutes} min.`).join('\n')}\n\n` +
+  `## Jogos nas estantes\n\n${games.map((g) => `- [${g.title}](${url(`/games/${g.slug}`)}): ${g.categories.join(', ')}, ${players(g.min_players, g.max_players)} jogadores, ${g.duration_minutes} min.`).join('\n')}\n\n` +
   `## Universo\n\n` +
   `- Arcanos: "${pt['faction.arcanos.motto']}" ${pt['faction.arcanos.line']}\n` +
   `- Elementais: "${pt['faction.elementais.motto']}" ${pt['faction.elementais.line']}\n` +

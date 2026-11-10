@@ -5,7 +5,7 @@ import { t } from '@/i18n';
 import { OAUTH_PROVIDERS, providerName, type EnabledProviders, type OAuthProvider } from './providers';
 
 /** Only allow in-app relative paths as post-login destinations (prevents open redirects). */
-export function safeNextPath(next: string | null | undefined, fallback = '/library'): string {
+export function safeNextPath(next: string | null | undefined, fallback = '/games'): string {
   if (!next || !next.startsWith('/') || next.startsWith('//') || next.includes('\\')) return fallback;
   return next;
 }
@@ -35,7 +35,7 @@ const PROVIDER_OPTIONS: Record<OAuthProvider, { scopes?: string; queryParams?: R
 
 const isDisabledError = (message: string) => /not enabled|unsupported provider/i.test(message);
 
-export async function signInWithProvider(provider: OAuthProvider, next = '/library') {
+export async function signInWithProvider(provider: OAuthProvider, next = '/games') {
   await assertEnabled(provider);
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
@@ -47,7 +47,7 @@ export async function signInWithProvider(provider: OAuthProvider, next = '/libra
   }
 }
 
-export async function signInWithMagicLink(email: string, next = '/library') {
+export async function signInWithMagicLink(email: string, next = '/games') {
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: { emailRedirectTo: authCallbackUrl(safeNextPath(next)), shouldCreateUser: true },

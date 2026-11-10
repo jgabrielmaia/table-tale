@@ -6,7 +6,7 @@ Inventário feito a partir das rotas em `src/App.tsx`, das páginas em `src/feat
 
 | Perfil | Como se identifica | O que pode fazer |
 |---|---|---|
-| **Visitante** | Sem sessão | Ver início, biblioteca (pesquisa e filtros), detalhe de jogo, Lore, eventos e páginas de entrada/registo. Não pode registar nada. |
+| **Visitante** | Sem sessão | Ver início, jogos das comunidades perto (pesquisa, filtros, localização e raio), detalhe de jogo, Lore, eventos e páginas de entrada/registo. Não pode registar nada. |
 | **Jogador** | Sessão Supabase (Google, GitHub ou link mágico) | Tudo o anterior, mais: favoritos e estados dos jogos, diário de sessões, inscrição em eventos, perfil, Sorteio do Destino, poster, coleção de cartas do Lore, conquistas. |
 
 Não existe perfil de administrador na interface.
@@ -18,7 +18,7 @@ Estado: **Coberto** = fluxo principal + validações/erros relevantes; **Parcial
 | Funcionalidade | Rota / ponto de entrada | Perfil | Cenários cobertos | Ficheiro | Estado |
 |---|---|---|---|---|---|
 | Página inicial | `/` | Visitante, Jogador | Título, atalhos, estatísticas, destaques, botão Entrar conforme sessão, contador de favoritos, erro de carregamento | `home.spec.ts`, `navigation.spec.ts` | Coberto |
-| Menu e navegação | Cabeçalho, barra inferior, rodapé | Todos | Ordem Perfil › Biblioteca › Arcanos › Eventos, item atual, hambúrguer (abrir/fechar/Esc), barra inferior, saltar para o conteúdo, 404, redirecionamento `/biblioteca` | `navigation.spec.ts`, `responsive.spec.ts` | Coberto |
+| Menu e navegação | Cabeçalho, barra inferior, rodapé | Todos | Ordem Perfil › Jogos › Arcanos › Eventos, item atual, hambúrguer (abrir/fechar/Esc), barra inferior, saltar para o conteúdo, 404, `/library` e `/biblioteca` dão 404 | `navigation.spec.ts`, `responsive.spec.ts` | Coberto |
 | Idioma PT/EN | Seletor no cabeçalho | Todos | Alternar, persistir ao recarregar, `lang` do documento, textos de Lore e Sorteio em inglês | `navigation.spec.ts`, `lore.spec.ts`, `fate.spec.ts` | Coberto |
 | Metadados de SEO em runtime | Todas as rotas | Todos | Título, canonical e robots mudam sem recarregar; páginas privadas e 404 em `noindex` | `navigation.spec.ts` | Coberto |
 | Entrar com e-mail (link mágico) | `/login`, `/register` | Visitante | E-mail vazio e inválido, envio, confirmação, "usar outro e-mail", limite de pedidos, erro 500, falha de rede, botão desativado e sem duplo envio, conclusão pelo link de retorno | `auth.spec.ts` | Coberto |
@@ -26,10 +26,11 @@ Estado: **Coberto** = fluxo principal + validações/erros relevantes; **Parcial
 | Callback de autenticação | `/auth/callback` | Visitante | Erros do fornecedor traduzidos, `next` externo ignorado (redirecionamento aberto) | `auth.spec.ts` | Coberto |
 | Sessão e proteção de rotas | `/profile`, `/fate` | Todos | Terminar sessão, persistência ao recarregar e numa sessão nova, sessão expirada renovável e não renovável, acesso anónimo redireciona e guarda o destino | `auth.spec.ts` | Coberto |
 | Recuperação / alteração de palavra-passe | — | — | — | — | N/A (login sem palavra-passe) |
-| Biblioteca: listagem | `/library` | Visitante, Jogador | Contagem, exemplares, proprietário, estados de carregamento, vazio e erro com "Tentar novamente", falha de rede | `library.spec.ts` | Coberto |
-| Biblioteca: pesquisa e filtros | `/library?q=` | Visitante, Jogador | Pesquisa sem acentos/maiúsculas, género, jogadores, duração, estado, só favoritos, combinação, limpar, pesquisa no URL, texto muito longo | `library.spec.ts` | Coberto |
-| Biblioteca: ordenar / paginar | — | — | — | — | N/A (lista única sem paginação nem ordenação) |
-| Favoritos e estado do jogo | Cartões da biblioteca, detalhe | Jogador | Marcar/desmarcar, estado, persistência, desfazer em erro, 403, token expirado, sem duplo clique | `library.spec.ts`, `game-detail.spec.ts` | Coberto |
+| Jogos: listagem | `/games` | Visitante, Jogador | Contagem, um cartão por jogo com comunidades, exemplares e distância, jogos fora das estantes escondidos, estados de carregamento, vazio e erro com "Tentar novamente", falha de rede | `games.spec.ts`, `home.spec.ts` | Coberto |
+| Jogos: localização e raio | `/games` | Visitante, Jogador | Localização do browser, recusa com escolha de cidade (só comunidades públicas) lembrada, "Usar a minha localização", raio 5–100 km lembrado, comunidades privadas escondidas a quem não pertence, as minhas comunidades sempre incluídas, pedido pendente não conta | `games.spec.ts` | Coberto |
+| Jogos: pesquisa e filtros | `/games?q=` | Visitante, Jogador | Pesquisa sem acentos/maiúsculas, comunidade, categoria e mecânica do BGG, jogadores, duração, estado, só favoritos, combinação, limpar, pesquisa no URL, texto muito longo | `games.spec.ts` | Coberto |
+| Jogos: ordenar | `/games` | Visitante, Jogador | Nome, mais perto | `games.spec.ts` | Coberto (sem paginação) |
+| Favoritos e estado do jogo | Cartões de Jogos, detalhe | Jogador | Marcar/desmarcar, estado, persistência, desfazer em erro, 403, token expirado, sem duplo clique | `games.spec.ts`, `game-detail.spec.ts` | Coberto |
 | Detalhe do jogo | `/games/:slug` | Visitante, Jogador | Ficha, proprietário, relacionados, jogo inexistente, erro de carregamento, convite a entrar | `game-detail.spec.ts` | Coberto |
 | Diário de sessões (criar / listar / apagar) | `/games/:slug` | Jogador | Sessão completa, "jogado hoje", validações (data, jogadores, duração, notas), avaliação, apagar, erro 500, duplicado (23505), permissão (42501), sem duplo envio, HTML nas notas, notas longas, teclado | `game-detail.spec.ts` | Coberto |
 | Diário de sessões: editar / confirmar exclusão | — | — | — | — | N/A (não há edição nem confirmação; o apagar é imediato) |

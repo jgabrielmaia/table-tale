@@ -13,7 +13,7 @@ vi.mock('@/lib/supabase', () => ({
 vi.mock('@/lib/env', () => ({
   env: { supabaseUrl: 'https://project.supabase.co', supabaseAnonKey: 'anon', siteUrl: 'http://localhost:5173/table-tale' },
   isSupabaseConfigured: true,
-  authCallbackUrl: (next = '/library') => `http://localhost:5173/table-tale/auth/callback?next=${encodeURIComponent(next)}`,
+  authCallbackUrl: (next = '/games') => `http://localhost:5173/table-tale/auth/callback?next=${encodeURIComponent(next)}`,
   basePath: '/',
 }));
 

@@ -6,7 +6,7 @@ export type SeoLang = 'pt' | 'en';
 type Localized = Record<SeoLang, string>;
 
 export interface PageSeo {
-  /** Router path without the base ("/library"). */
+  /** Router path without the base ("/games"). */
   path: string;
   /** false: kept out of the index (private, transactional or utility pages). */
   index: boolean;
@@ -18,19 +18,19 @@ export const PAGES: readonly PageSeo[] = [
   {
     path: '/',
     index: true,
-    title: { pt: 'Table Tale – Biblioteca de jogos de tabuleiro e comunidade', en: 'Table Tale – Board Game Library, Stories and Community' },
+    title: { pt: 'Table Tale – Jogos de tabuleiro, histórias e comunidades', en: 'Table Tale – Board Games, Stories and Communities' },
     description: {
-      pt: 'Explora a biblioteca viva de jogos de tabuleiro da Table Tale, regista as tuas sessões e descobre o universo dos Arcanos e Elementais.',
-      en: 'Explore the living board game library of Table Tale, log your game sessions and discover the universe of the Arcanists and the Elementals.',
+      pt: 'Descobre jogos de tabuleiro nas comunidades perto de ti, regista as tuas sessões e conhece o universo dos Arcanos e Elementais da Table Tale.',
+      en: 'Find board games on the shelves of communities near you, log your game sessions and discover the universe of the Arcanists and the Elementals.',
     },
   },
   {
-    path: '/library',
+    path: '/games',
     index: true,
-    title: { pt: 'Biblioteca – Jogos de tabuleiro da comunidade | Table Tale', en: 'Library – Community Board Game Collection | Table Tale' },
+    title: { pt: 'Jogos – Jogos de tabuleiro perto de ti | Table Tale', en: 'Games – Board Games in Communities Near You | Table Tale' },
     description: {
-      pt: 'Consulta a coleção de jogos de tabuleiro e de cartas da Table Tale: filtra por categoria e mecânica do BoardGameGeek, vê jogadores e duração e guarda favoritos.',
-      en: 'Browse the Table Tale collection of board and card games: filter by BoardGameGeek category and mechanic, check players and duration, save favourites.',
+      pt: 'Descobre os jogos de tabuleiro nas estantes das comunidades perto de ti: filtra por distância, comunidade e categoria do BoardGameGeek e guarda favoritos.',
+      en: 'Find the board and card games on the shelves of communities near you: filter by distance, community, BoardGameGeek category and mechanic, and save favourites.',
     },
   },
   {

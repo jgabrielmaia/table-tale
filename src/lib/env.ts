@@ -17,5 +17,5 @@ export const env = {
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
-export const authCallbackUrl = (next = '/library') =>
+export const authCallbackUrl = (next = '/games') =>
   `${env.siteUrl}/auth/callback?next=${encodeURIComponent(next)}`;

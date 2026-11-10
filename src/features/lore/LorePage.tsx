@@ -188,7 +188,7 @@ export function LorePage() {
                 <p className="cta-title">{L.outro.title}</p>
                 <p className="cta-text">{L.outro.text}</p>
               </div>
-              <Link className="btn btn-primary" to="/library">{t('lore.exploreLibrary')}</Link>
+              <Link className="btn btn-primary" to="/games">{t('lore.exploreGames')}</Link>
             </div>
           </div>
         </div>

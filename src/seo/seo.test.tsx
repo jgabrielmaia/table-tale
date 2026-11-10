@@ -30,9 +30,9 @@ describe('page metadata table', () => {
 
 describe('RouteSeo', () => {
   it('sets title, canonical and index for a public page', () => {
-    renderAt('/library');
-    expect(document.title).toContain('Biblioteca');
-    expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toMatch(/\/library\/$/);
+    renderAt('/games');
+    expect(document.title).toContain('Jogos');
+    expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toMatch(/\/games\/$/);
     expect(meta('meta[name="robots"]')).toBe('index, follow');
   });
 

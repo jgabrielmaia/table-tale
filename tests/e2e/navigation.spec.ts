@@ -7,7 +7,7 @@ test.describe('Navigation e estrutura', () => {
     await expect(page).toHaveTitle(/Table Tale/);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Cada jogo guarda uma história. Cada partida escreve outra.');
     await expect(page.getByRole('link', { name: 'Table Tale — página inicial' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Explorar a coleção' })).toHaveAttribute('href', /\/library$/);
+    await expect(page.getByRole('link', { name: 'Explorar os jogos' })).toHaveAttribute('href', /\/games$/);
     await expect(page.getByRole('link', { name: 'Conhecer o universo' })).toHaveAttribute('href', /\/lore$/);
   });
 
@@ -20,10 +20,10 @@ test.describe('Navigation e estrutura', () => {
     await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', /apple-touch-icon\.png$/);
   });
 
-  test('o menu segue a ordem Perfil, Biblioteca, Arcanos & Elementais, Eventos, Comunidades', async ({ page, isMobile }) => {
+  test('o menu segue a ordem Perfil, Jogos, Arcanos & Elementais, Eventos, Comunidades', async ({ page, isMobile }) => {
     test.skip(isMobile, 'O menu colapsado é coberto pelo teste responsivo.');
     await page.goto('');
-    expect(await new AppShell(page).navLabels()).toEqual(['Perfil', 'Biblioteca', 'Arcanos & Elementais', 'Eventos', 'Comunidades']);
+    expect(await new AppShell(page).navLabels()).toEqual(['Perfil', 'Jogos', 'Arcanos & Elementais', 'Eventos', 'Comunidades']);
   });
 
   test('cada entrada do menu leva à página certa e marca-se como atual', async ({ page, signIn, isMobile }) => {
@@ -32,7 +32,7 @@ test.describe('Navigation e estrutura', () => {
     await page.goto('');
     const shell = new AppShell(page);
     for (const [label, path, heading] of [
-      ['Biblioteca', /\/library$/, 'Biblioteca'],
+      ['Jogos', /\/games$/, 'Jogos'],
       ['Arcanos & Elementais', /\/lore$/, 'Arcanos & Elementais'],
       ['Eventos', /\/events$/, 'Eventos'],
       ['Perfil', /\/profile$/, 'Ana Teste'],
@@ -57,14 +57,14 @@ test.describe('Navigation e estrutura', () => {
     await expect(page.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false');
 
     await page.getByRole('button', { name: 'Abrir menu' }).click();
-    await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Biblioteca' }).click();
-    await expect(page).toHaveURL(/\/library$/);
+    await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Jogos' }).click();
+    await expect(page).toHaveURL(/\/games$/);
     await expect(page.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false');
   });
 
   test('no telemóvel a página não tem scroll horizontal @responsive', async ({ page, isMobile }) => {
     test.skip(!isMobile, 'Verificação específica de ecrã pequeno.');
-    for (const path of ['', 'library', 'lore', 'login']) {
+    for (const path of ['', 'games', 'lore', 'login']) {
       await page.goto(path);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -87,31 +87,33 @@ test.describe('Navigation e estrutura', () => {
     await page.goto('esta-rota-nao-existe');
     await expect(page.getByRole('heading', { name: 'Esta página não consta do mapa' })).toBeVisible();
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
-    await page.getByRole('link', { name: 'Voltar à biblioteca' }).click();
-    await expect(page).toHaveURL(/\/library$/);
+    await page.getByRole('link', { name: 'Voltar aos jogos' }).click();
+    await expect(page).toHaveURL(/\/games$/);
   });
 
-  test('o endereço antigo /biblioteca redireciona para /library', async ({ page }) => {
-    await page.goto('biblioteca');
-    await expect(page).toHaveURL(/\/library$/);
+  test('os endereços antigos /library e /biblioteca já não existem', async ({ page }) => {
+    for (const path of ['library', 'biblioteca', 'library/import']) {
+      await page.goto(path);
+      await expect(page.getByRole('heading', { name: 'Esta página não consta do mapa' })).toBeVisible();
+    }
   });
 
   test('a língua alterna entre PT e EN, atualiza o texto e persiste após recarregar', async ({ page }) => {
-    await page.goto('library');
+    await page.goto('games');
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-PT');
     const shell = new AppShell(page);
     await shell.openMenuIfCollapsed();
     await shell.switchLanguage('EN');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Library');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Games');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en-GB');
     await page.reload();
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Library');
-    await expect(page).toHaveTitle(/Library/);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Games');
+    await expect(page).toHaveTitle(/Games/);
   });
 
   test('os metadados de SEO acompanham a navegação sem recarregar', async ({ page }) => {
     await page.goto('');
-    await expect(page).toHaveTitle('Table Tale – Biblioteca de jogos de tabuleiro e comunidade');
+    await expect(page).toHaveTitle('Table Tale – Jogos de tabuleiro, histórias e comunidades');
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/table-tale\/$/);
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'index, follow');
 

@@ -1,6 +1,6 @@
 # Testes E2E (Playwright)
 
-Suíte ponta a ponta da Table Tale: autenticação, biblioteca, detalhe do jogo e diário, eventos, perfil, Sorteio do Destino com poster, Lore, acessibilidade e responsividade. O que cada ficheiro cobre está em [`FEATURE-MATRIX.md`](./FEATURE-MATRIX.md).
+Suíte ponta a ponta da Table Tale: autenticação, jogos das comunidades, detalhe do jogo e diário, eventos, perfil, Sorteio do Destino com poster, Lore, acessibilidade e responsividade. O que cada ficheiro cobre está em [`FEATURE-MATRIX.md`](./FEATURE-MATRIX.md).
 
 ## Pré-requisitos
 
@@ -49,8 +49,8 @@ npm run typecheck:e2e         # verifica os tipos da suíte
 Um ficheiro, um teste ou uma etiqueta:
 
 ```powershell
-npx playwright test tests/e2e/library.spec.ts
-npx playwright test tests/e2e/library.spec.ts --project=chromium
+npx playwright test tests/e2e/games.spec.ts
+npx playwright test tests/e2e/games.spec.ts --project=chromium
 npx playwright test -g "link mágico"
 npx playwright test --grep @smoke        # fluxos críticos
 npx playwright test --grep @a11y         # acessibilidade (axe)

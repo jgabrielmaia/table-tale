@@ -3,6 +3,7 @@ import { unwrap } from '@/lib/errors';
 import { t } from '@/i18n';
 import type { GameRow, GameSessionRow, OwnershipCondition, UserGameStatusRow } from '@/types/database';
 import type { Game, GameOwner, GameSession, GameStatus, GameUserState } from '@/types/domain';
+import type { ShelfEntry } from './shelves';
 
 const LIST_COLUMNS =
   'id,title,slug,description,cover_url,min_players,max_players,duration_minutes,bgg_id,bgg_synced_at,categories,mechanics,' +
@@ -157,4 +158,28 @@ export async function createSession(userId: string, input: NewSession): Promise<
 
 export async function deleteSession(sessionId: string): Promise<void> {
   unwrap(await supabase.from('game_sessions').delete().eq('id', sessionId), t('games.err.deleteSession'));
+}
+
+// ---- community shelves ---------------------------------------------------------------------------------------------
+
+type ShelfQueryRow = {
+  game_id: string;
+  copies: number;
+  communities: { id: string; slug: string; name: string; city: string; latitude: number | string | null; longitude: number | string | null } | null;
+};
+
+/** Every shelf entry the viewer may read (public communities and their own), with the community's location. */
+export async function fetchShelfEntries(): Promise<ShelfEntry[]> {
+  const rows = unwrap(
+    await supabase.from('community_games').select('game_id,copies,communities(id,slug,name,city,latitude,longitude)'),
+    t('games.err.load'),
+  ) as unknown as ShelfQueryRow[];
+  const num = (v: number | string | null) => (v === null ? null : Number(v));
+  return rows
+    .filter((r) => r.communities)
+    .map((r) => ({
+      gameId: r.game_id,
+      copies: r.copies,
+      community: { ...r.communities!, latitude: num(r.communities!.latitude), longitude: num(r.communities!.longitude) },
+    }));
 }

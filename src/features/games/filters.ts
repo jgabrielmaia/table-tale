@@ -54,7 +54,7 @@ export function matchesFilters(game: LibraryGame, f: GameFilterValues): boolean 
   return true;
 }
 
-export const filterGames = (games: LibraryGame[], filters: GameFilterValues) => games.filter((g) => matchesFilters(g, filters));
+export const filterGames = <T extends LibraryGame>(games: T[], filters: GameFilterValues): T[] => games.filter((g) => matchesFilters(g, filters));
 
 export const hasActiveFilters = (f: GameFilterValues) =>
   Boolean(f.query || f.category || f.mechanic || f.players || f.duration || f.status || f.favoritesOnly);

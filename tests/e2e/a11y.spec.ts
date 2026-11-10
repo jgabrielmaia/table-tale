@@ -31,7 +31,7 @@ test.describe('Acessibilidade', () => {
   test.describe('regras estruturais (axe) @a11y', () => {
     const publicPages: [string, string][] = [
       ['página inicial', ''],
-      ['biblioteca', 'library'],
+      ['jogos', 'games'],
       ['detalhe do jogo', 'games/dixit'],
       ['lore', 'lore'],
       ['eventos', 'events'],
@@ -73,7 +73,7 @@ test.describe('Acessibilidade', () => {
   });
 
   test('cada página pública tem exatamente um título principal', async ({ page }) => {
-    for (const path of ['', 'library', 'lore', 'events', 'communities', 'communities/table-tale', 'login', 'games/uno']) {
+    for (const path of ['', 'games', 'lore', 'events', 'communities', 'communities/table-tale', 'login', 'games/uno']) {
       await page.goto(path);
       await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     }
@@ -139,7 +139,7 @@ test.describe('Acessibilidade', () => {
 
   test('botões e ligações principais têm nome acessível', async ({ page, signIn }) => {
     await signIn();
-    await page.goto('library');
+    await page.goto('games');
     await expect(page.getByRole('button', { name: 'Adicionar Dixit aos favoritos' })).toBeVisible();
     await expect(page.getByLabel('Estado de Dixit')).toBeVisible();
     const shell = new AppShell(page);
@@ -148,7 +148,7 @@ test.describe('Acessibilidade', () => {
   });
 
   test('a navegação principal tem marcos semânticos', async ({ page }) => {
-    await page.goto('library');
+    await page.goto('games');
     await expect(page.getByRole('banner')).toBeVisible();
     await expect(page.getByRole('main')).toBeVisible();
     await expect(page.getByRole('contentinfo')).toBeVisible();

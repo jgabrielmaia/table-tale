@@ -41,8 +41,8 @@ test.describe('Detalhe do jogo', () => {
       await page.goto('games/nao-existe');
       await expect(page.getByRole('heading', { name: 'Este jogo não consta da estante' })).toBeVisible();
       await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
-      await page.getByRole('link', { name: 'Voltar à biblioteca' }).first().click();
-      await expect(page).toHaveURL(/\/library$/);
+      await page.getByRole('link', { name: 'Voltar aos jogos' }).first().click();
+      await expect(page).toHaveURL(/\/games$/);
     });
 
     test('falha ao carregar o jogo mostra erro', async ({ page, backend }) => {
@@ -121,7 +121,7 @@ test.describe('Detalhe do jogo', () => {
       await page.getByRole('button', { name: 'Iniciar' }).click();
       await expect(page.getByRole('button', { name: 'Pausar' })).toBeVisible();
 
-      await page.goto('library');
+      await page.goto('games');
       await game.goto('dixit');
       await page.reload();
       await page.getByRole('button', { name: 'Pausar' }).click();
