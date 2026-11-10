@@ -36,9 +36,9 @@ describe('providers', () => {
 describe('post-login destination', () => {
   it('keeps in-app paths and rejects open redirects', () => {
     expect(safeNextPath('/fate')).toBe('/fate');
-    expect(safeNextPath('//evil.example')).toBe('/library');
-    expect(safeNextPath('https://evil.example')).toBe('/library');
-    expect(safeNextPath('/\\evil')).toBe('/library');
-    expect(safeNextPath(null)).toBe('/library');
+    expect(safeNextPath('//evil.example')).toBe('/games');
+    expect(safeNextPath('https://evil.example')).toBe('/games');
+    expect(safeNextPath('/\\evil')).toBe('/games');
+    expect(safeNextPath(null)).toBe('/games');
   });
 });

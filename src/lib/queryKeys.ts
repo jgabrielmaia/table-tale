@@ -18,6 +18,7 @@ export const queryKeys = {
   communityGames: (id: string | null) => ['community-games', id] as const,
   myMemberships: (userId: string | null) => ['my-memberships', userId] as const,
   myUserGames: (userId: string | null) => ['my-user-games', userId] as const,
+  shelves: ['shelves'] as const,
 };
 
 /** Keys whose data depends on the user's progress (refreshed after any activity change). */

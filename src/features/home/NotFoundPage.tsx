@@ -10,7 +10,7 @@ export function NotFoundPage() {
         headingLevel={2}
         title={t('notFound.title')}
         description={t('notFound.text')}
-        action={<ButtonLink to="/library" variant="primary">{t('common.backToLibrary')}</ButtonLink>}
+        action={<ButtonLink to="/games" variant="primary">{t('common.backToGames')}</ButtonLink>}
       />
     </div>
   );

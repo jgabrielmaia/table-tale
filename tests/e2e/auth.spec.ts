@@ -21,10 +21,10 @@ test.describe('Autenticação', () => {
       await expect(page).toHaveURL(/\/login$/);
     });
 
-    test('um utilizador com sessão é reencaminhado para a biblioteca', async ({ page, signIn }) => {
+    test('um utilizador com sessão é reencaminhado para os jogos', async ({ page, signIn }) => {
       await signIn();
       await page.goto('login');
-      await expect(page).toHaveURL(/\/library$/);
+      await expect(page).toHaveURL(/\/games$/);
     });
   });
 
@@ -115,12 +115,12 @@ test.describe('Autenticação', () => {
   });
 
   test.describe('Google e GitHub', () => {
-    test('entrar com Google leva à biblioteca com a sessão iniciada @smoke', async ({ page, backend }) => {
+    test('entrar com Google leva aos jogos com a sessão iniciada @smoke', async ({ page, backend }) => {
       backend.giveCard();
       const login = new LoginPage(page);
       await login.goto();
       await login.google().click();
-      await expect(page).toHaveURL(/\/library$/);
+      await expect(page).toHaveURL(/\/games$/);
       await new AppShell(page).expectSignedIn();
     });
 
@@ -145,7 +145,7 @@ test.describe('Autenticação', () => {
       const login = new LoginPage(page);
       await login.goto();
       await login.google().click();
-      await expect(page).toHaveURL(/\/library$/);
+      await expect(page).toHaveURL(/\/games$/);
     });
 
     test('entrar com GitHub também funciona', async ({ page, backend }) => {
@@ -153,7 +153,7 @@ test.describe('Autenticação', () => {
       const login = new LoginPage(page);
       await login.goto();
       await login.github().click();
-      await expect(page).toHaveURL(/\/library$/);
+      await expect(page).toHaveURL(/\/games$/);
       await new AppShell(page).expectSignedIn();
     });
 
@@ -165,7 +165,7 @@ test.describe('Autenticação', () => {
       await login.google().click({ noWaitAfter: true });
       await expect(page.getByRole('button', { name: 'A redirecionar…' })).toBeDisabled();
       release();
-      await expect(page).toHaveURL(/\/library$/);
+      await expect(page).toHaveURL(/\/games$/);
     });
 
     test('depois de entrar, regressa à página protegida que o utilizador queria @smoke', async ({ page, backend }) => {
@@ -215,7 +215,7 @@ test.describe('Autenticação', () => {
       await signIn();
       for (const next of ['//evil.example.test', 'https://evil.example.test', '/\\evil.example.test']) {
         await page.goto(`auth/callback?next=${encodeURIComponent(next)}`);
-        await expect(page).toHaveURL(/\/library$/);
+        await expect(page).toHaveURL(/\/games$/);
         expect(new URL(page.url()).hostname).toBe('localhost');
       }
     });
@@ -224,7 +224,7 @@ test.describe('Autenticação', () => {
   test.describe('sessão', () => {
     test('termina a sessão, avisa e volta a proteger as rotas @smoke', async ({ page, signIn }) => {
       await signIn();
-      await page.goto('library');
+      await page.goto('games');
       const shell = new AppShell(page);
       await shell.openMenuIfCollapsed();
       await shell.signOut().click();

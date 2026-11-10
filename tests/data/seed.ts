@@ -30,10 +30,27 @@ export const EVENT_DEFS = [
 ];
 
 export const COMMUNITY_DEFS = [
-  { slug: 'table-tale', name: 'Table Tale Lisboa', visibility: 'public', city: 'Lisboa', district: 'Alvalade', country: 'Portugal' },
-  { slug: 'tabuleiros-do-porto', name: 'Tabuleiros do Porto', visibility: 'public', city: 'Porto', district: 'Boavista', country: 'Portugal' },
-  { slug: 'clube-secreto-braga', name: 'Clube Secreto de Braga', visibility: 'private', city: 'Braga', district: 'Centro', country: 'Portugal' },
+  { slug: 'table-tale', name: 'Table Tale Lisboa', visibility: 'public', city: 'Lisboa', district: 'Alvalade', country: 'Portugal', latitude: 38.7495, longitude: -9.1438 },
+  { slug: 'tabuleiros-do-porto', name: 'Tabuleiros do Porto', visibility: 'public', city: 'Porto', district: 'Boavista', country: 'Portugal', latitude: 41.1597, longitude: -8.6476 },
+  { slug: 'clube-secreto-braga', name: 'Clube Secreto de Braga', visibility: 'private', city: 'Braga', district: 'Centro', country: 'Portugal', latitude: 41.5503, longitude: -8.4201 },
 ];
+
+/** Places the viewer can stand in (browser location), each a few km from one community and far from the others. */
+export const PLACES = {
+  /** ~3 km from Table Tale Lisboa. */
+  lisboa: { latitude: 38.7223, longitude: -9.1393 },
+  /** ~1.5 km from Tabuleiros do Porto; Lisboa is ~275 km away. */
+  porto: { latitude: 41.1579, longitude: -8.6291 },
+  /** Next to the private Braga club: its shelf is invisible to non-members. */
+  braga: { latitude: 41.5454, longitude: -8.4265 },
+} as const;
+
+/** What each shelf holds (game slugs → copies). Lisboa has the whole catalogue, so filter counts match the catalogue. */
+export const SHELVES: Record<string, Record<string, number>> = {
+  'table-tale': {}, // filled below with every game
+  'tabuleiros-do-porto': { dixit: 1, coup: 3, vaalbara: 1 },
+  'clube-secreto-braga': { uno: 1 },
+};
 
 export interface Db {
   profiles: Row[];
@@ -80,14 +97,20 @@ export function baseDb(): Db {
     seasons: [{ ...SEASON }],
     identities: [],
     factions: factions.map((f, i) => ({ id: uuid('5000', i + 1), slug: f.slug, name: f.name, description: f.description, symbol: f.symbol, color: f.color, lore: f.lore, created_at: CREATED })),
-    communities: COMMUNITY_DEFS.map((c, i) => ({ id: uuid('a000', i + 1), description: '', latitude: null, longitude: null, created_by: OWNER.id, created_at: CREATED, updated_at: CREATED, ...c })),
+    communities: COMMUNITY_DEFS.map((c, i) => ({ id: uuid('a000', i + 1), description: '', created_by: OWNER.id, created_at: CREATED, updated_at: CREATED, ...c })),
     memberships: [
       ...COMMUNITY_DEFS.map((_, i) => ({ id: uuid('a100', i + 1), user_id: OWNER.id, community_id: uuid('a000', i + 1), role: 'owner', status: 'active', joined_at: CREATED })),
       { id: uuid('a100', 10), user_id: PLAYER.id, community_id: uuid('a000', 1), role: 'member', status: 'active', joined_at: CREATED },
     ],
-    communityGames: [
-      { id: uuid('a200', 1), community_id: uuid('a000', 1), game_id: gameRows[0]!.id, added_by: OWNER.id, copies: 2, condition: 'good', notes: null, added_at: CREATED },
-    ],
+    communityGames: COMMUNITY_DEFS.flatMap((c, ci) => {
+      // Lisboa holds every game with the owner's copies; the others hold what SHELVES lists.
+      // Ids start at 10001 so they never collide with the ids the fake backend generates for new rows (101, 102...).
+      const shelf = c.slug === 'table-tale' ? Object.fromEntries(games.map((g) => [g.slug, g.copies])) : SHELVES[c.slug]!;
+      return Object.entries(shelf).map(([slug, copies], gi) => ({
+        id: uuid('a200', (ci + 1) * 10_000 + gi + 1), community_id: uuid('a000', ci + 1), game_id: gameRows.find((g) => g.slug === slug)!.id,
+        added_by: OWNER.id, copies, condition: 'good', notes: null, added_at: CREATED,
+      }));
+    }),
     counter: 0,
   };
 }

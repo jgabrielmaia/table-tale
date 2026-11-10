@@ -119,7 +119,7 @@ export function LoginPage({ mode = 'login' }: { mode?: 'login' | 'register' }) {
             </div>
           </>
         )}
-        <Link className="back-link back-center" to="/library"><Icon name="back" />{t('common.backToLibrary')}</Link>
+        <Link className="back-link back-center" to="/games"><Icon name="back" />{t('common.backToGames')}</Link>
       </div>
     </section>
   );

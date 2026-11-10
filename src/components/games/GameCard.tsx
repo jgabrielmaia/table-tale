@@ -5,6 +5,7 @@ import { PlayerAvatar } from '@/components/identity/PlayerAvatar';
 import { t, tn } from '@/i18n';
 import { minutesText, playersText } from '@/lib/format';
 import type { GameStatus, LibraryGame } from '@/types/domain';
+import { formatKm, type GameShelf, type ShelfGame } from '@/features/games/shelves';
 import { gameStyle } from '@/lib/cover';
 import { GameCover, coverAccent } from './GameCover';
 import { GameStatusBadge, statusOptions } from './GameStatusBadge';
@@ -21,6 +22,7 @@ export interface GameCardProps {
 
 export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact, headingLevel = 3 }: GameCardProps) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
+  const shelves = 'shelves' in game ? (game as ShelfGame).shelves : null;
   const owner = game.owners[0];
   const copies = game.owners.reduce((sum, o) => sum + o.copies, 0);
   const style = { '--accent': coverAccent(game.slug) } as CSSProperties;
@@ -56,7 +58,9 @@ export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact
             <li><Icon name="users" />{playersText(game.minPlayers, game.maxPlayers)}</li>
             <li><Icon name="clock" />{minutesText(game.durationMinutes)}</li>
           </ul>
-          {owner && (
+          {shelves ? (
+            <ShelfList shelves={shelves} />
+          ) : owner && (
             <p className="owner">
               <PlayerAvatar playerId={owner.userId} name={owner.displayName} src={owner.avatarUrl} size="xs" decorative />
               <span>
@@ -102,5 +106,26 @@ export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact
         </div>
       )}
     </li>
+  );
+}
+
+const MAX_SHELVES = 2;
+
+/** The communities that have the game, closest first; the rest are summarised as "+N". */
+function ShelfList({ shelves }: { shelves: GameShelf[] }) {
+  const shown = shelves.slice(0, MAX_SHELVES);
+  const hidden = shelves.length - shown.length;
+  return (
+    <ul className="game-card-shelves" aria-label={t('card.shelves')}>
+      {shown.map((s) => (
+        <li key={s.communityId} className="shelf-chip">
+          <Icon name="pin" />
+          <span className="shelf-chip-name">{s.name}</span>
+          {s.copies > 1 && <span className="shelf-chip-meta">×{s.copies}</span>}
+          {s.distanceKm !== null && <span className="shelf-chip-meta">{t('card.km', { km: formatKm(s.distanceKm) })}</span>}
+        </li>
+      ))}
+      {hidden > 0 && <li className="shelf-chip shelf-chip-more">{tn('card.moreShelves', hidden)}</li>}
+    </ul>
   );
 }

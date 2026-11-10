@@ -55,7 +55,7 @@ export function BggImportPage() {
     <div className="container section">
       <div className="section-head">
         <div>
-          <p className="eyebrow">{t('library.eyebrow')}</p>
+          <p className="eyebrow">{t('games.eyebrow')}</p>
           <h1>{t('bgg.title')}</h1>
         </div>
         <BggCredit />

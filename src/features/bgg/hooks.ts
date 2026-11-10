@@ -62,6 +62,7 @@ export function useBggImport() {
       void qc.invalidateQueries({ queryKey: queryKeys.games });
       void qc.invalidateQueries({ queryKey: ['my-user-games'] });
       void qc.invalidateQueries({ queryKey: ['community-games'] });
+      void qc.invalidateQueries({ queryKey: queryKeys.shelves });
       void qc.invalidateQueries({ queryKey: ['bgg', 'search'] });
     },
   });

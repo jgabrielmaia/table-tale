@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout/AppShell';
 import { LoadingState, ToastProvider } from '@/components/ui';
@@ -14,7 +14,7 @@ import { createQueryClient } from '@/lib/queryClient';
 
 const LoginPage = lazy(() => import('@/features/auth/LoginPage').then((m) => ({ default: m.LoginPage })));
 const AuthCallbackPage = lazy(() => import('@/features/auth/AuthCallbackPage').then((m) => ({ default: m.AuthCallbackPage })));
-const LibraryPage = lazy(() => import('@/features/games/LibraryPage').then((m) => ({ default: m.LibraryPage })));
+const GamesPage = lazy(() => import('@/features/games/GamesPage').then((m) => ({ default: m.GamesPage })));
 const GameDetailPage = lazy(() => import('@/features/games/GameDetailPage').then((m) => ({ default: m.GameDetailPage })));
 const BggImportPage = lazy(() => import('@/features/bgg/BggImportPage').then((m) => ({ default: m.BggImportPage })));
 const LorePage = lazy(() => import('@/features/lore/LorePage').then((m) => ({ default: m.LorePage })));
@@ -47,8 +47,8 @@ function ShellRoutes() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<LoginPage mode="register" />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
-          <Route path="/library" element={<LibraryPage />} />
-          <Route path="/library/import" element={<RequireAuth><BggImportPage /></RequireAuth>} />
+          <Route path="/games" element={<GamesPage />} />
+          <Route path="/games/import" element={<RequireAuth><BggImportPage /></RequireAuth>} />
           <Route path="/games/:slug" element={<GameDetailPage />} />
           <Route path="/lore" element={<LorePage />} />
           <Route path="/events" element={<EventsPage />} />
@@ -57,7 +57,6 @@ function ShellRoutes() {
           <Route path="/communities/:slug" element={<CommunityPage />} />
           <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
           {import.meta.env.DEV && <Route path="/ui" element={<ComponentsPage />} />}
-          <Route path="/biblioteca" element={<Navigate to="/library" replace />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>

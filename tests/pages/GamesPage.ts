@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 
-export class LibraryPage {
+export class GamesPage {
   constructor(readonly page: Page) {}
 
   readonly filters = () => this.page.getByRole('search', { name: 'Pesquisar e filtrar jogos' });
@@ -14,12 +14,26 @@ export class LibraryPage {
   readonly count = () => this.page.getByText(/\d+ jogos? encontrados?/);
   readonly grid = () => this.page.getByRole('list', { name: 'Jogos' });
 
+  // Where to look: location, radius, community and sort.
+  readonly reach = () => this.page.getByRole('region', { name: 'Onde procurar' });
+  readonly where = () => this.reach().locator('p').first();
+  readonly useMyLocation = () => this.reach().getByRole('button', { name: 'Usar a minha localização' });
+  readonly city = () => this.reach().getByLabel('Cidade');
+  readonly radius = () => this.reach().getByLabel('Raio');
+  readonly community = () => this.reach().getByLabel('Comunidade');
+  readonly sort = () => this.reach().getByLabel('Ordenar por');
+
   async goto(query = '') {
-    await this.page.goto(`library${query}`);
+    await this.page.goto(`games${query}`);
   }
 
   card(title: string): Locator {
     return this.grid().getByRole('listitem').filter({ has: this.page.getByRole('heading', { name: title, exact: true }) });
+  }
+
+  /** The community chips on a card, in display order (closest first). */
+  shelves(title: string): Locator {
+    return this.card(title).getByRole('list', { name: 'Comunidades com este jogo' }).getByRole('listitem');
   }
 
   async titles() {

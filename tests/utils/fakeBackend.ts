@@ -411,7 +411,10 @@ export class FakeBackend {
       case 'community_games': {
         if (method === 'GET') {
           const rows = this.filtered(db.communityGames.filter((g) => this.canReadCommunity(g.community_id, uid)), params).map((g) => ({
-            ...g, games: db.games.find((x) => x.id === g.game_id) ?? null,
+            ...g,
+            games: db.games.find((x) => x.id === g.game_id) ?? null,
+            // The games list embeds the community with its location: `communities(id,slug,name,city,latitude,longitude)`.
+            ...(select.includes('communities(') ? { communities: db.communities.find((c) => c.id === g.community_id) ?? null } : {}),
           }));
           return this.rows(rows, single);
         }

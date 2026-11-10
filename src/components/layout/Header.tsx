@@ -43,6 +43,7 @@ export function Header() {
       <div className="container header-inner">
         <Link className="brand" to="/" aria-label={t('header.homeAria')}>
           <Logo variant="horizontal" decorative className="brand-logo" />
+          <span className="brand-version">{__APP_VERSION__}</span>
         </Link>
 
         <button
