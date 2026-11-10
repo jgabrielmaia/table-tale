@@ -36,6 +36,22 @@ describe('RouteSeo', () => {
     expect(meta('meta[name="robots"]')).toBe('index, follow');
   });
 
+  it('gives the communities list, new community and BGG import their own titles, never "not found"', () => {
+    const pages: [string, string][] = [['/communities', 'Comunidades'], ['/communities/new', 'Nova comunidade'], ['/games/import', 'Importar do BoardGameGeek']];
+    for (const [path, title] of pages) {
+      renderAt(path);
+      expect(document.title, path).toBe(`${title} | Table Tale`);
+    }
+  });
+
+  it('leaves game, community and player pages to set their own title', () => {
+    for (const path of ['/games/coup', '/communities/table-tale', '/players/00000000-0000-4000-8000-0000000000a1']) {
+      document.title = 'set by the page';
+      renderAt(path);
+      expect(document.title, path).toBe('set by the page');
+    }
+  });
+
   it('marks private pages and unknown routes as noindex', () => {
     renderAt('/login');
     expect(meta('meta[name="robots"]')).toBe('noindex, follow');

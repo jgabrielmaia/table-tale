@@ -596,6 +596,8 @@ export const en: Record<MessageKey, string> = {
   'communities.tab.games': 'Games',
   'communities.tab.manage': 'Manage',
   'communities.newTitle': 'New community',
+  'communities.seoDescription': '{name}, a board game community in {city} on Table Tale.',
+  'communities.seoListDescription': 'Find board game communities near you on Table Tale.',
   'communities.newDesc': 'Each community has its own location, members and games.',
   'communities.editTitle': 'Edit community',
   'communities.save': 'Save',

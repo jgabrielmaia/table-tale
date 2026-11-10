@@ -595,6 +595,8 @@ export const pt = {
   'communities.tab.games': 'Jogos',
   'communities.tab.manage': 'Gestão',
   'communities.newTitle': 'Nova comunidade',
+  'communities.seoDescription': '{name}, uma comunidade de jogos de tabuleiro em {city} na Table Tale.',
+  'communities.seoListDescription': 'Encontra comunidades de jogos de tabuleiro perto de ti na Table Tale.',
   'communities.newDesc': 'Cada comunidade tem a sua localização, os seus membros e os seus jogos.',
   'communities.editTitle': 'Editar comunidade',
   'communities.save': 'Guardar',

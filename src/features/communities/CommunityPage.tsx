@@ -13,6 +13,8 @@ import { useGameCardActions } from '@/hooks/useGameCardActions';
 import { useGames } from '@/hooks/useGames';
 import { getLocale, useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
+import { truncate } from '@/seo/pages';
+import { usePageSeo } from '@/seo/RouteSeo';
 import { CommunityForm } from './CommunityForm';
 import { FactionBalance } from './FactionBalance';
 import { MembershipBadge } from './CommunitiesPage';
@@ -37,6 +39,17 @@ export function CommunityPage() {
   const { notify } = useToast();
   const c = useCommunity(slug);
   const [tab, setTab] = useState('members');
+  const loaded = c.community.data;
+  const missing = c.community.isSuccess && !loaded;
+  usePageSeo({
+    title: loaded ? `${loaded.name} | Table Tale` : missing ? `${t('communities.notFound').replace(/\.$/, '')} | Table Tale` : `${t('communities.title')} | Table Tale`,
+    description: loaded
+      ? truncate(loaded.description || t('communities.seoDescription', { name: loaded.name, city: loaded.city }), 160)
+      : t('communities.seoListDescription'),
+    path: `/communities/${slug}`,
+    // Community pages are not prerendered, so they stay out of search results.
+    noindex: true,
+  });
 
   if (c.community.isLoading) return <div className="container section"><LoadingState /></div>;
   if (c.community.isError) {

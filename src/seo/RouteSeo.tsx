@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getLang } from '@/i18n';
 import { env } from '@/lib/env';
-import { NOT_FOUND_SEO, findPage } from './pages';
+import { DYNAMIC_SEO_PREFIXES, NOT_FOUND_SEO, findPage } from './pages';
 
 function setTag(selector: string, create: () => HTMLElement, attr: string, value: string) {
   let el = document.head.querySelector<HTMLElement>(selector);
@@ -51,8 +51,13 @@ function StaticRouteSeo({ pathname }: { pathname: string }) {
   return null;
 }
 
-/** Metadata for every static route. Game pages set their own through `usePageSeo`. */
+/**
+ * Metadata for every static route. Game, community and player pages set their own through `usePageSeo`;
+ * static paths under those prefixes (/games/import, /communities/new) still use their PAGES entry.
+ */
 export function RouteSeo() {
   const { pathname } = useLocation();
-  return pathname.startsWith('/games/') ? null : <StaticRouteSeo pathname={pathname} />;
+  const path = pathname.replace(/(.)\/+$/, '$1');
+  const dynamic = !findPage(path) && DYNAMIC_SEO_PREFIXES.some((prefix) => path.startsWith(prefix));
+  return dynamic ? null : <StaticRouteSeo pathname={pathname} />;
 }
