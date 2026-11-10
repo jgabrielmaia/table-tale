@@ -1031,6 +1031,27 @@ section + section > .medal-group { margin-top: 1.75rem; }
 .library-item { padding: 1rem; display: flex; flex-direction: column; gap: .35rem; }
 .library-item h3 { margin: 0; font-size: 1.05rem; }
 .library-add { display: flex; align-items: end; gap: 1rem; flex-wrap: wrap; }
+
+/* Member and game cards on a community page are one click target each: the name/title link stretches over the card.
+   Owner controls (approve, role, remove...) sit above the stretched link so they stay clickable on their own. */
+.member-card, .library-item {
+  position: relative; cursor: pointer; -webkit-tap-highlight-color: rgba(212, 168, 90, .15);
+  transition: transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s;
+}
+.member-card .member-name, .library-item h3 a { color: inherit; text-decoration: none; }
+.member-card .member-name::after, .library-item h3 a::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.member-card .member-name:focus-visible, .library-item h3 a:focus-visible { outline: none; }
+.member-card:has(.member-name:focus-visible), .library-item:has(h3 a:focus-visible) { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(45, 212, 191, .45); }
+.member-card :is(.member-actions, button, select, input), .library-item :is(button, select, input) { position: relative; z-index: 1; }
+.member-card .member-actions { cursor: auto; }
+@media (hover: hover) {
+  .member-card:hover, .library-item:hover { transform: translateY(-3px); border-color: rgba(231, 111, 60, .55); box-shadow: var(--shadow), var(--glow); }
+  .member-card:hover .member-name, .library-item:hover h3 a { color: var(--gold-hover); }
+}
+.member-card:active, .library-item:active { transform: scale(.985); }
+@media (prefers-reduced-motion: reduce) {
+  .member-card, .member-card:hover, .member-card:active, .library-item, .library-item:hover, .library-item:active { transition: none; transform: none; }
+}
 .form-stack { display: flex; flex-direction: column; gap: 1rem; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem; border: 0; padding: 0; margin: 0; }
 .form-actions { display: flex; gap: .75rem; }

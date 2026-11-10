@@ -47,6 +47,14 @@ test.describe('Comunidades', () => {
     await expect(page).toHaveURL(/\/games\/dixit$/);
   });
 
+  test('clicar em qualquer parte de um cartão de jogo da estante abre o jogo', async ({ page }) => {
+    await page.goto('communities/tabuleiros-do-porto');
+    await page.getByRole('tab', { name: 'Jogos' }).click();
+    // Clicking the card itself, away from the title, opens the game.
+    await page.getByRole('tabpanel').getByRole('listitem').filter({ hasText: 'Coup' }).click({ position: { x: 20, y: 60 } });
+    await expect(page).toHaveURL(/\/games\/coup$/);
+  });
+
   test.describe('jogador com sessão', () => {
     test.beforeEach(async ({ signIn }) => {
       await signIn();
@@ -262,6 +270,8 @@ test.describe('Comunidades', () => {
 
       await page.getByRole('listitem').filter({ hasText: 'Dono da Estante' }).getByRole('button', { name: 'Suspender' }).click();
       await expect.poll(() => backend.db.memberships.find((m) => m.id === 'm-other')?.status).toBe('suspended');
+      // The controls sit above the card's link: using them never opens the player's page.
+      await expect(page).toHaveURL(/\/communities\/clube-secreto-braga$/);
     });
 
     test('um jogo posto na estante aparece em Jogos com a comunidade e sai quando é removido', async ({ page, locateAt }) => {

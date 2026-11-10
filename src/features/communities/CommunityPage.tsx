@@ -167,7 +167,8 @@ function MembersPanel({ community, c, userId, run }: { community: Community; c: 
     return (
       <li key={x.id} className="member-card" data-role={x.role}>
         <span className="member-avatar"><PlayerAvatar playerId={x.userId} name={x.displayName} src={x.avatarUrl} size="lg" decorative /></span>
-        <span className="member-name">{x.displayName}</span>
+        {/* Stretched link: the whole card opens the player (your own card opens your profile). */}
+        <Link className="member-name" to={x.userId === userId ? '/profile' : `/players/${x.userId}`} aria-label={t('communities.openPlayer', { name: x.displayName })}>{x.displayName}</Link>
         <span className="member-badges">
           <Badge tone={x.role === 'member' ? 'neutral' : 'accent'}>{t(`communities.role.${x.role}`)}</Badge>
           {x.status !== 'active' && <Badge tone="progress">{t(`communities.status.${x.status}`)}</Badge>}

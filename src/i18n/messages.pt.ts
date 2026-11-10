@@ -411,6 +411,15 @@ export const pt = {
   'idp.cta': 'Descobre o teu destino',
   'idp.history': 'Histórico de temporadas',
   'idp.pastSeason': 'Temporada anterior',
+  'idp.titleOther': 'Identidade Table Tale',
+  'idp.noneOther': 'O destino deste jogador ainda não foi revelado nesta temporada.',
+  // player (another player's public page)
+  'player.notFoundTitle': 'Jogador não encontrado',
+  'player.notFoundText': 'Este jogador não existe ou o endereço está incorreto.',
+  'player.backToCommunities': 'Ver comunidades',
+  'player.seoDescription': 'O perfil de {name} na Table Tale: nível, facção e carta do Destino.',
+  'player.xpTotal': '{xp} XP no total.',
+  'communities.openPlayer': 'Ver o perfil de {name}',
 
   // fate draw
   'fate.introTitle': 'O Sorteio do Destino',

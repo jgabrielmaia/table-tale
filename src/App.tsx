@@ -19,6 +19,7 @@ const GameDetailPage = lazy(() => import('@/features/games/GameDetailPage').then
 const BggImportPage = lazy(() => import('@/features/bgg/BggImportPage').then((m) => ({ default: m.BggImportPage })));
 const LorePage = lazy(() => import('@/features/lore/LorePage').then((m) => ({ default: m.LorePage })));
 const ProfilePage = lazy(() => import('@/features/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })));
+const PlayerPage = lazy(() => import('@/features/players/PlayerPage').then((m) => ({ default: m.PlayerPage })));
 const EventsPage = lazy(() => import('@/features/events/EventsPage').then((m) => ({ default: m.EventsPage })));
 const FateDrawPage = lazy(() => import('@/features/fate/FateDrawPage').then((m) => ({ default: m.FateDrawPage })));
 const CommunitiesPage = lazy(() => import('@/features/communities/CommunitiesPage').then((m) => ({ default: m.CommunitiesPage })));
@@ -56,6 +57,7 @@ function ShellRoutes() {
           <Route path="/communities/new" element={<RequireAuth><NewCommunityPage /></RequireAuth>} />
           <Route path="/communities/:slug" element={<CommunityPage />} />
           <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+          <Route path="/players/:id" element={<PlayerPage />} />
           {import.meta.env.DEV && <Route path="/ui" element={<ComponentsPage />} />}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

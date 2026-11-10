@@ -379,7 +379,8 @@ export class FakeBackend {
       }
       case 'seasons': return this.rows(this.filtered(db.seasons, params), single);
       case 'player_card_identities':
-        return this.rows(this.filtered(db.identities.filter((i) => i.player_id === uid), params).map((i) => ({ ...i, seasons: db.seasons.find((s) => s.id === i.season_id) ?? null })), single);
+        // Card identities are public (RLS "card identities are public"); the app filters by player_id.
+        return this.rows(this.filtered(db.identities, params).map((i) => ({ ...i, seasons: db.seasons.find((s) => s.id === i.season_id) ?? null })), single);
       case 'active_player_identities':
         return this.rows(db.identities.filter((i) => i.is_active && db.seasons.find((s) => s.id === i.season_id)?.is_active).map((i) => ({ player_id: i.player_id, season_id: i.season_id, card_id: i.card_id, faction: i.faction, selected_at: i.selected_at })), single);
       case 'factions': return this.rows(this.filtered(db.factions, params), single);
