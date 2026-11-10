@@ -90,8 +90,8 @@ export function ComponentsPage() {
             <Avatar name="Gabriel Maia" size="sm" />
             <Avatar name="Gabriel Maia" size="xl" />
             <Badge>Neutro</Badge>
-            <Badge tone="progress">Em progresso</Badge>
-            <Badge tone="success">Concluído</Badge>
+            <Badge tone="progress">A jogar</Badge>
+            <Badge tone="success">Já jogado</Badge>
             <Badge tone="accent" color="#22d3ee" icon={<BrandSymbol name="atom" />}>Arcanos</Badge>
             <GameStatusBadge status="completed" />
           </div>

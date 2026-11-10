@@ -60,12 +60,12 @@ test.describe('Detalhe do jogo', () => {
     test('altera o estado e mantém-no após recarregar', async ({ page, backend }) => {
       const game = new GamePage(page);
       await game.goto('dixit');
-      await game.statusGroup().getByLabel('Em progresso').click();
-      await expect(game.statusGroup().getByLabel('Em progresso')).toBeChecked();
-      await expect(new AppShell(page).toast('Estado atualizado: Em progresso')).toBeVisible();
+      await game.statusGroup().getByLabel('A jogar').click();
+      await expect(game.statusGroup().getByLabel('A jogar')).toBeChecked();
+      await expect(new AppShell(page).toast('Estado atualizado: A jogar')).toBeVisible();
       expect(backend.db.gameStatus[0]).toMatchObject({ status: 'in_progress', user_id: PLAYER.id });
       await page.reload();
-      await expect(game.statusGroup().getByLabel('Em progresso')).toBeChecked();
+      await expect(game.statusGroup().getByLabel('A jogar')).toBeChecked();
     });
 
     test('adiciona e remove dos favoritos', async ({ page }) => {
@@ -80,14 +80,14 @@ test.describe('Detalhe do jogo', () => {
       await expect(game.favorite()).toHaveText('Adicionar aos favoritos');
     });
 
-    test('"Marcar como jogado hoje" cria uma sessão e passa o jogo a Em progresso @smoke', async ({ page, backend }) => {
+    test('"Marcar como jogado hoje" cria uma sessão e passa o jogo para «A jogar» @smoke', async ({ page, backend }) => {
       const game = new GamePage(page);
       await game.goto('dixit');
       await expect(page.getByRole('heading', { name: 'Ainda não há sessões registadas' })).toBeVisible();
       await game.markToday().click();
       await expect(new AppShell(page).toast('Sessão de hoje registada')).toBeVisible();
       await expect(game.sessions()).toHaveCount(1);
-      await expect(game.statusGroup().getByLabel('Em progresso')).toBeChecked();
+      await expect(game.statusGroup().getByLabel('A jogar')).toBeChecked();
       expect(backend.db.sessions[0]).toMatchObject({ duration_minutes: 30, user_id: PLAYER.id });
     });
 

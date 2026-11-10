@@ -279,7 +279,7 @@ export const achievements: SeedAchievement[] = [
   { slug: 'cronista-da-mesa', name: 'Cronista da Mesa', description: 'Regista 5 sessões no diário.', icon: 'scroll', requirement_type: 'sessions', requirement_value: 5 },
   { slug: 'peregrino-dos-eventos', name: 'Peregrino dos Eventos', description: 'Participa em 3 eventos da comunidade.', icon: 'shield', requirement_type: 'events', requirement_value: 3 },
   { slug: 'coracao-de-pergaminho', name: 'Coração de Pergaminho', description: 'Adiciona 3 jogos aos favoritos.', icon: 'heart', requirement_type: 'favorites', requirement_value: 3 },
-  { slug: 'mestre-do-compasso', name: 'Mestre do Compasso', description: 'Conclui 3 jogos da biblioteca.', icon: 'trophy', requirement_type: 'completed', requirement_value: 3 },
+  { slug: 'mestre-do-compasso', name: 'Mestre do Compasso', description: 'Marca 3 jogos como já jogados.', icon: 'trophy', requirement_type: 'completed', requirement_value: 3 },
   { slug: 'destino-revelado', name: 'Destino Revelado', description: 'Revela a tua carta no Sorteio do Destino e descobre a tua facção.', icon: 'constellation', requirement_type: 'fate_draw', requirement_value: 1 },
 ];
 
