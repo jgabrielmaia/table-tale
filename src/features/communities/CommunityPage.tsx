@@ -1,11 +1,17 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PlayerAvatar } from '@/components/identity/PlayerAvatar';
-import { Badge, BrandSymbol, Button, ButtonLink, EmptyState, ErrorState, Icon, LoadingState, Select, Tabs, useToast } from '@/components/ui';
+import { Badge, Button, ButtonLink, EmptyState, ErrorState, Icon, LoadingState, Select, Tabs, useToast } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommunity } from '@/hooks/useCommunities';
+import { BggCredit } from '@/components/bgg/BggCredit';
+import { GameFilters } from '@/components/games/GameFilters';
+import { GameGrid } from '@/components/games/GameGrid';
+import { EMPTY_FILTERS, filterGames, hasActiveFilters, type GameFilterValues } from '@/features/games/filters';
+import { sortShelfGames, type GamesSort } from '@/features/games/shelves';
+import { useGameCardActions } from '@/hooks/useGameCardActions';
 import { useGames } from '@/hooks/useGames';
-import { useI18n } from '@/i18n';
+import { getLocale, useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { CommunityForm } from './CommunityForm';
 import { FactionBalance } from './FactionBalance';
@@ -19,7 +25,9 @@ import {
   canManageMember,
   canManageMembers,
 } from './permissions';
-import type { Community, CommunityMember, CommunityRole } from '@/types/domain';
+import type { Community, CommunityMember, CommunityRole, LibraryGame } from '@/types/domain';
+
+const uniqueSorted = (values: string[]) => [...new Set(values)].sort((a, b) => a.localeCompare(b, getLocale()));
 
 export function CommunityPage() {
   const { slug = '' } = useParams();
@@ -98,7 +106,7 @@ export function CommunityPage() {
       onChange={setTab}
       items={[
         { id: 'members', label: t('communities.tab.members'), content: <MembersPanel community={community} c={c} userId={user?.id ?? null} run={run} /> },
-        { id: 'games', label: t('communities.tab.games'), content: <LibraryPanel c={c} run={run} /> },
+        { id: 'games', label: t('communities.tab.games'), content: <GamesPanel c={c} run={run} /> },
         ...(canEditCommunity(m)
           ? [{
               id: 'manage',
@@ -139,7 +147,6 @@ export function CommunityPage() {
           </Badge>
         </div>
         <div className="section-actions">
-          <ButtonLink to="/games" variant="secondary" icon={<BrandSymbol name="book" />}>{t('communities.goToGames')}</ButtonLink>
           {joinControl}
         </div>
       </div>
@@ -229,16 +236,37 @@ function MembersPanel({ community, c, userId, run }: { community: Community; c: 
   );
 }
 
-function LibraryPanel({ c, run }: { c: CommunityState; run: Run }) {
+/**
+ * The community's games, shown like the Games page (covers, search, filters, sort, favourite and status) but limited to
+ * this community's shelf, with its copies on each card. Owners also add games, import from BGG and remove games here.
+ */
+function GamesPanel({ c, run }: { c: CommunityState; run: Run }) {
   const { t, tn } = useI18n();
-  const { games: catalogue } = useGames();
+  const { user } = useAuth();
+  const catalogue = useGames();
+  const cardActions = useGameCardActions();
   const [pick, setPick] = useState('');
-  if (c.games.isLoading) return <LoadingState variant="lines" count={3} />;
-  if (c.games.isError) return <ErrorState compact message={errorMessage(c.games.error)} onRetry={() => void c.games.refetch()} />;
-  const entries = c.games.data ?? [];
+  const [filters, setFilters] = useState<GameFilterValues>(EMPTY_FILTERS);
+  const [sort, setSort] = useState<GamesSort>('title');
+
+  const entries = useMemo(() => c.games.data ?? [], [c.games.data]);
+  const byGame = useMemo(() => new Map(entries.map((e) => [e.game.id, e])), [entries]);
+  const games = useMemo(() => catalogue.games.filter((g) => byGame.has(g.id)), [catalogue.games, byGame]);
+  const categories = useMemo(() => uniqueSorted(games.flatMap((g) => g.categories)), [games]);
+  const mechanics = useMemo(() => uniqueSorted(games.flatMap((g) => g.mechanics)), [games]);
+  const visible = useMemo(() => sortShelfGames(filterGames(games, filters), sort, getLocale()), [games, filters, sort]);
+
+  if (c.games.isLoading || catalogue.isLoading) return <LoadingState variant="cards" label={t('games.loading')} />;
+  if (c.games.isError || catalogue.isError) {
+    return <ErrorState compact message={errorMessage(c.games.error ?? catalogue.error)} onRetry={() => void Promise.all([c.games.refetch(), catalogue.refetch()])} />;
+  }
   const manage = canManageLibrary(c.membership);
-  const inLibrary = new Set(entries.map((e) => e.game.id));
-  const options = catalogue.filter((g) => !inLibrary.has(g.id)).map((g) => ({ value: g.id, label: g.title }));
+  const options = catalogue.games.filter((g) => !byGame.has(g.id)).map((g) => ({ value: g.id, label: g.title }));
+  const reset = () => setFilters(EMPTY_FILTERS);
+  const remove = (game: LibraryGame) => {
+    const entry = byGame.get(game.id);
+    if (entry) void run(() => c.removeGame.mutateAsync(entry.id), t('communities.memberUpdated'));
+  };
 
   return (
     <div>
@@ -261,20 +289,41 @@ function LibraryPanel({ c, run }: { c: CommunityState; run: Run }) {
           </Button>
         </div>
       )}
-      {entries.length === 0 ? (
+      {games.length === 0 ? (
         <EmptyState compact title={t('communities.libraryEmpty')} />
       ) : (
-        <ul className="community-library" role="list">
-          {entries.map((e) => (
-            <li key={e.id} className="panel library-item">
-              <h3><Link to={`/games/${e.game.slug}`}>{e.game.title}</Link></h3>
-              <p className="muted">{[...e.game.categories.slice(0, 2), tn('communities.copies', e.copies)].join(' · ')}</p>
-              {manage && (
-                <Button size="sm" variant="ghost" aria-label={t('communities.removeGame', { title: e.game.title })} icon={<Icon name="trash" />} onClick={() => void run(() => c.removeGame.mutateAsync(e.id), t('communities.memberUpdated'))} />
-              )}
-            </li>
-          ))}
-        </ul>
+        <>
+          <div className="community-games-head">
+            <p className="results-count" aria-live="polite">{tn('games.found', visible.length)}</p>
+            <Select
+              label={t('games.sort')}
+              value={sort}
+              onChange={(e) => setSort(e.target.value as GamesSort)}
+              options={[
+                { value: 'title', label: t('games.sortTitle') },
+                { value: 'bgg', label: t('games.sortBgg') },
+              ]}
+            />
+          </div>
+          <GameFilters values={filters} categories={categories} mechanics={mechanics} onChange={setFilters} onReset={reset} showPersonalFilters={Boolean(user)} />
+          {visible.length === 0 ? (
+            <EmptyState
+              compact
+              title={t('games.noResultsTitle')}
+              description={<>{filters.query && <>{t('games.noResultsFor', { query: filters.query })}</>}{t('games.noResultsText')}</>}
+              action={hasActiveFilters(filters) && <Button variant="secondary" onClick={reset}>{t('games.clearFilters')}</Button>}
+            />
+          ) : (
+            <GameGrid
+              games={visible}
+              label={t('games.gamesLabel')}
+              {...cardActions}
+              copiesOf={(g) => byGame.get(g.id)?.copies}
+              onRemove={manage ? remove : undefined}
+            />
+          )}
+          {games.some((g) => g.bggId !== null) && <p className="mt-6 text-center"><BggCredit /></p>}
+        </>
       )}
     </div>
   );

@@ -571,7 +571,6 @@ export const en: Record<MessageKey, string> = {
   'communities.citySearch.err.rateLimited': 'Too many searches, try again in a moment.',
   'communities.citySearch.err.unauthenticated': 'Sign in to search cities.',
   'communities.location': 'Location',
-  'communities.goToGames': 'See all games',
   'communities.join': 'Join',
   'communities.requestJoin': 'Request to join',
   'communities.leave': 'Leave community',

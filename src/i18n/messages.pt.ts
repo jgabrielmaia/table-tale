@@ -570,7 +570,6 @@ export const pt = {
   'communities.citySearch.err.unauthenticated': 'Inicia sessão para pesquisar cidades.',
   'communities.coordsHint':'Opcional: latitude e longitude em graus decimais.',
   'communities.location': 'Localização',
-  'communities.goToGames': 'Ver todos os jogos',
   'communities.join': 'Entrar',
   'communities.requestJoin': 'Pedir para entrar',
   'communities.leave': 'Sair da comunidade',

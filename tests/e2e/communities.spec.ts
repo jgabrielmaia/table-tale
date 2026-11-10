@@ -47,6 +47,20 @@ test.describe('Comunidades', () => {
     await expect(page).toHaveURL(/\/games\/dixit$/);
   });
 
+  test('o separador Jogos é a página de Jogos limitada à comunidade: pesquisa, filtros e exemplares, sem atalho redundante', async ({ page }) => {
+    await page.goto('communities/tabuleiros-do-porto');
+    await expect(page.getByRole('link', { name: 'Ver todos os jogos' })).toHaveCount(0);
+    await page.getByRole('tab', { name: 'Jogos' }).click();
+    const shelf = page.getByRole('tabpanel');
+    await expect(shelf.getByText('3 jogos encontrados')).toBeVisible();
+    await shelf.getByRole('searchbox', { name: 'Pesquisar por nome' }).fill('coup');
+    await expect(shelf.getByText('1 jogo encontrado')).toBeVisible();
+    await expect(shelf.getByRole('heading', { level: 3 })).toHaveText(['Coup']);
+    await expect(shelf.getByRole('listitem').filter({ hasText: 'Coup' }).first()).toContainText('3 exemplares');
+    await shelf.getByRole('searchbox', { name: 'Pesquisar por nome' }).fill('catan');
+    await expect(shelf.getByText('Nenhum jogo encontrado')).toBeVisible();
+  });
+
   test('clicar em qualquer parte de um cartão de jogo da estante abre o jogo', async ({ page }) => {
     await page.goto('communities/tabuleiros-do-porto');
     await page.getByRole('tab', { name: 'Jogos' }).click();

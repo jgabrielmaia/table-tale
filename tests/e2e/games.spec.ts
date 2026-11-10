@@ -321,6 +321,18 @@ test.describe('Jogos', () => {
       await locateAt('lisboa');
     });
 
+    test('o favorito e o estado ficam visíveis dentro do cartão', async ({ page }) => {
+      // Regression: the card clips what overflows, and these controls used to sit below its bottom edge.
+      const games = new GamesPage(page);
+      await games.goto();
+      const card = await games.card('Dixit').boundingBox();
+      for (const control of [games.favoriteToggle('Dixit'), games.statusSelect('Dixit')]) {
+        const box = (await control.boundingBox())!;
+        expect(box.y + box.height).toBeLessThanOrEqual(card!.y + card!.height);
+        expect(box.y).toBeGreaterThanOrEqual(card!.y);
+      }
+    });
+
     test('marca e desmarca favoritos, avisa e persiste após recarregar @smoke', async ({ page, backend }) => {
       const games = new GamesPage(page);
       const shell = new AppShell(page);
