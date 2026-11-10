@@ -34,7 +34,7 @@ export function PlayerPage() {
 
   const name = profile.data?.displayName || t('profile.noName');
   usePageSeo({
-    title: profile.data ? `${name} · Table Tale` : t('player.notFoundTitle'),
+    title: profile.data ? `${name} | Table Tale` : `${t('player.notFoundTitle')} | Table Tale`,
     description: t('player.seoDescription', { name }),
     path: `/players/${id}`,
     // Player pages are for people, not search engines.

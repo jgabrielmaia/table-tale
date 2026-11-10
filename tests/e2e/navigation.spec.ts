@@ -111,6 +111,26 @@ test.describe('Navigation e estrutura', () => {
     await expect(page).toHaveTitle(/Games/);
   });
 
+  test('cada página tem o seu título no separador, nunca "Página não encontrada"', async ({ page, signIn }) => {
+    await page.goto('communities');
+    await expect(page).toHaveTitle('Comunidades | Table Tale');
+    await page.goto('communities/tabuleiros-do-porto');
+    await expect(page).toHaveTitle('Tabuleiros do Porto | Table Tale');
+    await page.goto('communities/nao-existe');
+    await expect(page).toHaveTitle('Comunidade não encontrada | Table Tale');
+    await page.goto('players/00000000-0000-4000-8000-0000000000b2');
+    await expect(page).toHaveTitle('Dono da Estante | Table Tale');
+    await signIn();
+    await page.goto('games/import');
+    await expect(page).toHaveTitle('Importar do BoardGameGeek | Table Tale');
+    await page.goto('communities/new');
+    await expect(page).toHaveTitle('Nova comunidade | Table Tale');
+    // Navigating inside the app (no reload) also updates the title.
+    await page.goto('communities');
+    await page.getByRole('link', { name: 'Tabuleiros do Porto' }).click();
+    await expect(page).toHaveTitle('Tabuleiros do Porto | Table Tale');
+  });
+
   test('os metadados de SEO acompanham a navegação sem recarregar', async ({ page }) => {
     await page.goto('');
     await expect(page).toHaveTitle('Table Tale – Jogos de tabuleiro, histórias e comunidades');

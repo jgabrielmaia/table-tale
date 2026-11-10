@@ -47,6 +47,9 @@ export const PAGES: readonly PageSeo[] = [
   { path: '/register', index: false, title: { pt: 'Criar conta | Table Tale', en: 'Create account | Table Tale' }, description: { pt: 'Cria a tua conta Table Tale.', en: 'Create your Table Tale account.' } },
   { path: '/profile', index: false, title: { pt: 'O meu perfil | Table Tale', en: 'My profile | Table Tale' }, description: { pt: 'O teu perfil e identidade sazonal na Table Tale.', en: 'Your profile and seasonal identity on Table Tale.' } },
   { path: '/fate', index: false, title: { pt: 'O Sorteio do Destino | Table Tale', en: 'The Fate Draw | Table Tale' }, description: { pt: 'Descobre a carta que revela o teu destino na Table Tale.', en: 'Discover the card that reveals your destiny in Table Tale.' } },
+  { path: '/communities', index: false, title: { pt: 'Comunidades | Table Tale', en: 'Communities | Table Tale' }, description: { pt: 'Encontra comunidades de jogos de tabuleiro perto de ti na Table Tale.', en: 'Find board game communities near you on Table Tale.' } },
+  { path: '/communities/new', index: false, title: { pt: 'Nova comunidade | Table Tale', en: 'New community | Table Tale' }, description: { pt: 'Cria uma comunidade de jogos de tabuleiro na Table Tale.', en: 'Create a board game community on Table Tale.' } },
+  { path: '/games/import', index: false, title: { pt: 'Importar do BoardGameGeek | Table Tale', en: 'Import from BoardGameGeek | Table Tale' }, description: { pt: 'Pesquisa no BoardGameGeek e importa jogos para a Table Tale.', en: 'Search BoardGameGeek and import games into Table Tale.' } },
   { path: '/auth/callback', index: false, title: { pt: 'A entrar… | Table Tale', en: 'Signing in… | Table Tale' }, description: { pt: 'A concluir o início de sessão.', en: 'Completing sign-in.' } },
 ];
 
@@ -56,6 +59,9 @@ export const NOT_FOUND_SEO: Pick<PageSeo, 'title' | 'description'> = {
 };
 
 export const findPage = (path: string) => PAGES.find((p) => p.path === path);
+
+/** Routes whose page sets its own title and description with `usePageSeo` (games, communities, players). */
+export const DYNAMIC_SEO_PREFIXES = ['/games/', '/communities/', '/players/'] as const;
 
 /** Cuts at a word boundary so snippets never end mid-word. */
 export function truncate(text: string, max: number): string {
