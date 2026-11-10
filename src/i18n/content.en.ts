@@ -191,6 +191,7 @@ export const contentEn: Content = {
     'peregrino-dos-eventos': { name: 'Event Pilgrim', description: 'Take part in 3 community events.' },
     'coracao-de-pergaminho': { name: 'Parchment Heart', description: 'Add 3 games to your favourites.' },
     'mestre-do-compasso': { name: 'Master of the Compass', description: 'Mark 3 games as played.' },
+    'guardiao-da-estante': { name: 'Keeper of the Shelf', description: 'Own a community.' },
     'destino-revelado': { name: 'Fate Revealed', description: 'Reveal your card in the Fate Draw and discover your faction.' },
   },
 };

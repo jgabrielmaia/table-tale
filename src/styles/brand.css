@@ -1027,6 +1027,15 @@ section + section > .medal-group { margin-top: 1.75rem; }
   border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
 }
 .member-card[data-role="owner"] { border-color: var(--line-strong); }
+/* Owners look like an unlocked achievement: the same warm glow on the card and a gold-filled badge. */
+.member-card[data-role="owner"] {
+  background: radial-gradient(circle at 50% 0%, rgba(231, 111, 60, .16), transparent 60%), var(--surface);
+}
+.chip.role-owner {
+  color: #2A1F1A; border-color: transparent;
+  background: radial-gradient(circle at 35% 30%, #f6e2a8, var(--dourado) 55%, #8f6328);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--dourado), 0 0 16px rgba(231, 111, 60, .4);
+}
 .member-avatar { display: flex; align-items: center; justify-content: center; min-height: 7rem; padding-top: .25rem; }
 
 /* Faction balance: Arcanists (purple neon) against Elementals (cyan neon). Text uses lighter tints for contrast. */

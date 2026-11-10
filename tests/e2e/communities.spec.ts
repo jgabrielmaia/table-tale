@@ -74,6 +74,29 @@ test.describe('Comunidades', () => {
       await signIn();
     });
 
+    test('ser dono de uma comunidade desbloqueia "Guardião da Estante", e o cartão do dono destaca-se', async ({ page }) => {
+      await page.goto('profile');
+      await expect(page.getByRole('region', { name: /Por descobrir/ }).getByRole('heading', { name: 'Guardião da Estante' })).toBeVisible();
+
+      await page.goto('communities/new');
+      await page.getByLabel('Nome', { exact: true }).fill('Mesa do Guardião');
+      await page.getByLabel('Cidade').fill('Coimbra');
+      await page.getByLabel('Bairro / distrito').fill('Baixa');
+      await page.getByLabel('País').fill('Portugal');
+      await page.getByLabel('Latitude').fill('40.2');
+      await page.getByLabel('Longitude').fill('-8.4');
+      await page.getByRole('button', { name: 'Criar' }).click();
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Mesa do Guardião');
+
+      // The owner's card looks like an unlocked achievement: warm glow and a gold-filled badge.
+      const ownerCard = page.locator('.member-card[data-role="owner"]');
+      await expect(ownerCard.locator('.chip.role-owner')).toHaveText('Dono');
+      await expect(ownerCard.locator('.chip.role-owner')).toHaveCSS('background-image', /radial-gradient/);
+
+      await page.goto('profile');
+      await expect(page.getByRole('region', { name: /Descobertas/ }).getByRole('heading', { name: 'Guardião da Estante' })).toBeVisible();
+    });
+
     test('cria uma comunidade com localização obrigatória e fica como dono', async ({ page, backend }) => {
       await page.goto('communities/new');
       await page.getByLabel('Nome', { exact: true }).fill('Dados e Tabuleiros');

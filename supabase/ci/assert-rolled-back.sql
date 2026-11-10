@@ -3,6 +3,15 @@
 reset role;
 do $$
 begin
+  if exists (select 1 from public.achievements where slug = 'guardiao-da-estante') then
+    raise exception 'rollback left the owner achievement behind';
+  end if;
+  if exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'tg_membership_progress') then
+    raise exception 'rollback left tg_membership_progress behind';
+  end if;
+  if pg_get_functiondef('public.recompute_progress(uuid)'::regprocedure) like '%community_memberships%' then
+    raise exception 'rollback did not restore recompute_progress';
+  end if;
   if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name in ('communities', 'community_memberships', 'community_games', 'user_games')) then
     raise exception 'rollback left community tables or user_games behind';
   end if;

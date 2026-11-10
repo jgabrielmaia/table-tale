@@ -508,6 +508,7 @@ export class FakeBackend {
       const row = { id: this.id('a000'), created_at: now, updated_at: now, ...input };
       db.communities.push(row);
       db.memberships.push({ id: this.id('a100'), user_id: uid, community_id: row.id, role: 'owner', status: 'active', joined_at: now });
+      this.recompute(uid!); // trigger community_memberships_progress: owning a community unlocks an achievement
       return representation ? this.rows([row], single) : { status: 201 };
     }
     const targets = this.filtered(db.communities, params);
@@ -618,6 +619,7 @@ export class FakeBackend {
       if (!me || !target || p_new_owner === uid) return this.forbidden();
       target.role = 'owner';
       me.role = 'admin';
+      this.recompute(p_new_owner); // trigger community_memberships_progress
       return { status: 204 };
     }
     if (name === 'dev_reset_my_card') {
@@ -657,7 +659,8 @@ export class FakeBackend {
     const db = this.db;
     const m = this.metrics(userId);
     const fateCount = db.identities.filter((i) => i.player_id === userId).length;
-    const value: Record<string, number> = { sessions: m.sessions, games_played: m.games_played, completed: m.completed, favorites: m.favorites, events: m.events, genres: m.genres, fate_draw: fateCount };
+    const owned = db.memberships.filter((x) => x.user_id === userId && x.role === 'owner' && x.status === 'active').length;
+    const value: Record<string, number> = { sessions: m.sessions, games_played: m.games_played, completed: m.completed, favorites: m.favorites, events: m.events, genres: m.genres, fate_draw: fateCount, community_owner: owned };
     for (const a of db.achievements) {
       const done = (value[a.requirement_type] ?? 0) >= a.requirement_value;
       const has = db.userAchievements.some((u) => u.user_id === userId && u.achievement_id === a.id);
