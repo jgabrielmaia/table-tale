@@ -98,9 +98,9 @@ export function baseDb(): Db {
     identities: [],
     factions: factions.map((f, i) => ({ id: uuid('5000', i + 1), slug: f.slug, name: f.name, description: f.description, symbol: f.symbol, color: f.color, lore: f.lore, created_at: CREATED })),
     communities: COMMUNITY_DEFS.map((c, i) => ({ id: uuid('a000', i + 1), description: '', created_by: OWNER.id, created_at: CREATED, updated_at: CREATED, ...c })),
+    // The player starts in no community: new accounts are no longer added to one automatically (backend.joinCommunity).
     memberships: [
       ...COMMUNITY_DEFS.map((_, i) => ({ id: uuid('a100', i + 1), user_id: OWNER.id, community_id: uuid('a000', i + 1), role: 'owner', status: 'active', joined_at: CREATED })),
-      { id: uuid('a100', 10), user_id: PLAYER.id, community_id: uuid('a000', 1), role: 'member', status: 'active', joined_at: CREATED },
     ],
     communityGames: COMMUNITY_DEFS.flatMap((c, ci) => {
       // Lisboa holds every game with the owner's copies; the others hold what SHELVES lists.

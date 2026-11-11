@@ -110,7 +110,8 @@ export function useCommunity(slug: string) {
   const members = useQuery({
     queryKey: queryKeys.communityMembers(id),
     queryFn: () => fetchMembers(id!),
-    enabled: isSupabaseConfigured && Boolean(id) && canSeeContent,
+    // Signed-out visitors have no access to the memberships (only to the count): do not ask.
+    enabled: isSupabaseConfigured && Boolean(id) && Boolean(userId) && canSeeContent,
   });
   const games = useQuery({
     queryKey: queryKeys.communityGames(id),

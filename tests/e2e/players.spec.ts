@@ -6,7 +6,8 @@ const memberCard = (page: import('@playwright/test').Page, name: string) =>
 
 test.describe('Jogadores', () => {
   test.describe('a partir de uma comunidade', () => {
-    test.beforeEach(async ({ signIn }) => {
+    test.beforeEach(async ({ signIn, backend }) => {
+      backend.joinCommunity('table-tale'); // the player is a member alongside the owner
       await signIn();
     });
 

@@ -16,7 +16,9 @@ import type {
 import { joinOutcome } from './permissions';
 import type { CommunityFormValues } from './schemas';
 
-type CountEmbed = { community_memberships: { count: number }[] | null };
+/** Computed field `public.member_count(communities)`: active members only, readable by anon (the memberships are not). */
+type CountEmbed = { member_count: number | null };
+const WITH_COUNT = '*,member_count';
 
 const GAME_BRIEF = 'id,title,slug,cover_url,categories,min_players,max_players,duration_minutes';
 type GameBriefRow = Pick<GameRow, 'id' | 'title' | 'slug' | 'cover_url' | 'categories' | 'min_players' | 'max_players' | 'duration_minutes'>;
@@ -44,14 +46,14 @@ export const mapCommunity = (r: CommunityRow & Partial<CountEmbed>): Community =
   latitude: r.latitude,
   longitude: r.longitude,
   createdBy: r.created_by,
-  memberCount: r.community_memberships?.[0]?.count ?? 0,
+  memberCount: r.member_count ?? 0,
 });
 
 // ---- communities ----------------------------------------------------------------------------------------------------
 
 export async function fetchCommunities(): Promise<Community[]> {
   const rows = unwrap(
-    await supabase.from('communities').select('*,community_memberships(count)').eq('community_memberships.status', 'active').order('name'),
+    await supabase.from('communities').select(WITH_COUNT).order('name'),
     t('communities.err.load'),
   ) as unknown as (CommunityRow & CountEmbed)[];
   return rows.map(mapCommunity);
@@ -59,7 +61,7 @@ export async function fetchCommunities(): Promise<Community[]> {
 
 export async function fetchCommunityBySlug(slug: string): Promise<Community | null> {
   const row = unwrap(
-    await supabase.from('communities').select('*,community_memberships(count)').eq('community_memberships.status', 'active').eq('slug', slug).maybeSingle(),
+    await supabase.from('communities').select(WITH_COUNT).eq('slug', slug).maybeSingle(),
     t('communities.err.load'),
   ) as unknown as (CommunityRow & CountEmbed) | null;
   return row ? mapCommunity(row) : null;

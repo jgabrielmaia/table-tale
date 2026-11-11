@@ -105,6 +105,17 @@ export class FakeBackend {
     this.recompute(userId);
   }
 
+  /**
+   * Makes a user a member of a community, as if they had joined it earlier. New accounts belong to no community:
+   * there is no automatic join any more (migration 20261112000004), so tests that need a member set it up here.
+   */
+  joinCommunity(slug: string, userId = PLAYER.id, partial: Row = {}) {
+    const community = this.db.communities.find((c) => c.slug === slug)!;
+    const row = { id: this.id('a100'), user_id: userId, community_id: community.id, role: 'member', status: 'active', joined_at: '2026-01-02T10:00:00.000Z', ...partial };
+    this.db.memberships.push(row);
+    return row;
+  }
+
   addSession(userId: string, gameSlug: string, partial: Row = {}) {
     const game = this.db.games.find((g) => g.slug === gameSlug)!;
     const row = { id: this.id('3000'), game_id: game.id, user_id: userId, played_at: '2026-10-01', duration_minutes: null, players_count: null, rating: null, notes: null, created_at: new Date().toISOString(), ...partial };
@@ -465,6 +476,11 @@ export class FakeBackend {
 
   private static RANK: Record<string, number> = { owner: 4, admin: 3, moderator: 2, member: 1 };
 
+  /** What PostgREST answers anon for a table it has no grant on (as community_memberships in production). */
+  private noGrant(table: string): Result {
+    return { status: 401, body: { code: '42501', message: `permission denied for table ${table}`, details: null, hint: null } };
+  }
+
   private forbidden(): Result {
     return { status: 403, body: { code: '42501', message: 'new row violates row-level security policy', details: null, hint: null } };
   }
@@ -490,12 +506,15 @@ export class FakeBackend {
   private communities(method: string, params: URLSearchParams, body: unknown, uid: string | null, single: boolean, select: string, representation: boolean): Result {
     const db = this.db;
     if (method === 'GET') {
+      // anon has no grant on community_memberships: embedding it fails for the whole request, like PostgREST does.
+      if (!uid && select.includes('community_memberships')) return this.noGrant('community_memberships');
       const visible = db.communities.filter(
-        (c) => c.visibility === 'public' || db.memberships.some((m) => m.community_id === c.id && m.user_id === uid),
+        (c) => c.visibility === 'public' || c.created_by === uid || db.memberships.some((m) => m.community_id === c.id && m.user_id === uid),
       );
+      // Computed field public.member_count(communities): active members only, for anon too (rows are already visible).
       const rows = this.filtered(visible, params).map((c) =>
-        select.includes('community_memberships(count)')
-          ? { ...c, community_memberships: [{ count: db.memberships.filter((m) => m.community_id === c.id && m.status === 'active').length }] }
+        /\bmember_count\b/.test(select)
+          ? { ...c, member_count: db.memberships.filter((m) => m.community_id === c.id && m.status === 'active').length }
           : c,
       );
       return this.rows(rows, single);
@@ -532,6 +551,7 @@ export class FakeBackend {
     const db = this.db;
     const rank = (r: string) => FakeBackend.RANK[r] ?? 0;
     const managers = ['owner', 'admin', 'moderator'];
+    if (!uid) return this.noGrant('community_memberships');
     if (method === 'GET') {
       const readable = db.memberships.filter(
         (m) => m.user_id === uid

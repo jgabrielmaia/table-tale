@@ -214,8 +214,9 @@ test.describe('Jogos', () => {
   });
 
   test.describe('jogador com comunidades', () => {
-    // O jogador é membro ativo de Table Tale Lisboa (seed).
-    test.beforeEach(async ({ signIn }) => {
+    // O jogador é membro ativo de Table Tale Lisboa (já não há entrada automática: junta-se aqui).
+    test.beforeEach(async ({ signIn, backend }) => {
+      backend.joinCommunity('table-tale');
       await signIn();
     });
 
