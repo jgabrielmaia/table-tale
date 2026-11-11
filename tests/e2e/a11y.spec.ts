@@ -151,7 +151,8 @@ test.describe('Acessibilidade', () => {
     await expect(game.players()).toHaveAccessibleDescription('Jogadores: mínimo 1.');
   });
 
-  test('botões e ligações principais têm nome acessível', async ({ page, signIn }) => {
+  test('botões e ligações principais têm nome acessível', async ({ page, signIn, backend }) => {
+    backend.joinCommunity('table-tale'); // the player's community puts Dixit in the games list
     await signIn();
     await page.goto('games');
     await expect(page.getByRole('button', { name: 'Adicionar Dixit aos favoritos' })).toBeVisible();

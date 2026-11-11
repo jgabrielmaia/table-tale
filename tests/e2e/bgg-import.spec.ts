@@ -15,6 +15,7 @@ test.describe('Importar do BoardGameGeek', () => {
     });
 
     test('pesquisa, vê os dados completos e importa para os meus jogos @smoke', async ({ page, backend }) => {
+      backend.joinCommunity('table-tale'); // so the games list shows Lisboa's shelf without a location
       // The Games page has no import button: importing starts from a community's Games tab or this address.
       const games = new GamesPage(page);
       await games.goto();
