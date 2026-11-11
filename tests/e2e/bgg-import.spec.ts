@@ -15,9 +15,11 @@ test.describe('Importar do BoardGameGeek', () => {
     });
 
     test('pesquisa, vê os dados completos e importa para os meus jogos @smoke', async ({ page, backend }) => {
+      // The Games page has no import button: importing starts from a community's Games tab or this address.
       const games = new GamesPage(page);
       await games.goto();
-      await page.getByRole('link', { name: 'Importar do BoardGameGeek' }).click();
+      await expect(page.getByRole('link', { name: 'Importar do BoardGameGeek' })).toHaveCount(0);
+      await page.goto('games/import');
       await expect(page.getByRole('heading', { level: 1 })).toHaveText('Importar do BoardGameGeek');
 
       await page.getByRole('searchbox', { name: 'Nome do jogo' }).fill('catan');

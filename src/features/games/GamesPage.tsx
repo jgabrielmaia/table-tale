@@ -59,7 +59,6 @@ export function GamesPage() {
             {tn('games.found', visible.length)}
           </p>
         )}
-        {user && <ButtonLink to="/games/import" variant="gold" icon={<Icon name="search" />}>{t('bgg.link')}</ButtonLink>}
       </div>
 
       <section className="filters games-reach" aria-label={t('games.reachAria')}>
