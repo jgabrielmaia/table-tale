@@ -70,6 +70,20 @@ test.describe('Acessibilidade', () => {
       await expect(new GamePage(page).sessions()).toHaveCount(1);
       await expectNoViolations(page);
     });
+
+    test('encontrar comunidade e os avisos "sem comunidade" não têm violações', async ({ page, signIn, locateAt }) => {
+      await signIn();
+      await locateAt('lisboa');
+      await page.goto('find-community');
+      await expect(page.getByRole('list', { name: 'Comunidades sugeridas' })).toBeVisible();
+      await expect(page.getByText(LOADING)).toHaveCount(0);
+      await expectNoViolations(page);
+
+      await page.goto('games');
+      await expect(page.getByRole('region', { name: 'Ainda não tens comunidade' })).toBeVisible();
+      await expect(page.getByText(LOADING)).toHaveCount(0);
+      await expectNoViolations(page);
+    });
   });
 
   test('cada página pública tem exatamente um título principal', async ({ page }) => {
