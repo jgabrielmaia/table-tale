@@ -40,6 +40,7 @@ export function useMyMemberships() {
 
 /** Discovery: every community visible to the viewer, plus the viewer's own membership in each. */
 export function useCommunities() {
+  const { user } = useAuth();
   const catalogue = useQuery({ queryKey: queryKeys.communities, queryFn: fetchCommunities, enabled: isSupabaseConfigured });
   const mine = useMyMemberships();
   const membershipOf = useMemo(() => new Map((mine.data ?? []).map((m) => [m.communityId, m])), [mine.data]);
@@ -49,7 +50,8 @@ export function useCommunities() {
     isLoading: catalogue.isLoading,
     isError: catalogue.isError,
     error: catalogue.error,
-    refetch: () => Promise.all([catalogue.refetch(), mine.refetch()]),
+    // refetch() ignores `enabled`: signed out, asking for memberships would be refused (anon has no grant).
+    refetch: () => Promise.all([catalogue.refetch(), ...(user ? [mine.refetch()] : [])]),
   };
 }
 

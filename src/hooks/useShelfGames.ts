@@ -51,6 +51,7 @@ export function useShelfGames({ browserPoint, cityKey, radiusKm }: { browserPoin
     isLoading: catalogue.isLoading || shelves.isLoading || (Boolean(userId) && memberships.isLoading),
     isError: catalogue.isError || shelves.isError || memberships.isError,
     error: catalogue.error ?? shelves.error ?? memberships.error,
-    refetch: () => Promise.all([catalogue.refetch(), shelves.refetch(), memberships.refetch()]),
+    // refetch() ignores `enabled`: signed out, asking for memberships would be refused (anon has no grant).
+    refetch: () => Promise.all([catalogue.refetch(), shelves.refetch(), ...(userId ? [memberships.refetch()] : [])]),
   };
 }
