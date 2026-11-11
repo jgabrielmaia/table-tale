@@ -24,7 +24,12 @@ export function MyCommunitiesCard() {
       ) : isError ? (
         <ErrorState compact message={errorMessage(error)} onRetry={() => void refetch()} />
       ) : list.length === 0 ? (
-        <EmptyState compact title={t('communities.myEmpty')} />
+        <EmptyState
+          compact
+          title={t('communities.myEmpty')}
+          description={t('communities.myEmptyDesc')}
+          action={<ButtonLink to="/find-community" variant="gold" size="sm">{t('communities.findMine')}</ButtonLink>}
+        />
       ) : (
         <ul className="member-list" role="list">
           {list.map(({ community, membership }) => (
