@@ -27,7 +27,8 @@ import { t } from '@/i18n';
 import type { Community, CommunityRole, CommunityVisibility, MembershipStatus, MyMembership } from '@/types/domain';
 import { useAuth } from './useAuth';
 
-function useMyMemberships() {
+/** The signed-in viewer's memberships (any status); empty when signed out. */
+export function useMyMemberships() {
   const { user } = useAuth();
   const userId = user?.id ?? null;
   return useQuery({
@@ -86,6 +87,19 @@ export function useCreateCommunity() {
       // A short random suffix keeps slugs unique without a round trip.
       const slug = `${slugify(values.name)}-${Math.random().toString(36).slice(2, 6)}`;
       return createCommunity(user.id, values, slug);
+    },
+    onSuccess: invalidate,
+  });
+}
+
+/** Joins a public community at once, or asks to join a private one (pending until a manager approves). */
+export function useJoinCommunity() {
+  const { user } = useAuth();
+  const invalidate = useInvalidateCommunities();
+  return useMutation({
+    mutationFn: (community: Pick<Community, 'id' | 'visibility'>): Promise<MembershipStatus> => {
+      if (!user) throw new Error(t('auth.needLoginCommunities'));
+      return joinCommunity(user.id, community.id, community.visibility);
     },
     onSuccess: invalidate,
   });

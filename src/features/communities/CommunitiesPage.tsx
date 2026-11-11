@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Badge, Button, ButtonLink, EmptyState, ErrorState, Icon, Input, LoadingState, Select } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommunities } from '@/hooks/useCommunities';
 import { useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
+import { formatKm } from '@/features/games/shelves';
 import type { Community, MyMembership } from '@/types/domain';
 import {
   EMPTY_COMMUNITY_FILTERS,
@@ -105,12 +106,24 @@ export function MembershipBadge({ membership }: { membership: MyMembership | nul
   return <Badge tone="success">{t(`communities.role.${membership.role}`)}</Badge>;
 }
 
-export function CommunityCard({ community: c, membership }: { community: Community; membership: MyMembership | null }) {
+interface CommunityCardProps {
+  community: Community;
+  membership: MyMembership | null;
+  /** Shown next to the place when known (the find-a-community step). */
+  distanceKm?: number | null;
+  /** An extra control under the card, such as Join. */
+  action?: ReactNode;
+}
+
+export function CommunityCard({ community: c, membership, distanceKm = null, action }: CommunityCardProps) {
   const { t, tn } = useI18n();
   return (
     <li className="panel community-card">
       <h2><Link to={`/communities/${c.slug}`}>{c.name}</Link></h2>
-      <p className="community-place"><Icon name="pin" /> {c.district}, {c.city} · {c.country}</p>
+      <p className="community-place">
+        <Icon name="pin" /> {c.district}, {c.city} · {c.country}
+        {distanceKm !== null && <> · {t('onboarding.distance', { km: formatKm(distanceKm) })}</>}
+      </p>
       {c.description && <p className="muted">{c.description}</p>}
       <div className="community-meta">
         <Badge tone="accent" icon={<Icon name={c.visibility === 'public' ? 'users' : 'lock'} />}>
@@ -119,6 +132,7 @@ export function CommunityCard({ community: c, membership }: { community: Communi
         <span className="muted">{tn('communities.members', c.memberCount)}</span>
         <MembershipBadge membership={membership} />
       </div>
+      {action && <div className="community-card__action">{action}</div>}
     </li>
   );
 }
