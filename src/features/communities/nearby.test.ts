@@ -4,7 +4,7 @@ import type { Community, MyMembership } from '@/types/domain';
 
 const c = (id: string, name: string, latitude: number | null, longitude: number | null): Community => ({
   id, slug: id, name, description: '', visibility: 'public', city: 'X', district: 'Y', country: 'Portugal',
-  latitude, longitude, createdBy: 'u', memberCount: 1,
+  latitude, longitude, createdBy: 'u', coverUrl: null, memberCount: 1,
 });
 
 const lisboa = c('lx', 'Table Tale Lisboa', 38.7495, -9.1438);

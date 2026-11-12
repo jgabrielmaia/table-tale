@@ -184,6 +184,7 @@ export interface CommunityRow {
   latitude: number | null;
   longitude: number | null;
   created_by: string;
+  cover_url: string | null;
   created_at: string;
   updated_at: string;
 }

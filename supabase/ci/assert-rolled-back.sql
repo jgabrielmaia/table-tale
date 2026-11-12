@@ -3,6 +3,9 @@
 reset role;
 do $$
 begin
+  if exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'can_edit_community_folder') then
+    raise exception 'rollback left can_edit_community_folder behind';
+  end if;
   if exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'member_count') then
     raise exception 'rollback left member_count behind';
   end if;

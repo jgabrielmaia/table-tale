@@ -5,6 +5,8 @@ import {
   addUserGame,
   createCommunity,
   deleteCommunity,
+  removeCommunityCover,
+  setCommunityCover,
   fetchCommunities,
   fetchCommunityBySlug,
   fetchCommunityGames,
@@ -148,6 +150,8 @@ export function useCommunity(slug: string) {
   const leave = useMutation({ mutationFn: () => leaveCommunity(need().userId, need().id), ...refresh });
   const update = useMutation({ mutationFn: (values: CommunityFormValues) => updateCommunity(need().id, values), ...refresh });
   const remove = useMutation({ mutationFn: () => deleteCommunity(need().id), ...refresh });
+  const setCover = useMutation({ mutationFn: (file: File) => setCommunityCover({ id: need().id, coverUrl: community.data!.coverUrl }, file), ...refresh });
+  const removeCover = useMutation({ mutationFn: () => removeCommunityCover({ id: need().id, coverUrl: community.data!.coverUrl }), ...refresh });
   const setMember = useMutation({
     mutationFn: (v: { membershipId: string; role?: CommunityRole; status?: MembershipStatus }) =>
       updateMember(v.membershipId, { ...(v.role ? { role: v.role } : {}), ...(v.status ? { status: v.status } : {}) }),
@@ -160,7 +164,7 @@ export function useCommunity(slug: string) {
 
   const activeOwners = (members.data ?? []).filter((m) => m.role === 'owner' && m.status === 'active').length;
 
-  return { community, membership, members, games, activeOwners, canSeeContent, join, leave, update, remove, setMember, kick, transfer, addGame, removeGame };
+  return { community, membership, members, games, activeOwners, canSeeContent, join, leave, update, remove, setCover, removeCover, setMember, kick, transfer, addGame, removeGame };
 }
 
 /** The viewer's personal collection (table `user_games`). */

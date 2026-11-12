@@ -15,6 +15,7 @@ import { getLocale, useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { truncate } from '@/seo/pages';
 import { usePageSeo } from '@/seo/RouteSeo';
+import { CommunityCoverField } from './CommunityCoverField';
 import { CommunityForm } from './CommunityForm';
 import { FactionBalance } from './FactionBalance';
 import { MembershipBadge } from './CommunitiesPage';
@@ -125,6 +126,15 @@ export function CommunityPage() {
               id: 'manage',
               label: t('communities.tab.manage'),
               content: (
+                <>
+                <CommunityCoverField
+                  name={community.name}
+                  coverUrl={community.coverUrl}
+                  uploading={c.setCover.isPending}
+                  removing={c.removeCover.isPending}
+                  onUpload={(file) => run(() => c.setCover.mutateAsync(file), t('communities.cover.saved'))}
+                  onRemove={() => run(() => c.removeCover.mutateAsync(), t('communities.cover.removed'))}
+                />
                 <ManagePanel
                   community={community}
                   saving={c.update.isPending}
@@ -139,6 +149,7 @@ export function CommunityPage() {
                       : undefined
                   }
                 />
+                </>
               ),
             }]
           : []),
@@ -150,6 +161,11 @@ export function CommunityPage() {
   return (
     <div className="container section">
       <p className="eyebrow"><Link to="/communities">{t('communities.title')}</Link></p>
+      {community.coverUrl && (
+        <div className="community-cover community-cover--banner">
+          <img src={community.coverUrl} alt={t('communities.cover.alt', { name: community.name })} />
+        </div>
+      )}
       <div className="section-head">
         <div>
           <h1>{community.name}</h1>
