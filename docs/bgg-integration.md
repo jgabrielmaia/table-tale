@@ -82,6 +82,17 @@ Reversão da cache: aplicar `supabase/rollbacks/20261112000007_bgg_search_cache.
 `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` são injetados pelo Supabase. Sem o token a função responde 503
 («ligação não configurada») e o resto da app funciona. Em desenvolvimento local: `supabase functions serve bgg --env-file <ficheiro fora do git>`.
 
+### Ligar a interface (feature flag)
+
+A pesquisa e a importação estão atrás da flag `VITE_FEATURE_BGG`, **desligada por omissão**: sem ela, `/games/import`
+redireciona para `/games` e o botão «Importar do BoardGameGeek» da estante da comunidade não aparece. Os jogos já importados
+continuam a mostrar os dados e o crédito do BGG. Depois de o teste ao vivo (passo 5 do PR) correr bem:
+
+1. Na Vercel, em Settings → Environment Variables (Production), definir `VITE_FEATURE_BGG=true`.
+2. Fazer um novo deploy (a flag é lida no build). Para desligar, remover a variável ou pô-la a `false` e fazer deploy de novo.
+
+Para o teste ao vivo antes de ligar a flag em produção: `VITE_FEATURE_BGG=true npm run dev` contra o projeto de produção.
+
 ### 3. Ordem de lançamento (expand / contract)
 
 A app em produção ainda lê `genre` e `complexity`; por isso a remoção é feita em duas fases.

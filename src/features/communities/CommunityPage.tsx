@@ -12,6 +12,7 @@ import { sortShelfGames, type GamesSort } from '@/features/games/shelves';
 import { useGameCardActions } from '@/hooks/useGameCardActions';
 import { useGames } from '@/hooks/useGames';
 import { getLocale, useI18n } from '@/i18n';
+import { features } from '@/lib/env';
 import { errorMessage } from '@/lib/errors';
 import { truncate } from '@/seo/pages';
 import { usePageSeo } from '@/seo/RouteSeo';
@@ -317,7 +318,7 @@ function GamesPanel({ c, run }: { c: CommunityState; run: Run }) {
             options={[{ value: '', label: t('communities.pickGame') }, ...options]}
             onChange={(e) => setPick(e.target.value)}
           />
-          <ButtonLink to={`/games/import?community=${c.community.data?.slug ?? ''}`} variant="ghost">{t('bgg.link')}</ButtonLink>
+          {features.bgg && <ButtonLink to={`/games/import?community=${c.community.data?.slug ?? ''}`} variant="ghost">{t('bgg.link')}</ButtonLink>}
           <Button
             variant="gold"
             disabled={!pick}

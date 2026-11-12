@@ -51,6 +51,8 @@ export default defineConfig({
         env: {
           VITE_SUPABASE_URL: FAKE_SUPABASE_URL,
           VITE_SUPABASE_ANON_KEY: 'e2e-anon-key',
+          // The e2e suite covers BGG import, so the flag is on here (production keeps it off until the token exists).
+          VITE_FEATURE_BGG: process.env.VITE_FEATURE_BGG ?? 'true',
           VITE_SITE_URL: `http://localhost:${PORT}${BASE_PATH}`,
         },
       },
