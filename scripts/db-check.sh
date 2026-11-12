@@ -41,6 +41,7 @@ psql_ -f supabase/ci/assert-migrated.sql
 psql_ -f supabase/ci/assert-bgg.sql
 psql_ -f supabase/ci/assert-owner-achievement.sql
 psql_ -f supabase/ci/assert-community-onboarding.sql
+psql_ -f supabase/ci/assert-community-cover.sql
 echo "ok: migrated"
 
 # The full rollback below drops the default-community trigger again with the community schema, so prove on its own
@@ -64,6 +65,7 @@ psql_ -c "delete from public.games where slug = 'ci-bgg'"
 psql_ -f supabase/ci/assert-bgg.sql
 psql_ -f supabase/ci/assert-owner-achievement.sql
 psql_ -f supabase/ci/assert-community-onboarding.sql
+psql_ -f supabase/ci/assert-community-cover.sql
 echo "ok: round trip"
 
 # Contract phase (drop genre/complexity), last because dropping the columns discards the legacy values. It lives outside supabase/migrations on purpose, so it is only

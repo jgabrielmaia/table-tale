@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { unwrap } from '@/lib/errors';
+import { AppError, unwrap } from '@/lib/errors';
 import { t } from '@/i18n';
 import type { CommunityGameRow, CommunityMembershipRow, CommunityRow, GameRow, OwnershipCondition, UserGameRow } from '@/types/database';
 import type {
@@ -13,6 +13,7 @@ import type {
   MyMembership,
   UserGameEntry,
 } from '@/types/domain';
+import { COVER_BUCKET, COVER_MAX_BYTES, COVER_TYPES, coverPath } from './cover';
 import { joinOutcome } from './permissions';
 import type { CommunityFormValues } from './schemas';
 
@@ -46,6 +47,7 @@ export const mapCommunity = (r: CommunityRow & Partial<CountEmbed>): Community =
   latitude: r.latitude,
   longitude: r.longitude,
   createdBy: r.created_by,
+  coverUrl: r.cover_url ?? null,
   memberCount: r.member_count ?? 0,
 });
 
@@ -100,6 +102,33 @@ export async function updateCommunity(id: string, values: CommunityFormValues): 
 
 export async function deleteCommunity(id: string): Promise<void> {
   unwrap(await supabase.from('communities').delete().eq('id', id), t('communities.err.delete'));
+}
+
+// ---- cover photo ---------------------------------------------------------------------------------------------------
+
+/** Uploads a new cover, points the community at it, then removes the previous file (best effort). */
+export async function setCommunityCover(community: Pick<Community, 'id' | 'coverUrl'>, file: File): Promise<void> {
+  const ext = COVER_TYPES[file.type];
+  if (!ext) throw new AppError(t('edit.fileType'));
+  if (file.size > COVER_MAX_BYTES) throw new AppError(t('communities.cover.errSize'));
+  const path = `${community.id}/cover-${Date.now()}.${ext}`;
+  unwrap(await supabase.storage.from(COVER_BUCKET).upload(path, file, { contentType: file.type, upsert: false }), t('communities.cover.errUpload'));
+  const url = supabase.storage.from(COVER_BUCKET).getPublicUrl(path).data.publicUrl;
+  unwrap(await supabase.from('communities').update({ cover_url: url }).eq('id', community.id), t('communities.cover.errUpload'));
+  await removeCoverFile(community.coverUrl, community.id);
+}
+
+export async function removeCommunityCover(community: Pick<Community, 'id' | 'coverUrl'>): Promise<void> {
+  unwrap(await supabase.from('communities').update({ cover_url: null }).eq('id', community.id), t('communities.cover.errRemove'));
+  await removeCoverFile(community.coverUrl, community.id);
+}
+
+// A leftover file only costs storage, so a failed clean-up never fails the action.
+async function removeCoverFile(url: string | null, communityId: string) {
+  const old = coverPath(url, communityId);
+  if (!old) return;
+  const { error } = await supabase.storage.from(COVER_BUCKET).remove([old]);
+  if (error) console.warn('community cover clean-up failed', error.message);
 }
 
 // ---- memberships ----------------------------------------------------------------------------------------------------

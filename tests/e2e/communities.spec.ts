@@ -372,5 +372,29 @@ test.describe('Comunidades', () => {
       await expect(page.getByText('Comunidade atualizada.')).toBeVisible();
       expect(backend.db.communities.find((c) => c.slug === 'clube-secreto-braga')?.city).toBe('Guimarães');
     });
+
+    test('o dono põe e remove a foto de capa, que aparece na página e no cartão da comunidade', async ({ page, backend }) => {
+      await page.goto('communities/clube-secreto-braga');
+      await page.getByRole('tab', { name: 'Gestão' }).click();
+      await expect(page.getByRole('heading', { name: 'Foto de capa' })).toBeVisible();
+
+      await page.getByLabel('Adicionar foto de capa').setInputFiles({ name: 'grande.png', mimeType: 'image/png', buffer: Buffer.alloc(2 * 1024 * 1024 + 1) });
+      await expect(page.getByText('A imagem não pode exceder 2 MB.')).toBeVisible();
+
+      await page.getByLabel('Adicionar foto de capa').setInputFiles({ name: 'capa.png', mimeType: 'image/png', buffer: Buffer.from('fake-png') });
+      await expect(page.getByText('Foto de capa atualizada.')).toBeVisible();
+      const community = () => backend.db.communities.find((c) => c.slug === 'clube-secreto-braga')!;
+      expect(community().cover_url).toContain(`/community-covers/${community().id}/cover-`);
+      await expect(page.getByRole('img', { name: 'Foto de capa de Clube Secreto de Braga' }).first()).toBeVisible();
+
+      await page.goto('communities');
+      await expect(page.locator('.community-card--cover')).toHaveCount(1);
+
+      await page.goto('communities/clube-secreto-braga');
+      await page.getByRole('tab', { name: 'Gestão' }).click();
+      await page.getByRole('button', { name: 'Remover foto de capa' }).click();
+      await expect(page.getByText('Foto de capa removida.')).toBeVisible();
+      expect(community().cover_url).toBeNull();
+    });
   });
 });

@@ -118,7 +118,13 @@ interface CommunityCardProps {
 export function CommunityCard({ community: c, membership, distanceKm = null, action }: CommunityCardProps) {
   const { t, tn } = useI18n();
   return (
-    <li className="panel community-card">
+    <li className={c.coverUrl ? 'panel community-card community-card--cover' : 'panel community-card'}>
+      {c.coverUrl && (
+        <div className="community-cover community-cover--card">
+          {/* Decorative here: the card's title already names the community. */}
+          <img src={c.coverUrl} alt="" loading="lazy" />
+        </div>
+      )}
       <h2><Link to={`/communities/${c.slug}`}>{c.name}</Link></h2>
       <p className="community-place">
         <Icon name="pin" /> {c.district}, {c.city} · {c.country}

@@ -182,6 +182,8 @@ export interface Community {
   latitude: number | null;
   longitude: number | null;
   createdBy: string;
+  /** Cover photo uploaded by an owner or admin; null shows the branded fallback. */
+  coverUrl: string | null;
   memberCount: number;
 }
 
