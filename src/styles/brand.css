@@ -1010,6 +1010,15 @@ section + section > .medal-group { margin-top: 1.75rem; }
 }
 .community-card:active { transform: scale(.985); }
 @media (prefers-reduced-motion: reduce) { .community-card, .community-card:hover, .community-card:active { transition: none; transform: none; } }
+/* Controls inside a clickable card sit above the card-wide link. */
+.community-card__action { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .25rem; cursor: default; }
+/* Find-a-community step (after the Fate Draw). */
+.onboarding-lead { max-width: 62ch; }
+.onboarding-notice { margin-block: 1rem; display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between; }
+.onboarding-footer { margin-top: 2rem; display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between; }
+.no-community { margin-bottom: 1.25rem; display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; }
+.no-community h2 { margin: 0 0 .25rem; font-size: 1.1rem; }
+.no-community p { margin: 0; }
 .community-place { display: flex; align-items: center; gap: .4rem; margin: 0; color: var(--text-2); }
 .community-meta { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; margin-top: auto; }
 .community-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; }

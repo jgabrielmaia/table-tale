@@ -3,6 +3,9 @@
 reset role;
 do $$
 begin
+  if exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'member_count') then
+    raise exception 'rollback left member_count behind';
+  end if;
   if exists (select 1 from public.achievements where slug = 'guardiao-da-estante') then
     raise exception 'rollback left the owner achievement behind';
   end if;

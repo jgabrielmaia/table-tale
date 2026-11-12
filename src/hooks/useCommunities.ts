@@ -27,7 +27,8 @@ import { t } from '@/i18n';
 import type { Community, CommunityRole, CommunityVisibility, MembershipStatus, MyMembership } from '@/types/domain';
 import { useAuth } from './useAuth';
 
-function useMyMemberships() {
+/** The signed-in viewer's memberships (any status); empty when signed out. */
+export function useMyMemberships() {
   const { user } = useAuth();
   const userId = user?.id ?? null;
   return useQuery({
@@ -39,6 +40,7 @@ function useMyMemberships() {
 
 /** Discovery: every community visible to the viewer, plus the viewer's own membership in each. */
 export function useCommunities() {
+  const { user } = useAuth();
   const catalogue = useQuery({ queryKey: queryKeys.communities, queryFn: fetchCommunities, enabled: isSupabaseConfigured });
   const mine = useMyMemberships();
   const membershipOf = useMemo(() => new Map((mine.data ?? []).map((m) => [m.communityId, m])), [mine.data]);
@@ -48,7 +50,8 @@ export function useCommunities() {
     isLoading: catalogue.isLoading,
     isError: catalogue.isError,
     error: catalogue.error,
-    refetch: () => Promise.all([catalogue.refetch(), mine.refetch()]),
+    // refetch() ignores `enabled`: signed out, asking for memberships would be refused (anon has no grant).
+    refetch: () => Promise.all([catalogue.refetch(), ...(user ? [mine.refetch()] : [])]),
   };
 }
 
@@ -91,6 +94,19 @@ export function useCreateCommunity() {
   });
 }
 
+/** Joins a public community at once, or asks to join a private one (pending until a manager approves). */
+export function useJoinCommunity() {
+  const { user } = useAuth();
+  const invalidate = useInvalidateCommunities();
+  return useMutation({
+    mutationFn: (community: Pick<Community, 'id' | 'visibility'>): Promise<MembershipStatus> => {
+      if (!user) throw new Error(t('auth.needLoginCommunities'));
+      return joinCommunity(user.id, community.id, community.visibility);
+    },
+    onSuccess: invalidate,
+  });
+}
+
 /** One community page: data, the viewer's membership and every action the UI can take on it. */
 export function useCommunity(slug: string) {
   const { user } = useAuth();
@@ -110,7 +126,8 @@ export function useCommunity(slug: string) {
   const members = useQuery({
     queryKey: queryKeys.communityMembers(id),
     queryFn: () => fetchMembers(id!),
-    enabled: isSupabaseConfigured && Boolean(id) && canSeeContent,
+    // Signed-out visitors have no access to the memberships (only to the count): do not ask.
+    enabled: isSupabaseConfigured && Boolean(id) && Boolean(userId) && canSeeContent,
   });
   const games = useQuery({
     queryKey: queryKeys.communityGames(id),

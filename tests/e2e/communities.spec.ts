@@ -35,6 +35,22 @@ test.describe('Comunidades', () => {
     await expect(page.getByRole('tab', { name: 'Membros' })).toBeVisible();
   });
 
+  test('um visitante vê quantos membros há sem acesso às inscrições (sem erro 401) @smoke', async ({ page, backend }) => {
+    backend.joinCommunity('tabuleiros-do-porto');
+    await page.goto('communities');
+    await expect(card(page, 'Tabuleiros do Porto').getByText('2 membros')).toBeVisible();
+    await expect(card(page, 'Table Tale Lisboa').getByText('1 membro', { exact: true })).toBeVisible();
+
+    await page.goto('communities/tabuleiros-do-porto');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tabuleiros do Porto');
+    await expect(page.getByRole('tabpanel').getByText('2 membros')).toBeVisible();
+    await expect(page.getByText('Entra na tua conta para veres quem faz parte desta comunidade.')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Entrar para ver os membros' })).toBeVisible();
+    // Signed out, the app never asks for the memberships themselves: only the computed count.
+    expect(backend.calls(/\/rest\/v1\/community_memberships/)).toHaveLength(0);
+    expect(backend.calls(/\/rest\/v1\/communities\?.*member_count/).length).toBeGreaterThan(0);
+  });
+
   test('o separador Jogos mostra a estante da comunidade com exemplares e ligação ao jogo', async ({ page }) => {
     await page.goto('communities/tabuleiros-do-porto');
     await page.getByRole('tab', { name: 'Jogos' }).click();
@@ -213,7 +229,8 @@ test.describe('Comunidades', () => {
       await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeVisible();
     });
 
-    test('pertence a várias comunidades e vê-as no perfil, separadas dos jogos pessoais', async ({ page }) => {
+    test('pertence a várias comunidades e vê-as no perfil, separadas dos jogos pessoais', async ({ page, backend }) => {
+      backend.joinCommunity('table-tale');
       await page.goto('communities/tabuleiros-do-porto');
       await page.getByRole('button', { name: 'Entrar', exact: true }).click();
       await expect(page.getByText('Entraste na comunidade.')).toBeVisible();
@@ -237,7 +254,8 @@ test.describe('Comunidades', () => {
       expect(backend.db.ownerships.filter((o) => o.user_id === PLAYER.id)).toHaveLength(0);
     });
 
-    test('um membro vê membros e jogos, mas não tem gestão', async ({ page }) => {
+    test('um membro vê membros e jogos, mas não tem gestão', async ({ page, backend }) => {
+      backend.joinCommunity('table-tale');
       await page.goto('communities/table-tale');
       await expect(page.getByRole('tab', { name: 'Gestão' })).toHaveCount(0);
       await page.getByRole('tab', { name: 'Membros' }).click();

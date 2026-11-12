@@ -40,7 +40,17 @@ migrate seed
 psql_ -f supabase/ci/assert-migrated.sql
 psql_ -f supabase/ci/assert-bgg.sql
 psql_ -f supabase/ci/assert-owner-achievement.sql
+psql_ -f supabase/ci/assert-community-onboarding.sql
 echo "ok: migrated"
+
+# The full rollback below drops the default-community trigger again with the community schema, so prove on its own
+# that undoing 20261112000004 brings the automatic join back, then re-apply it.
+echo "== rollback and re-apply 20261112000004 (automatic join)"
+psql_ -1 -f supabase/rollbacks/20261112000004_no_default_community_join.down.sql
+psql_ -f supabase/ci/assert-default-join-restored.sql
+psql_ -1 -f supabase/migrations/20261112000004_no_default_community_join.sql
+psql_ -f supabase/ci/assert-community-onboarding.sql
+echo "ok: automatic join rollback"
 
 echo "== rollback"
 rollback
@@ -53,6 +63,7 @@ psql_ -f supabase/ci/assert-migrated.sql
 psql_ -c "delete from public.games where slug = 'ci-bgg'"
 psql_ -f supabase/ci/assert-bgg.sql
 psql_ -f supabase/ci/assert-owner-achievement.sql
+psql_ -f supabase/ci/assert-community-onboarding.sql
 echo "ok: round trip"
 
 # Contract phase (drop genre/complexity), last because dropping the columns discards the legacy values. It lives outside supabase/migrations on purpose, so it is only

@@ -5,6 +5,7 @@ import { GameGrid } from '@/components/games/GameGrid';
 import { BggCredit } from '@/components/bgg/BggCredit';
 import { Button, ButtonLink, EmptyState, ErrorState, Icon, LoadingState, Select } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
+import { useMyMemberships } from '@/hooks/useCommunities';
 import { useGameCardActions } from '@/hooks/useGameCardActions';
 import { useShelfGames } from '@/hooks/useShelfGames';
 import { useViewerLocation } from '@/hooks/useViewerLocation';
@@ -19,6 +20,7 @@ export function GamesPage() {
   const { t, tn } = useI18n();
   const { user } = useAuth();
   const cardActions = useGameCardActions();
+  const mine = useMyMemberships();
   const [params, setParams] = useSearchParams();
   const [filters, setFilters] = useState<GameFilterValues>({ ...EMPTY_FILTERS, query: params.get('q') ?? '' });
   const [communityId, setCommunityId] = useState('');
@@ -60,6 +62,16 @@ export function GamesPage() {
           </p>
         )}
       </div>
+
+      {user && mine.isSuccess && !hasMemberships && (
+        <section className="panel no-community" aria-labelledby="no-community-title">
+          <div>
+            <h2 id="no-community-title">{t('games.noCommunityTitle')}</h2>
+            <p className="muted">{mine.data.some((m) => m.status === 'pending') ? t('games.pendingCommunityDesc') : t('games.noCommunityDesc')}</p>
+          </div>
+          <ButtonLink to="/find-community" variant="gold" size="sm">{t('communities.findMine')}</ButtonLink>
+        </section>
+      )}
 
       <section className="filters games-reach" aria-label={t('games.reachAria')}>
         <div className="games-reach-where" aria-live="polite">

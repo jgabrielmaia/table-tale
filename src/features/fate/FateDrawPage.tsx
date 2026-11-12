@@ -4,6 +4,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/brand/Logo';
 import { LanguageSelector } from '@/components/layout/LanguageSelector';
 import { useAuth } from '@/hooks/useAuth';
+import { useMyMemberships } from '@/hooks/useCommunities';
 import { useFate } from '@/hooks/useFate';
 import { useProfile } from '@/hooks/useProfile';
 import { useI18n } from '@/i18n';
@@ -33,6 +34,7 @@ export function FateDrawPage() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const fate = useFate();
+  const memberships = useMyMemberships();
   const [phase, setPhase] = useState<Phase>('invitation');
   const [pickedIndex, setPickedIndex] = useState<number | null>(null);
   const [chosen, setChosen] = useState<Chosen | null>(null);
@@ -126,7 +128,8 @@ export function FateDrawPage() {
           player={{ name: profile.data?.displayName || user?.email?.split('@')[0] || t('common.player'), avatarUrl: profile.data?.avatarUrl ?? null }}
           seasonName={fate.season.data?.name ?? t('idp.currentSeason')}
           discoveredAt={chosen.selectedAt}
-          onEnter={() => navigate('/profile')}
+          // Newcomers belong to no community yet: the next step is finding one. Players who already have one go on.
+          onEnter={() => navigate((memberships.data ?? []).length ? '/profile' : '/find-community')}
         />
       )}
     </main>

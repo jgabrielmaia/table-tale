@@ -47,7 +47,7 @@ test.describe('O Sorteio do Destino', () => {
       await expect(fate.cards().last()).toHaveAccessibleName('Revelar a carta 9 de 9');
     });
 
-    test('revela a carta atribuída pelo servidor, a facção e a identidade, e entra no perfil @smoke', async ({ page, backend }) => {
+    test('revela a carta atribuída pelo servidor, a facção e a identidade, e segue para escolher comunidade @smoke', async ({ page, backend }) => {
       const fate = new FatePage(page);
       await fate.goto();
       await fate.draw(4);
@@ -63,7 +63,11 @@ test.describe('O Sorteio do Destino', () => {
       await expect(page.getByText('XIV — A Temperança')).toBeVisible();
 
       await fate.enter().click();
-      await expect(page).toHaveURL(/\/profile$/);
+      // A newcomer belongs to no community: the next step is finding one.
+      await expect(page).toHaveURL(/\/find-community$/);
+      await expect(page.getByRole('heading', { level: 1, name: 'Encontra a tua comunidade' })).toBeVisible();
+
+      await page.goto('profile');
       await expect(page.getByRole('region', { name: 'A minha identidade Table Tale' }).getByRole('heading', { name: 'A Temperança' })).toBeVisible();
       await expect(page.getByText('Arcanos', { exact: true }).first()).toBeVisible();
       await expect(page.getByRole('region', { name: /Descobertas/ }).getByRole('heading', { name: 'Destino Revelado' })).toBeVisible();

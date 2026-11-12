@@ -172,8 +172,18 @@ type Run = (action: () => Promise<unknown>, success: string) => Promise<void>;
 type CommunityState = ReturnType<typeof useCommunity>;
 
 function MembersPanel({ community, c, userId, run }: { community: Community; c: CommunityState; userId: string | null; run: Run }) {
-  const { t } = useI18n();
+  const { t, tn } = useI18n();
   const m = c.membership;
+  if (!userId) {
+    return (
+      <EmptyState
+        compact
+        title={tn('communities.members', community.memberCount)}
+        description={t('communities.membersSignedOut')}
+        action={<ButtonLink to="/login" state={{ from: `/communities/${community.slug}` }} variant="secondary" size="sm">{t('communities.membersSignIn')}</ButtonLink>}
+      />
+    );
+  }
   if (c.members.isLoading) return <LoadingState variant="lines" count={3} />;
   if (c.members.isError) return <ErrorState compact message={errorMessage(c.members.error)} onRetry={() => void c.members.refetch()} />;
   const list = c.members.data ?? [];

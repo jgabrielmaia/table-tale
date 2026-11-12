@@ -36,8 +36,8 @@ describe('RouteSeo', () => {
     expect(meta('meta[name="robots"]')).toBe('index, follow');
   });
 
-  it('gives the communities list, new community and BGG import their own titles, never "not found"', () => {
-    const pages: [string, string][] = [['/communities', 'Comunidades'], ['/communities/new', 'Nova comunidade'], ['/games/import', 'Importar do BoardGameGeek']];
+  it('gives the communities list, new community, find-a-community and BGG import their own titles, never "not found"', () => {
+    const pages: [string, string][] = [['/communities', 'Comunidades'], ['/communities/new', 'Nova comunidade'], ['/games/import', 'Importar do BoardGameGeek'], ['/find-community', 'Encontra a tua comunidade']];
     for (const [path, title] of pages) {
       renderAt(path);
       expect(document.title, path).toBe(`${title} | Table Tale`);
