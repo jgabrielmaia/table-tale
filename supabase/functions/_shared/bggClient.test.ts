@@ -78,6 +78,21 @@ describe('createBggClient', () => {
     await expect(client.search('catan')).rejects.toMatchObject({ code: 'rate_limited', status: 429 });
   });
 
+  it('does not wait out a long Retry-After: it reports rate_limited at once', async () => {
+    const { client, fetchFn, sleeps } = setup([xml('', 429, { 'retry-after': '120' })], { minIntervalMs: 0 });
+    await expect(client.search('catan')).rejects.toMatchObject({ code: 'rate_limited', status: 429 });
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    expect(sleeps).toEqual([]);
+  });
+
+  it('gives every request a timeout, and retries one that timed out', async () => {
+    const timeout = Object.assign(new Error('The operation timed out.'), { name: 'TimeoutError' });
+    const { client, fetchFn } = setup([timeout, xml(searchXml)], { minIntervalMs: 0, timeoutMs: 1234 });
+    expect((await client.search('catan')).length).toBe(3);
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    expect(fetchFn.mock.calls[0]![1]!.signal).toBeInstanceOf(AbortSignal);
+  });
+
   it('does not retry an invalid token', async () => {
     const { client, fetchFn } = setup([xml('', 401)]);
     await expect(client.search('catan')).rejects.toBeInstanceOf(BggError);

@@ -9,6 +9,9 @@ begin
   if exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'member_count') then
     raise exception 'rollback left member_count behind';
   end if;
+  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'bgg_search_cache') then
+    raise exception 'rollback left the BGG search cache behind';
+  end if;
   if exists (select 1 from public.achievements where slug = 'guardiao-da-estante') then
     raise exception 'rollback left the owner achievement behind';
   end if;

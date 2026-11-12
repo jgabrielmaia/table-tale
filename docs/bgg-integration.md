@@ -13,7 +13,7 @@ coleção de um utilizador BGG e importação em massa.
 Browser ── supabase.functions.invoke('bgg') ──▶ Edge Function `bgg` ──(Bearer BGG_API_TOKEN)──▶ boardgamegeek.com/xmlapi2
    │                                               │ verifica o JWT do utilizador
    │                                               │ respeita o ritmo do BGG, faz cache e tenta de novo com espera
-   │◀── { results | thing | game } ───────────────┘ grava em `games` com a service role (upsert por bgg_id)
+   │◀── { results | thing | game } ───────────────┘ grava em `games` com a service role (os dados que já temos ganham)
    └─ adiciona o jogo à coleção ou à comunidade com a sessão do utilizador (RLS decide se pode)
 ```
 
@@ -23,7 +23,16 @@ Browser ── supabase.functions.invoke('bgg') ──▶ Edge Function `bgg` �
   leitura para os clientes; apenas a função (service role) escreve.
 - Código: `supabase/functions/bgg/index.ts` (arranque e acesso à BD), `_shared/bggHandler.ts` (pedidos), `_shared/bggClient.ts`
   (cliente do BGG: `Authorization: Bearer`, `https://boardgamegeek.com` sem `www`, ~5 s entre pedidos, lotes de 20 ids,
-  novas tentativas em 429/5xx, cache em memória) e `_shared/bggParse.ts` (XML → dados, sem dependências).
+  novas tentativas em 429/5xx, 20 s de limite por pedido, cache em memória) e `_shared/bggParse.ts` (XML → dados, sem dependências;
+  a descrição do BGG vem escapada duas vezes, por isso as entidades HTML como `&#10;` e `&mdash;` são descodificadas uma vez mais).
+- Cache de pesquisas: cada pesquisa (normalizada: minúsculas, espaços simples) fica 7 dias na tabela `bgg_search_cache`
+  (migração `20261112000007_bgg_search_cache.sql`, só a service role lhe acede). Repetir uma pesquisa não gasta pedidos ao BGG;
+  se a cache falhar, a função pergunta ao BGG na mesma.
+- **Os dados que já temos ganham.** Ao importar um jogo que já está no catálogo (pelo `bgg_id` ou, se ainda não tem ligação ao
+  BGG, por um título igual sem diferença de maiúsculas), o BGG só preenche os campos vazios: título, descrição, capa, jogadores,
+  duração, categorias, mecânicas, ano e idade mínima. Os dados próprios do BGG (`bgg_data`, nota, ranking, peso, `bgg_synced_at`)
+  são sempre atualizados. Um jogo feito à mão com o mesmo título fica ligado ao BGG em vez de ser duplicado; se houver mais de
+  um com esse título, cria-se um jogo novo. Ver `fillGaps` em `_shared/bggHandler.ts`.
 - Interface: `/library/import` (também a partir da Biblioteca e da biblioteca de cada comunidade).
 
 ### Dados
@@ -55,12 +64,20 @@ Jogadores e duração passam a poder ser nulos: o BGG envia `0` quando não sabe
 2. Guardar o token (chave de aplicação) num gestor de segredos. Não o colocar em ficheiros do repositório, em `VITE_*` nem
    em ficheiros `.env` versionados.
 
-### 2. Segredo e função
+### 2. Segredo, migração da cache e função
+
+O histórico de migrações de produção foi alinhado com o repositório a 2026-11-12, por isso `supabase db push` funciona.
+Confirmar primeiro com `--dry-run` que só a migração da cache está pendente.
 
 ```bash
 npx supabase secrets set BGG_API_TOKEN=<token> --project-ref afrwnvusaxpflbezepik
+npx supabase db push --remote --dry-run   # deve listar só 20261112000007_bgg_search_cache.sql
+npx supabase db push --remote
 npx supabase functions deploy bgg --project-ref afrwnvusaxpflbezepik
 ```
+
+Reversão da cache: aplicar `supabase/rollbacks/20261112000007_bgg_search_cache.down.sql` (apaga só pesquisas guardadas) e
+`npx supabase migration repair --status reverted 20261112000007 --remote`.
 
 `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` são injetados pelo Supabase. Sem o token a função responde 503
 («ligação não configurada») e o resto da app funciona. Em desenvolvimento local: `supabase functions serve bgg --env-file <ficheiro fora do git>`.

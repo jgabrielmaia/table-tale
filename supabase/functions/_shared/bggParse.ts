@@ -17,13 +17,42 @@ export interface XmlNode {
 
 const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
 
-export function decodeEntities(value: string): string {
-  return value.replace(/&(#x[0-9a-fA-F]+|#\d+|[a-zA-Z]+);/g, (match, body: string) => {
-    if (body.startsWith('#x')) return String.fromCodePoint(parseInt(body.slice(2), 16));
-    if (body.startsWith('#')) return String.fromCodePoint(parseInt(body.slice(1), 10));
-    return ENTITIES[body] ?? match;
+const codePoint = (n: number, match: string) => (Number.isInteger(n) && n > 0 && n <= 0x10ffff ? String.fromCodePoint(n) : match);
+
+function decodeWith(table: Record<string, string>, value: string): string {
+  return value.replace(/&(#[xX][0-9a-fA-F]+|#\d+|[a-zA-Z][a-zA-Z0-9]*);/g, (match, body: string) => {
+    if (body[1] === 'x' || body[1] === 'X') return codePoint(parseInt(body.slice(2), 16), match);
+    if (body.startsWith('#')) return codePoint(parseInt(body.slice(1), 10), match);
+    return table[body] ?? match;
   });
 }
+
+/** XML entities only (the five predefined ones plus character references). An out-of-range reference is kept as is. */
+export const decodeEntities = (value: string) => decodeWith(ENTITIES, value);
+
+// HTML named entities seen in BGG descriptions: Latin-1 (U+00A0 to U+00FF, in order) and common typography.
+const LATIN1 =
+  'nbsp iexcl cent pound curren yen brvbar sect uml copy ordf laquo not shy reg macr deg plusmn sup2 sup3 acute micro para middot cedil sup1 ordm raquo frac14 frac12 frac34 iquest ' +
+  'Agrave Aacute Acirc Atilde Auml Aring AElig Ccedil Egrave Eacute Ecirc Euml Igrave Iacute Icirc Iuml ETH Ntilde Ograve Oacute Ocirc Otilde Ouml times Oslash Ugrave Uacute Ucirc Uuml Yacute THORN szlig ' +
+  'agrave aacute acirc atilde auml aring aelig ccedil egrave eacute ecirc euml igrave iacute icirc iuml eth ntilde ograve oacute ocirc otilde ouml divide oslash ugrave uacute ucirc uuml yacute thorn yuml';
+const HTML_ENTITIES: Record<string, string> = {
+  ...ENTITIES,
+  ...Object.fromEntries(LATIN1.split(' ').map((name, i) => [name, String.fromCodePoint(0xa0 + i)])),
+  ndash: '\u2013', mdash: '\u2014', lsquo: '\u2018', rsquo: '\u2019', sbquo: '\u201a', ldquo: '\u201c', rdquo: '\u201d', bdquo: '\u201e',
+  dagger: '\u2020', Dagger: '\u2021', bull: '\u2022', hellip: '\u2026', permil: '\u2030', prime: '\u2032', Prime: '\u2033',
+  lsaquo: '\u2039', rsaquo: '\u203a', euro: '\u20ac', trade: '\u2122', minus: '\u2212', larr: '\u2190', rarr: '\u2192',
+  harr: '\u2194', uarr: '\u2191', darr: '\u2193', OElig: '\u0152', oelig: '\u0153', Scaron: '\u0160', scaron: '\u0161',
+  Yuml: '\u0178', fnof: '\u0192', circ: '\u02c6', tilde: '\u02dc', ensp: '\u2002', emsp: '\u2003', thinsp: '\u2009',
+  zwnj: '\u200c', zwj: '\u200d', lrm: '\u200e', rlm: '\u200f', hearts: '\u2665', spades: '\u2660', clubs: '\u2663', diams: '\u2666',
+  star: '\u2606', check: '\u2713',
+};
+
+/**
+ * BGG escapes descriptions twice: after the XML layer the text still holds HTML references such as `&#10;` (line
+ * breaks), `&quot;` or `&mdash;`. This removes that second, HTML layer once, so the text reads as it does on BGG
+ * (the words are not changed). Unknown names are kept as is.
+ */
+export const decodeHtmlEntities = (value: string) => decodeWith(HTML_ENTITIES, value);
 
 function parseAttrs(source: string): Record<string, string> {
   const attrs: Record<string, string> = {};
@@ -155,7 +184,7 @@ export function parseThings(xml: string): BggThing[] {
       type: item.attrs.type ?? 'boardgame',
       name: primaryName(item),
       alternateNames: kids(item, 'name').filter((n) => n.attrs.type === 'alternate').map((n) => n.attrs.value ?? ''),
-      description: kid(item, 'description')?.text.trim() ?? '',
+      description: decodeHtmlEntities(kid(item, 'description')?.text ?? '').trim(),
       image: kid(item, 'image')?.text.trim() || null,
       thumbnail: kid(item, 'thumbnail')?.text.trim() || null,
       yearPublished: num(value(kid(item, 'yearpublished'))),

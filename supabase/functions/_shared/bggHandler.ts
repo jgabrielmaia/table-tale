@@ -4,8 +4,10 @@
  *
  * Actions (POST, JSON body):
  *   { action: 'search', query }   -> { results: [{ id, name, yearPublished, type, gameSlug }] }
+ *                                    BGG answers are cached for a week per normalised query (see SearchCache).
  *   { action: 'preview', id }     -> { thing, gameSlug }      full BGG item, nothing written
- *   { action: 'import', id }      -> { game }                 upserts the catalogue row by bgg_id and returns it
+ *   { action: 'import', id }      -> { game }                 creates the catalogue row, or links and fills the gaps of an
+ *                                                             existing one (by bgg_id, else by title); data we hold wins
  * Adding the game to a personal or community library is done by the app afterwards, under the user's own row-level security.
  */
 import { BggError, type BggClient } from './bggClient.ts';
@@ -22,26 +24,74 @@ export interface GameRecord {
 export interface GameStore {
   findByBggIds(ids: number[]): Promise<{ bgg_id: number; slug: string }[]>;
   findByBggId(id: number): Promise<GameRecord | null>;
+  /** The one catalogue game with this title (case-insensitive) and no BGG link yet, or null if none or several. */
+  findUnlinkedByTitle(title: string): Promise<GameRecord | null>;
   slugTaken(slug: string): Promise<boolean>;
   insert(row: GameColumns & { slug: string }): Promise<GameRecord>;
-  update(id: string, row: GameColumns): Promise<GameRecord>;
+  update(id: string, row: Partial<GameColumns>): Promise<GameRecord>;
 }
+
+/**
+ * Catalogue data we already hold wins: these columns are only filled from BGG when the game has no value for them
+ * (null, blank text or an empty list). Everything else in GameColumns is BGG's own data (bgg_id, bgg_data, bgg_synced_at,
+ * BGG rating, rank and weight) and is always refreshed.
+ */
+export const CATALOGUE_COLUMNS = [
+  'title',
+  'description',
+  'cover_url',
+  'min_players',
+  'max_players',
+  'duration_minutes',
+  'categories',
+  'mechanics',
+  'year_published',
+  'min_age',
+] as const satisfies readonly (keyof GameColumns)[];
+
+const isEmpty = (value: unknown) =>
+  value === null || value === undefined || (typeof value === 'string' && value.trim() === '') || (Array.isArray(value) && value.length === 0);
+
+/** The update for an existing game: BGG's own columns always, catalogue columns only where the game has nothing. */
+export function fillGaps(existing: GameRecord, columns: GameColumns): Partial<GameColumns> {
+  const row: Partial<GameColumns> = { ...columns };
+  for (const key of CATALOGUE_COLUMNS) if (!isEmpty(existing[key])) delete row[key];
+  return row;
+}
+
+/** One cached BGG search: the raw results (no catalogue slugs, those are looked up fresh on every request). */
+export interface CachedSearch {
+  results: Awaited<ReturnType<BggClient['search']>>;
+  fetchedAt: string;
+}
+
+export interface SearchCache {
+  get(query: string): Promise<CachedSearch | null>;
+  put(query: string, results: CachedSearch['results']): Promise<void>;
+}
+
+/** Cache key: trimmed, lower-case, single spaces, at most 200 characters (matches the bgg_search_cache check). */
+export const normaliseQuery = (query: string) => query.trim().toLowerCase().replace(/\s+/g, ' ').slice(0, 200).trim();
 
 export interface HandlerDeps {
   client: BggClient | null;
   store: GameStore;
+  /** Optional: without it every search goes to BGG. */
+  searchCache?: SearchCache;
   /** Returns the signed-in user for the request's JWT, or null (anonymous key, expired or missing token). */
   authenticate(req: Request): Promise<{ id: string } | null>;
   now?: () => number;
   /** Imported games younger than this are served from the catalogue without calling BGG. */
   freshMs?: number;
+  /** Cached searches younger than this are answered without calling BGG. */
+  searchFreshMs?: number;
   corsOrigin?: string;
 }
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function handleBgg(req: Request, deps: HandlerDeps): Promise<Response> {
-  const { store, now = Date.now, freshMs = WEEK_MS, corsOrigin = '*' } = deps;
+  const { store, now = Date.now, freshMs = WEEK_MS, searchFreshMs = WEEK_MS, corsOrigin = '*' } = deps;
   const cors = {
     'Access-Control-Allow-Origin': corsOrigin,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -71,11 +121,23 @@ export async function handleBgg(req: Request, deps: HandlerDeps): Promise<Respon
   };
   const id = Number(body.id);
 
+  // A cache failure must never break a search: fall back to BGG and carry on.
+  const cachedSearch = async (query: string) => {
+    const cache = deps.searchCache;
+    const hit = cache ? await cache.get(query).catch(() => null) : null;
+    if (hit && now() - Date.parse(hit.fetchedAt) < searchFreshMs) return hit.results;
+    const results = await needClient().search(query);
+    await cache?.put(query, results).catch((e: unknown) => console.error('bgg search cache write failed', e instanceof Error ? e.message : e));
+    return results;
+  };
+
   try {
     switch (body.action) {
       case 'search': {
         if (typeof body.query !== 'string') return fail(400, 'bad_request', 'query is required');
-        const results = (await needClient().search(body.query)).slice(0, 25);
+        const query = normaliseQuery(body.query);
+        if (!query) return fail(400, 'bad_request', 'query is required');
+        const results = (await cachedSearch(query)).slice(0, 25);
         const known = new Map((await store.findByBggIds(results.map((r) => r.id))).map((g) => [g.bgg_id, g.slug]));
         return json({ results: results.map((r) => ({ ...r, gameSlug: known.get(r.id) ?? null })) });
       }
@@ -97,7 +159,9 @@ export async function handleBgg(req: Request, deps: HandlerDeps): Promise<Respon
         const [thing] = await needClient().things([id]);
         if (!thing) return fail(404, 'not_found', 'BGG has no such game');
         const columns = toGameColumns(thing, new Date(now()).toISOString());
-        if (existing) return json({ game: await store.update(existing.id, columns) });
+        // A game entered by hand under the same title is linked to BGG instead of duplicated.
+        const target = existing ?? (await store.findUnlinkedByTitle(columns.title));
+        if (target) return json({ game: await store.update(target.id, fillGaps(target, columns)) });
 
         let slug = slugify(columns.title, id);
         if (await store.slugTaken(slug)) slug = `${slug}-${id}`;

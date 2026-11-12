@@ -1,9 +1,10 @@
 import searchXml from './fixtures/search.xml?raw';
 import thingXml from './fixtures/thing.xml?raw';
 import { describe, expect, it } from 'vitest';
-import { parseSearch, parseThings, parseXml, slugify, toGameColumns } from './bggParse';
+import { decodeEntities, decodeHtmlEntities, parseSearch, parseThings, parseXml, slugify, toGameColumns } from './bggParse';
 
 // The fixtures follow the documented XML API2 shape (they are not recordings of live responses: no token existed yet).
+// Like live BGG, thing.xml escapes the description twice (`&amp;#10;`, `&amp;mdash;`).
 
 describe('parseXml', () => {
   it('decodes entities, CDATA and self-closing tags', () => {
@@ -12,6 +13,14 @@ describe('parseXml', () => {
     expect(a.attrs.x).toBe('1 & 2');
     expect(a.children.map((n) => n.tag)).toEqual(['b', 'c']);
     expect(a.children[1]!.text).toBe('<raw> t éA');
+  });
+
+  it('keeps out-of-range character references instead of throwing', () => {
+    expect(decodeEntities('a &#1114112; b &#x0; c')).toBe('a &#1114112; b &#x0; c');
+  });
+
+  it('decodes the HTML layer of BGG text once, keeping unknown names', () => {
+    expect(decodeHtmlEntities('a&#10;b &mdash; &ldquo;x&rdquo; &eacute;&Uuml;&nbsp;&yuml; &amp;amp; &bogus;')).toBe('a\nb \u2014 \u201cx\u201d \u00e9\u00dc\u00a0\u00ff &amp; &bogus;');
   });
 
   it('rejects malformed documents', () => {
@@ -47,7 +56,10 @@ describe('parseThings', () => {
     expect(catan!.alternateNames).toEqual(['Die Siedler von Catan', 'Os Colonizadores de Catan']);
     expect(catan!.image).toContain('catan__original');
     expect(catan!.description).toContain('Picture yourself in the era of discoveries:\nafter a long voyage');
-    expect(catan!.description).toContain('Trade & build "settlements"');
+    expect(catan!.description).toContain('Trade & build "settlements" \u2014 and be first');
+    expect(catan!.description).toContain('Teuber\u2019s classic, by Kosmos & Catan Studio');
+    expect(catan!.description).toContain('Literal text: &amp; stays &amp;.');
+    expect(catan!.description).not.toMatch(/&#10;|&quot;|&mdash;/);
   });
 
   it('groups links by type', () => {
