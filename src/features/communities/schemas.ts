@@ -9,6 +9,7 @@ export const communitySchema = z
     name: z.string().trim().min(2, { error: () => t('val.nameMin') }).max(80, { error: () => t('val.communityNameMax') }),
     description: z.string().trim().max(500, { error: () => t('val.descriptionMax') }),
     visibility: z.enum(['public', 'private']),
+    shelfVisibility: z.enum(['public', 'private']),
     city: z.string().trim().min(1, { error: () => t('val.cityRequired') }),
     district: z.string().trim().min(1, { error: () => t('val.districtRequired') }),
     country: z.string().trim().min(1, { error: () => t('val.countryRequired') }),

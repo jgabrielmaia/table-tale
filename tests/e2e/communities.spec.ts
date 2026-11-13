@@ -77,6 +77,15 @@ test.describe('Comunidades', () => {
     await expect(shelf.getByText('Nenhum jogo encontrado')).toBeVisible();
   });
 
+  test('numa comunidade pública com estante só para membros, o visitante vê a comunidade mas não os jogos', async ({ page, backend }) => {
+    backend.db.communities.find((c) => c.slug === 'tabuleiros-do-porto')!.shelf_visibility = 'private';
+    await page.goto('communities/tabuleiros-do-porto');
+    await page.getByRole('tab', { name: 'Jogos' }).click();
+    await expect(page.getByText('A estante desta comunidade só é visível para membros.')).toBeVisible();
+    await expect(page.getByRole('tabpanel').getByRole('link', { name: 'Coup' })).toHaveCount(0);
+    expect(backend.calls(/\/rest\/v1\/community_games/)).toHaveLength(0);
+  });
+
   test('clicar em qualquer parte de um cartão de jogo da estante abre o jogo', async ({ page }) => {
     await page.goto('communities/tabuleiros-do-porto');
     await page.getByRole('tab', { name: 'Jogos' }).click();
@@ -264,6 +273,7 @@ test.describe('Comunidades', () => {
       await page.getByRole('tab', { name: 'Jogos' }).click();
       await expect(page.getByRole('link', { name: /Hitster|Dixit|Catan/ }).first()).toBeVisible();
       await expect(page.getByLabel('Jogo', { exact: true })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: /^Editar .* nesta estante$/ })).toHaveCount(0);
     });
 
     test('comunidade privada: sem pertencer não existe; com pedido pendente só se vê o aviso', async ({ page, backend }) => {
@@ -371,6 +381,63 @@ test.describe('Comunidades', () => {
       await page.getByRole('button', { name: 'Guardar' }).click();
       await expect(page.getByText('Comunidade atualizada.')).toBeVisible();
       expect(backend.db.communities.find((c) => c.slug === 'clube-secreto-braga')?.city).toBe('Guimarães');
+    });
+
+    test('o dono põe a estante só para membros, e os membros continuam a vê-la', async ({ page, backend }) => {
+      const braga = backend.db.communities.find((c) => c.slug === 'clube-secreto-braga')!;
+      braga.visibility = 'public';
+      await page.goto('communities/clube-secreto-braga');
+      await page.getByRole('tab', { name: 'Gestão' }).click();
+      await expect(page.getByLabel('Estante')).toHaveValue('public');
+      await page.getByLabel('Estante').selectOption({ label: 'Só membros' });
+      await page.getByRole('button', { name: 'Guardar' }).click();
+      await expect(page.getByText('Comunidade atualizada.')).toBeVisible();
+      expect(braga.shelf_visibility).toBe('private');
+      await page.getByRole('tab', { name: 'Jogos' }).click();
+      await expect(page.getByRole('tabpanel').getByRole('link', { name: 'Uno' })).toBeVisible();
+    });
+
+    test('o dono gere os exemplares da estante, cada um com o seu dono, e a informação adicional', async ({ page, backend }) => {
+      await page.goto('communities/clube-secreto-braga');
+      await page.getByRole('tab', { name: 'Jogos' }).click();
+      const uno = page.getByRole('tabpanel').getByRole('listitem').filter({ has: page.getByRole('heading', { name: 'Uno', exact: true }) });
+      await expect(uno).toContainText('1 exemplar');
+      await expect(uno).toContainText('Donos: Dono da Estante');
+
+      await uno.getByRole('button', { name: 'Editar Uno nesta estante' }).click();
+      const editor = page.getByRole('dialog', { name: 'Uno nesta estante' });
+      await expect(editor.getByRole('button', { name: 'Remover exemplar 1' })).toBeDisabled();
+      await expect(editor.getByText('Para o tirar da estante, remove o jogo.')).toBeVisible();
+
+      // Um exemplar novo começa como da comunidade; depois escolhe-se o dono.
+      await editor.getByRole('button', { name: 'Adicionar exemplar' }).click();
+      const second = editor.getByRole('combobox', { name: 'Dono do exemplar 2' });
+      await expect(second).toHaveValue('');
+      await second.selectOption({ label: 'Ana Teste' });
+      await expect(page.getByText('Estante atualizada.').first()).toBeVisible();
+      await expect(second).toHaveValue(PLAYER.id);
+
+      await editor.getByLabel('Informação adicional').fill('Inclui a expansão Flip');
+      await editor.getByRole('button', { name: 'Guardar informação' }).click();
+      await expect(editor.getByRole('button', { name: 'Guardar informação' })).toBeDisabled();
+      await editor.getByRole('button', { name: 'Concluído' }).click();
+      await expect(editor).toBeHidden();
+
+      await expect(uno).toContainText('2 exemplares');
+      await expect(uno).toContainText('Donos: Dono da Estante, Ana Teste');
+      await expect(uno).toContainText('Inclui a expansão Flip');
+      const entry = backend.db.communityGames.find((g) => g.community_id === backend.db.communities.find((c) => c.slug === 'clube-secreto-braga')!.id)!;
+      expect(entry).toMatchObject({ copies: 2, notes: 'Inclui a expansão Flip' });
+      expect(backend.db.communityGameCopies.filter((k) => k.community_game_id === entry.id).map((k) => k.owner_id)).toEqual([OWNER.id, PLAYER.id]);
+
+      // Retirar o primeiro exemplar deixa só o da Ana.
+      await uno.getByRole('button', { name: 'Editar Uno nesta estante' }).click();
+      await editor.getByRole('button', { name: 'Remover exemplar 1' }).click();
+      await expect(editor.getByRole('combobox', { name: 'Dono do exemplar 2' })).toHaveCount(0);
+      await expect(editor.getByRole('combobox', { name: 'Dono do exemplar 1' })).toHaveValue(PLAYER.id);
+      await editor.getByRole('button', { name: 'Concluído' }).click();
+      await expect(uno).toContainText('1 exemplar');
+      await expect(uno).toContainText('Donos: Ana Teste');
     });
 
     test('o dono põe e remove a foto de capa, que aparece na página e no cartão da comunidade', async ({ page, backend }) => {

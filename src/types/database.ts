@@ -178,6 +178,8 @@ export interface CommunityRow {
   name: string;
   description: string;
   visibility: CommunityVisibility;
+  /** Who sees the shelf (games and copies): everyone, or members only. A private community's shelf is always members-only. */
+  shelf_visibility: CommunityVisibility;
   city: string;
   district: string;
   country: string;
@@ -206,6 +208,15 @@ export interface CommunityGameRow {
   copies: number;
   condition: OwnershipCondition;
   notes: string | null;
+  added_at: string;
+}
+
+/** One copy of a game on a community shelf. owner_id null: the copy belongs to the community. */
+export interface CommunityGameCopyRow {
+  id: string;
+  community_game_id: string;
+  community_id: string;
+  owner_id: string | null;
   added_at: string;
 }
 

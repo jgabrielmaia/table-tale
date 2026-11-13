@@ -422,8 +422,9 @@ export class FakeBackend {
       case 'community_memberships': return this.memberships(method, params, body, uid, single, select, representation);
       case 'community_games': {
         if (method === 'GET') {
-          const rows = this.filtered(db.communityGames.filter((g) => this.canReadCommunity(g.community_id, uid)), params).map((g) => ({
+          const rows = this.filtered(db.communityGames.filter((g) => this.canSeeShelf(g.community_id, uid)), params).map((g) => ({
             ...g,
+            ...(select.includes('community_game_copies(') ? { community_game_copies: this.copiesFor(g).map((k) => this.withOwner(k)) } : {}),
             games: db.games.find((x) => x.id === g.game_id) ?? null,
             // The games list embeds the community with its location: `communities(id,slug,name,city,latitude,longitude)`.
             ...(select.includes('communities(') ? { communities: db.communities.find((c) => c.id === g.community_id) ?? null } : {}),
@@ -434,17 +435,29 @@ export class FakeBackend {
           const input = body as Row;
           if (!this.hasRole(input.community_id, uid, ['owner', 'admin', 'moderator'])) return this.forbidden();
           if (db.communityGames.some((g) => g.community_id === input.community_id && g.game_id === input.game_id)) return this.duplicate();
-          db.communityGames.push({ id: this.id('a200'), notes: null, condition: 'good', copies: 1, added_at: new Date().toISOString(), ...input });
+          const entry = { id: this.id('a200'), notes: null, condition: 'good', copies: 1, added_at: new Date().toISOString(), ...input };
+          db.communityGames.push(entry);
+          this.copiesFor(entry); // trigger community_games_first_copies
           return { status: 201 };
+        }
+        if (method === 'PATCH') {
+          // Column grant: only condition and notes; the count follows community_game_copies.
+          if ('copies' in (body as Row)) return { status: 401, body: { code: '42501', message: 'permission denied for table community_games', details: null, hint: null } };
+          const targets = this.filtered(db.communityGames, params);
+          if (targets.some((g) => !this.hasRole(g.community_id, uid, ['owner', 'admin', 'moderator']))) return this.forbidden();
+          for (const g of targets) Object.assign(g, body);
+          return { status: 204 };
         }
         if (method === 'DELETE') {
           const gone = this.filtered(db.communityGames, params);
           if (gone.some((g) => !this.hasRole(g.community_id, uid, ['owner', 'admin', 'moderator']))) return this.forbidden();
           db.communityGames = db.communityGames.filter((g) => !gone.includes(g));
+          db.communityGameCopies = db.communityGameCopies.filter((k) => !gone.some((g) => g.id === k.community_game_id));
           return { status: 204 };
         }
         break;
       }
+      case 'community_game_copies': return this.copies(method, params, body, uid);
       case 'user_games': {
         if (method === 'GET') {
           const rows = this.filtered(db.ownerships.filter((o) => o.user_id === uid), params).map((o) => ({ ...o, games: db.games.find((x) => x.id === o.game_id) ?? null }));
@@ -474,6 +487,64 @@ export class FakeBackend {
 
   // ---- communities (mirrors the RLS policies and tg_guard_membership) ------------------------------------------------
 
+  /** Copies of a shelf entry, created on first use from its count (as the migration backfill and first-copies trigger do). */
+  private copiesFor(entry: Row): Row[] {
+    const db = this.db;
+    let rows = db.communityGameCopies.filter((k) => k.community_game_id === entry.id);
+    if (!rows.length) {
+      rows = Array.from({ length: Number(entry.copies) || 1 }, () => ({
+        id: this.id('a300'), community_game_id: entry.id, community_id: entry.community_id, owner_id: entry.added_by ?? null, added_at: entry.added_at,
+      }));
+      db.communityGameCopies.push(...rows);
+    }
+    return rows;
+  }
+
+  private withOwner(copy: Row): Row {
+    const p = this.db.profiles.find((x) => x.id === copy.owner_id);
+    return { ...copy, profiles: p ? { id: p.id, display_name: p.display_name } : null };
+  }
+
+  private copies(method: string, params: URLSearchParams, body: unknown, uid: string | null): Result {
+    const db = this.db;
+    const managers = ['owner', 'admin', 'moderator'];
+    const sync = (entryId: unknown) => {
+      const entry = db.communityGames.find((g) => g.id === entryId);
+      if (entry) entry.copies = db.communityGameCopies.filter((k) => k.community_game_id === entryId).length;
+    };
+    const ownerOk = (communityId: unknown, ownerId: unknown) =>
+      ownerId == null || db.memberships.some((m) => m.community_id === communityId && m.user_id === ownerId && m.status === 'active');
+    if (method === 'POST') {
+      const input = body as Row;
+      const entry = db.communityGames.find((g) => g.id === input.community_game_id);
+      if (!entry) return { status: 409, body: { code: '23503', message: 'unknown community game', details: null, hint: null } };
+      this.copiesFor(entry);
+      if (!this.hasRole(entry.community_id, uid, managers) || !ownerOk(entry.community_id, input.owner_id)) return this.forbidden();
+      db.communityGameCopies.push({ id: this.id('a300'), added_at: new Date().toISOString(), owner_id: null, ...input, community_id: entry.community_id });
+      sync(entry.id);
+      return { status: 201 };
+    }
+    const targets = this.filtered(db.communityGameCopies, params);
+    if (targets.some((k) => !this.hasRole(k.community_id, uid, managers))) return this.forbidden();
+    if (method === 'PATCH') {
+      const patch = body as Row;
+      if (targets.some((k) => !ownerOk(k.community_id, patch.owner_id))) return this.forbidden();
+      for (const k of targets) k.owner_id = patch.owner_id ?? null;
+      return { status: 204 };
+    }
+    if (method === 'DELETE') {
+      for (const k of targets) {
+        if (db.communityGameCopies.filter((x) => x.community_game_id === k.community_game_id).length <= 1) {
+          return { status: 400, body: { code: '23514', message: 'a game on a community shelf keeps at least one copy; remove the game instead', details: null, hint: null } };
+        }
+        db.communityGameCopies = db.communityGameCopies.filter((x) => x !== k);
+        sync(k.community_game_id);
+      }
+      return { status: 204 };
+    }
+    return this.forbidden();
+  }
+
   private static RANK: Record<string, number> = { owner: 4, admin: 3, moderator: 2, member: 1 };
 
   /** What PostgREST answers anon for a table it has no grant on (as community_memberships in production). */
@@ -501,6 +572,12 @@ export class FakeBackend {
   private canReadCommunity(communityId: string, uid: string | null) {
     const c = this.db.communities.find((x) => x.id === communityId);
     return Boolean(c) && (c!.visibility === 'public' || this.roleOf(communityId, uid) !== null);
+  }
+
+  /** can_see_community_shelf(): members always; others only on a public community with a public shelf. */
+  private canSeeShelf(communityId: string, uid: string | null) {
+    const c = this.db.communities.find((x) => x.id === communityId);
+    return Boolean(c) && ((c!.visibility === 'public' && (c!.shelf_visibility ?? 'public') === 'public') || this.roleOf(communityId, uid) !== null);
   }
 
   private communities(method: string, params: URLSearchParams, body: unknown, uid: string | null, single: boolean, select: string, representation: boolean): Result {

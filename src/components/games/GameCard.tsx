@@ -18,14 +18,23 @@ export interface GameCardProps {
   busy?: boolean;
   compact?: boolean;
   headingLevel?: 2 | 3;
-  /** On a community page: the copies this community has (replaces the shelves/owner line). */
-  copies?: number;
-  /** On a community page, for its owners: removes the game from the community. */
+  /** On a community page: this shelf's copies, who owns them and its notes (replaces the shelves/owner line). */
+  shelf?: ShelfInfo;
+  /** On a community page, for its managers: edits this shelf's copies and notes. */
+  onEdit?: (game: LibraryGame) => void;
+  /** On a community page, for its managers: removes the game from the community. */
   onRemove?: (game: LibraryGame) => void;
   removeLabel?: string;
 }
 
-export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact, headingLevel = 3, copies: shelfCopies, onRemove, removeLabel }: GameCardProps) {
+export interface ShelfInfo {
+  copies: number;
+  /** Distinct owner names, in copy order. */
+  owners: string[];
+  notes: string | null;
+}
+
+export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact, headingLevel = 3, shelf, onEdit, onRemove, removeLabel }: GameCardProps) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   const shelves = 'shelves' in game ? (game as ShelfGame).shelves : null;
   const owner = game.owners[0];
@@ -63,8 +72,12 @@ export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact
             <li><Icon name="users" />{playersText(game.minPlayers, game.maxPlayers)}</li>
             <li><Icon name="clock" />{minutesText(game.durationMinutes)}</li>
           </ul>
-          {shelfCopies !== undefined ? (
-            <p className="game-card-copies">{tn('communities.copies', shelfCopies)}</p>
+          {shelf ? (
+            <div className="game-card-copies">
+              <p>{tn('communities.copies', shelf.copies)}</p>
+              {shelf.owners.length > 0 && <p className="game-card-copy-owners">{t('communities.copyOwners', { names: shelf.owners.join(', ') })}</p>}
+              {shelf.notes && <p className="game-card-notes">{shelf.notes}</p>}
+            </div>
           ) : shelves ? (
             <ShelfList shelves={shelves} />
           ) : owner && (
@@ -80,7 +93,7 @@ export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact
         </div>
       </Link>
 
-      {(onToggleFavorite || onStatusChange || onRemove) && (
+      {(onToggleFavorite || onStatusChange || onEdit || onRemove) && (
         <div className="game-card-actions">
           {onToggleFavorite && (
             <button
@@ -109,6 +122,11 @@ export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact
                 ))}
               </select>
             </>
+          )}
+          {onEdit && (
+            <button type="button" className="icon-btn game-card-edit" aria-label={t('communities.editGame', { title: game.title })} disabled={busy} onClick={() => onEdit(game)}>
+              <Icon name="edit" />
+            </button>
           )}
           {onRemove && (
             <button type="button" className="icon-btn game-card-remove" aria-label={removeLabel ?? t('communities.removeGame', { title: game.title })} disabled={busy} onClick={() => onRemove(game)}>

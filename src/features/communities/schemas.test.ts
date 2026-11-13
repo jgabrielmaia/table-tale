@@ -5,6 +5,7 @@ const valid = {
   name: 'Table Tale Lisboa',
   description: '',
   visibility: 'public',
+  shelfVisibility: 'public',
   city: 'Lisboa',
   district: 'Alvalade',
   country: 'Portugal',

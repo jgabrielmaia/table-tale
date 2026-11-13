@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  addCommunityCopy,
   addCommunityGame,
   addUserGame,
   createCommunity,
@@ -15,18 +16,21 @@ import {
   fetchMyUserGames,
   joinCommunity,
   leaveCommunity,
+  removeCommunityCopy,
   removeCommunityGame,
   removeMember,
   removeUserGame,
   transferOwnership,
+  setCommunityCopyOwner,
   updateCommunity,
+  updateCommunityGameNotes,
   updateMember,
 } from '@/features/communities/api';
 import { slugify, type CommunityFormValues } from '@/features/communities/schemas';
 import { queryKeys } from '@/lib/queryKeys';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { t } from '@/i18n';
-import type { Community, CommunityRole, CommunityVisibility, MembershipStatus, MyMembership } from '@/types/domain';
+import type { Community, CommunityGameEntry, CommunityRole, CommunityVisibility, MembershipStatus, MyMembership } from '@/types/domain';
 import { useAuth } from './useAuth';
 
 /** The signed-in viewer's memberships (any status); empty when signed out. */
@@ -124,6 +128,8 @@ export function useCommunity(slug: string) {
   const id = community.data?.id ?? null;
   const membership = (mine.data ?? []).find((m) => m.communityId === id) ?? null;
   const canSeeContent = community.data?.visibility === 'public' || membership?.status === 'active';
+  // Same rule as can_see_community_shelf(): members always, everyone else only on a public community with a public shelf.
+  const canSeeShelf = (community.data?.visibility === 'public' && community.data.shelfVisibility === 'public') || membership?.status === 'active';
 
   const members = useQuery({
     queryKey: queryKeys.communityMembers(id),
@@ -134,7 +140,7 @@ export function useCommunity(slug: string) {
   const games = useQuery({
     queryKey: queryKeys.communityGames(id),
     queryFn: () => fetchCommunityGames(id!),
-    enabled: isSupabaseConfigured && Boolean(id) && canSeeContent,
+    enabled: isSupabaseConfigured && Boolean(id) && canSeeShelf,
   });
 
   const need = () => {
@@ -161,10 +167,14 @@ export function useCommunity(slug: string) {
   const transfer = useMutation({ mutationFn: (newOwnerId: string) => transferOwnership(need().id, newOwnerId), ...refresh });
   const addGame = useMutation({ mutationFn: (gameId: string) => addCommunityGame(need().userId, need().id, gameId), ...refresh });
   const removeGame = useMutation({ mutationFn: (entryId: string) => removeCommunityGame(entryId), ...refresh });
+  const setGameNotes = useMutation({ mutationFn: (v: { entryId: string; notes: string }) => updateCommunityGameNotes(v.entryId, v.notes), ...refresh });
+  const addCopy = useMutation({ mutationFn: (v: { entry: CommunityGameEntry; ownerId: string | null }) => addCommunityCopy(v.entry, v.ownerId), ...refresh });
+  const setCopyOwner = useMutation({ mutationFn: (v: { copyId: string; ownerId: string | null }) => setCommunityCopyOwner(v.copyId, v.ownerId), ...refresh });
+  const removeCopy = useMutation({ mutationFn: (copyId: string) => removeCommunityCopy(copyId), ...refresh });
 
   const activeOwners = (members.data ?? []).filter((m) => m.role === 'owner' && m.status === 'active').length;
 
-  return { community, membership, members, games, activeOwners, canSeeContent, join, leave, update, remove, setCover, removeCover, setMember, kick, transfer, addGame, removeGame };
+  return { community, membership, members, games, activeOwners, canSeeContent, canSeeShelf, join, leave, update, remove, setCover, removeCover, setMember, kick, transfer, addGame, removeGame, setGameNotes, addCopy, setCopyOwner, removeCopy };
 }
 
 /** The viewer's personal collection (table `user_games`). */
