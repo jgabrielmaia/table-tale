@@ -3,7 +3,7 @@ import { hasActiveCommunity, nearbyCommunities } from './nearby';
 import type { Community, MyMembership } from '@/types/domain';
 
 const c = (id: string, name: string, latitude: number | null, longitude: number | null): Community => ({
-  id, slug: id, name, description: '', visibility: 'public', city: 'X', district: 'Y', country: 'Portugal',
+  id, slug: id, name, description: '', visibility: 'public', shelfVisibility: 'public', city: 'X', district: 'Y', country: 'Portugal',
   latitude, longitude, createdBy: 'u', coverUrl: null, memberCount: 1,
 });
 

@@ -1,6 +1,6 @@
 import type { GameStatus, LibraryGame } from '@/types/domain';
 import { cn } from '@/lib/format';
-import { GameCard } from './GameCard';
+import { GameCard, type ShelfInfo } from './GameCard';
 
 export interface GameGridProps {
   games: LibraryGame[];
@@ -9,12 +9,13 @@ export interface GameGridProps {
   onStatusChange?: (game: LibraryGame, status: GameStatus) => void;
   busyId?: string | null;
   label?: string;
-  /** Community page: copies per game, and (for owners) a remove action. */
-  copiesOf?: (game: LibraryGame) => number | undefined;
+  /** Community page: this shelf's copies, owners and notes per game, and (for managers) edit and remove actions. */
+  shelfOf?: (game: LibraryGame) => ShelfInfo | undefined;
+  onEdit?: (game: LibraryGame) => void;
   onRemove?: (game: LibraryGame) => void;
 }
 
-export function GameGrid({ games, compact, onToggleFavorite, onStatusChange, busyId, label, copiesOf, onRemove }: GameGridProps) {
+export function GameGrid({ games, compact, onToggleFavorite, onStatusChange, busyId, label, shelfOf, onEdit, onRemove }: GameGridProps) {
   return (
     <ul className={cn('game-grid', compact && 'game-grid-compact')} role="list" aria-label={label}>
       {games.map((g) => (
@@ -25,7 +26,8 @@ export function GameGrid({ games, compact, onToggleFavorite, onStatusChange, bus
           onToggleFavorite={onToggleFavorite}
           onStatusChange={onStatusChange}
           busy={busyId === g.id}
-          copies={copiesOf?.(g)}
+          shelf={shelfOf?.(g)}
+          onEdit={onEdit}
           onRemove={onRemove}
         />
       ))}

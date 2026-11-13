@@ -34,7 +34,7 @@ describe('toLocationFields', () => {
     expect(fields).not.toHaveProperty('district');
   });
   it('produces values the community schema accepts (coordinates come as a pair)', () => {
-    const parsed = communitySchema.safeParse({ name: 'Clube', description: '', visibility: 'public', district: 'Boavista', ...toLocationFields(porto, 'en-GB') });
+    const parsed = communitySchema.safeParse({ name: 'Clube', description: '', visibility: 'public', shelfVisibility: 'public', district: 'Boavista', ...toLocationFields(porto, 'en-GB') });
     expect(parsed.success).toBe(true);
   });
   it('formats coordinates without trailing noise', () => {

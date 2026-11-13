@@ -10,6 +10,7 @@ export const EMPTY_COMMUNITY_FORM: CommunityFormValues = {
   name: '',
   description: '',
   visibility: 'public',
+  shelfVisibility: 'public',
   city: '',
   district: '',
   country: '',
@@ -27,7 +28,7 @@ export interface CommunityFormProps {
 /** Shared by "new community" and "edit community". Location (city, district, country) is required. */
 export function CommunityForm({ defaultValues = EMPTY_COMMUNITY_FORM, submitLabel, saving, onSubmit }: CommunityFormProps) {
   const { t, locale } = useI18n();
-  const { register, handleSubmit, setValue, setFocus, formState: { errors } } = useForm<CommunityFormValues>({
+  const { register, handleSubmit, setValue, setFocus, watch, formState: { errors } } = useForm<CommunityFormValues>({
     resolver: zodResolver(communitySchema),
     defaultValues,
   });
@@ -43,6 +44,15 @@ export function CommunityForm({ defaultValues = EMPTY_COMMUNITY_FORM, submitLabe
           { value: 'private', label: t('communities.private') },
         ]}
         {...register('visibility')}
+      />
+      <Select
+        label={t('communities.shelfVisibility')}
+        hint={watch('visibility') === 'private' ? t('communities.shelfPrivateCommunity') : t('communities.shelfVisibilityHint')}
+        options={[
+          { value: 'public', label: t('communities.shelfPublic') },
+          { value: 'private', label: t('communities.shelfMembers') },
+        ]}
+        {...register('shelfVisibility')}
       />
       <fieldset className="form-grid" aria-label={t('communities.location')}>
         <CityField

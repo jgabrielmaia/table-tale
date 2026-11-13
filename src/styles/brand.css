@@ -399,6 +399,9 @@ input[aria-invalid="true"] { border-color: #e0604f; }
 .game-card-actions .icon-btn:disabled, .game-card-actions select:disabled { opacity: .55; cursor: progress; }
 /* On a community page the card shows this community's copies instead of the shelves. */
 .game-card-copies { margin: auto 0 0; padding-top: .75rem; border-top: 1px solid var(--line); font-size: .84rem; color: var(--text-2); }
+.game-card-copies p { margin: 0; }
+.game-card-copies .game-card-copy-owners, .game-card-copies .game-card-notes { margin-top: .25rem; font-size: .8rem; color: var(--text-2); }
+.game-card-copies .game-card-notes { font-style: italic; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .community-games-head { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin: 1.25rem 0 .75rem; }
 .community-games-head .results-count { margin: 0; }
 .shelf-chip-more { border-style: dashed; }
@@ -1170,3 +1173,15 @@ section + section > .medal-group { margin-top: 1.75rem; }
 .city-status { margin: .35rem 0 0; min-height: 0; font-size: .85rem; color: var(--text-2); }
 .city-status:empty { display: none; }
 .city-status-warn { color: #ffd28a; }
+
+/* Community shelf editor (copies with owners, additional info) */
+.shelf-copies { display: grid; gap: .75rem; }
+.shelf-copies h3 { margin: 0; font-size: 1rem; }
+.shelf-copies-list { display: grid; gap: .5rem; margin: 0; padding: 0; list-style: none; }
+.shelf-copy { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr) auto; align-items: center; gap: .75rem; }
+.shelf-copy select { min-height: 40px; }
+.shelf-copy .icon-btn { border-color: var(--line); }
+.shelf-copy-n { font-size: .9rem; color: var(--text-2); }
+.shelf-notes { display: grid; gap: .5rem; justify-items: start; }
+.shelf-notes .field { width: 100%; }
+@media (max-width: 520px) { .shelf-copy { grid-template-columns: minmax(0, 1fr) auto; } .shelf-copy-n { grid-column: 1 / -1; } }

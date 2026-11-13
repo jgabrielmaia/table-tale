@@ -3,7 +3,7 @@ import { EMPTY_COMMUNITY_FILTERS, cityOptions, districtOptions, filterCommunitie
 import type { Community } from '@/types/domain';
 
 const c = (id: string, name: string, city: string, district: string): Community => ({
-  id, slug: id, name, description: '', visibility: 'public', city, district, country: 'Portugal',
+  id, slug: id, name, description: '', visibility: 'public', shelfVisibility: 'public', city, district, country: 'Portugal',
   latitude: null, longitude: null, createdBy: 'u', coverUrl: null, memberCount: 1,
 });
 

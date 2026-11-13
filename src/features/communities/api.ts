@@ -1,9 +1,10 @@
 import { supabase } from '@/lib/supabase';
 import { AppError, unwrap } from '@/lib/errors';
 import { t } from '@/i18n';
-import type { CommunityGameRow, CommunityMembershipRow, CommunityRow, GameRow, OwnershipCondition, UserGameRow } from '@/types/database';
+import type { CommunityGameCopyRow, CommunityGameRow, CommunityMembershipRow, CommunityRow, GameRow, OwnershipCondition, UserGameRow } from '@/types/database';
 import type {
   Community,
+  CommunityGameCopy,
   CommunityGameEntry,
   CommunityMember,
   CommunityRole,
@@ -41,6 +42,7 @@ export const mapCommunity = (r: CommunityRow & Partial<CountEmbed>): Community =
   name: r.name,
   description: r.description,
   visibility: r.visibility,
+  shelfVisibility: r.shelf_visibility ?? 'public',
   city: r.city,
   district: r.district,
   country: r.country,
@@ -81,6 +83,7 @@ const toPayload = (v: CommunityFormValues) => ({
   name: v.name.trim(),
   description: v.description.trim(),
   visibility: v.visibility,
+  shelf_visibility: v.shelfVisibility,
   city: v.city.trim(),
   district: v.district.trim(),
   country: v.country.trim(),
@@ -188,16 +191,36 @@ export async function transferOwnership(communityId: string, newOwnerId: string)
 
 // ---- community library ----------------------------------------------------------------------------------------------
 
-type CommunityGameQueryRow = Pick<CommunityGameRow, 'id' | 'copies' | 'condition' | 'notes'> & { games: GameBriefRow | null };
+type CopyQueryRow = Pick<CommunityGameCopyRow, 'id' | 'owner_id' | 'added_at'> & { profiles: { display_name: string } | null };
+type CommunityGameQueryRow = Pick<CommunityGameRow, 'id' | 'community_id' | 'copies' | 'condition' | 'notes'> & {
+  games: GameBriefRow | null;
+  community_game_copies: CopyQueryRow[] | null;
+};
+
+const mapCopies = (rows: CopyQueryRow[] | null): CommunityGameCopy[] =>
+  [...(rows ?? [])]
+    .sort((a, b) => a.added_at.localeCompare(b.added_at) || a.id.localeCompare(b.id))
+    .map((k) => ({ id: k.id, ownerId: k.owner_id, ownerName: k.owner_id ? k.profiles?.display_name || t('common.player') : null }));
 
 export async function fetchCommunityGames(communityId: string): Promise<CommunityGameEntry[]> {
   const rows = unwrap(
-    await supabase.from('community_games').select(`id,copies,condition,notes,games(${GAME_BRIEF})`).eq('community_id', communityId),
+    await supabase
+      .from('community_games')
+      .select(`id,community_id,copies,condition,notes,games(${GAME_BRIEF}),community_game_copies(id,owner_id,added_at,profiles(display_name))`)
+      .eq('community_id', communityId),
     t('communities.err.library'),
   ) as unknown as CommunityGameQueryRow[];
   return rows
     .filter((r) => r.games)
-    .map((r) => ({ id: r.id, copies: r.copies, condition: r.condition, notes: r.notes, game: mapBrief(r.games!) }))
+    .map((r) => ({
+      id: r.id,
+      communityId: r.community_id,
+      copies: r.copies,
+      copyList: mapCopies(r.community_game_copies),
+      condition: r.condition,
+      notes: r.notes,
+      game: mapBrief(r.games!),
+    }))
     .sort((a, b) => a.game.title.localeCompare(b.game.title));
 }
 
@@ -206,6 +229,30 @@ export async function addCommunityGame(userId: string, communityId: string, game
     await supabase.from('community_games').insert({ community_id: communityId, game_id: gameId, added_by: userId, copies }),
     t('communities.err.addGame'),
   );
+}
+
+// Copies and notes belong to this community's shelf; the game itself (title, cover…) is the shared catalogue entry.
+
+export async function updateCommunityGameNotes(entryId: string, notes: string): Promise<void> {
+  const value = notes.trim();
+  unwrap(await supabase.from('community_games').update({ notes: value || null }).eq('id', entryId), t('communities.err.updateGame'));
+}
+
+/** Adds one copy owned by a member, or by the community itself (null). The count on the shelf follows. */
+export async function addCommunityCopy(entry: Pick<CommunityGameEntry, 'id' | 'communityId'>, ownerId: string | null): Promise<void> {
+  unwrap(
+    await supabase.from('community_game_copies').insert({ community_game_id: entry.id, community_id: entry.communityId, owner_id: ownerId }),
+    t('communities.err.updateGame'),
+  );
+}
+
+export async function setCommunityCopyOwner(copyId: string, ownerId: string | null): Promise<void> {
+  unwrap(await supabase.from('community_game_copies').update({ owner_id: ownerId }).eq('id', copyId), t('communities.err.updateGame'));
+}
+
+/** The last copy can't be removed: remove the game from the shelf instead. */
+export async function removeCommunityCopy(copyId: string): Promise<void> {
+  unwrap(await supabase.from('community_game_copies').delete().eq('id', copyId), t('communities.err.updateGame'));
 }
 
 export async function removeCommunityGame(entryId: string): Promise<void> {

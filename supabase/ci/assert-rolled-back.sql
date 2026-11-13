@@ -3,6 +3,13 @@
 reset role;
 do $$
 begin
+  if exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'can_see_community_shelf') then
+    raise exception 'rollback left can_see_community_shelf behind';
+  end if;
+  if to_regclass('public.community_game_copies') is not null
+     or exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'is_active_community_member') then
+    raise exception 'rollback left community_game_copies behind';
+  end if;
   if exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'can_edit_community_folder') then
     raise exception 'rollback left can_edit_community_folder behind';
   end if;

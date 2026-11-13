@@ -17,6 +17,7 @@ import { errorMessage } from '@/lib/errors';
 import { truncate } from '@/seo/pages';
 import { usePageSeo } from '@/seo/RouteSeo';
 import { CommunityCoverField } from './CommunityCoverField';
+import { CommunityGameEditor } from './CommunityGameEditor';
 import { CommunityForm } from './CommunityForm';
 import { FactionBalance } from './FactionBalance';
 import { MembershipBadge } from './CommunitiesPage';
@@ -288,6 +289,7 @@ function GamesPanel({ c, run }: { c: CommunityState; run: Run }) {
   const [pick, setPick] = useState('');
   const [filters, setFilters] = useState<GameFilterValues>(EMPTY_FILTERS);
   const [sort, setSort] = useState<GamesSort>('title');
+  const [editing, setEditing] = useState<string | null>(null);
 
   const entries = useMemo(() => c.games.data ?? [], [c.games.data]);
   const byGame = useMemo(() => new Map(entries.map((e) => [e.game.id, e])), [entries]);
@@ -296,11 +298,21 @@ function GamesPanel({ c, run }: { c: CommunityState; run: Run }) {
   const mechanics = useMemo(() => uniqueSorted(games.flatMap((g) => g.mechanics)), [games]);
   const visible = useMemo(() => sortShelfGames(filterGames(games, filters), sort, getLocale()), [games, filters, sort]);
 
+  if (!c.canSeeShelf) return <EmptyState compact title={t('communities.shelfMembersOnly')} />;
   if (c.games.isLoading || catalogue.isLoading) return <LoadingState variant="cards" label={t('games.loading')} />;
   if (c.games.isError || catalogue.isError) {
     return <ErrorState compact message={errorMessage(c.games.error ?? catalogue.error)} onRetry={() => void Promise.all([c.games.refetch(), catalogue.refetch()])} />;
   }
   const manage = canManageLibrary(c.membership);
+  const editingEntry = entries.find((e) => e.id === editing) ?? null;
+  const owners = (c.members.data ?? []).filter((m) => m.status === 'active');
+  const shelfOf = (g: LibraryGame) => {
+    const entry = byGame.get(g.id);
+    if (!entry) return undefined;
+    const names = entry.copyList.map((k) => k.ownerName ?? t('communities.gameEditor.communityOwned'));
+    return { copies: entry.copies, owners: [...new Set(names)], notes: entry.notes };
+  };
+  const saved = t('communities.gameUpdated');
   const options = catalogue.games.filter((g) => !byGame.has(g.id)).map((g) => ({ value: g.id, label: g.title }));
   const reset = () => setFilters(EMPTY_FILTERS);
   const remove = (game: LibraryGame) => {
@@ -358,12 +370,25 @@ function GamesPanel({ c, run }: { c: CommunityState; run: Run }) {
               games={visible}
               label={t('games.gamesLabel')}
               {...cardActions}
-              copiesOf={(g) => byGame.get(g.id)?.copies}
+              shelfOf={shelfOf}
+              onEdit={manage ? (g) => setEditing(byGame.get(g.id)?.id ?? null) : undefined}
               onRemove={manage ? remove : undefined}
             />
           )}
           {games.some((g) => g.bggId !== null) && <p className="mt-6 text-center"><BggCredit /></p>}
         </>
+      )}
+      {manage && (
+        <CommunityGameEditor
+          entry={editingEntry}
+          members={owners}
+          busy={c.addCopy.isPending || c.setCopyOwner.isPending || c.removeCopy.isPending || c.setGameNotes.isPending}
+          onClose={() => setEditing(null)}
+          onAddCopy={(ownerId) => run(() => c.addCopy.mutateAsync({ entry: editingEntry!, ownerId }), saved)}
+          onSetOwner={(copyId, ownerId) => run(() => c.setCopyOwner.mutateAsync({ copyId, ownerId }), saved)}
+          onRemoveCopy={(copyId) => run(() => c.removeCopy.mutateAsync(copyId), saved)}
+          onSaveNotes={(notes) => run(() => c.setGameNotes.mutateAsync({ entryId: editingEntry!.id, notes }), saved)}
+        />
       )}
     </div>
   );
@@ -382,6 +407,7 @@ function ManagePanel({ community, saving, onSave, onDelete }: { community: Commu
           name: community.name,
           description: community.description,
           visibility: community.visibility,
+          shelfVisibility: community.shelfVisibility,
           city: community.city,
           district: community.district,
           country: community.country,

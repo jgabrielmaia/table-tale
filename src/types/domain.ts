@@ -176,6 +176,7 @@ export interface Community {
   name: string;
   description: string;
   visibility: CommunityVisibility;
+  shelfVisibility: CommunityVisibility;
   city: string;
   district: string;
   country: string;
@@ -206,9 +207,19 @@ export interface CommunityMember {
 
 export type GameBrief = Pick<Game, 'id' | 'title' | 'slug' | 'coverUrl' | 'categories' | 'minPlayers' | 'maxPlayers' | 'durationMinutes'>;
 
+/** One copy on a community shelf and who owns it (null: the community itself). */
+export interface CommunityGameCopy {
+  id: string;
+  ownerId: string | null;
+  ownerName: string | null;
+}
+
 export interface CommunityGameEntry {
   id: string;
+  communityId: string;
   copies: number;
+  /** One per copy, oldest first. */
+  copyList: CommunityGameCopy[];
   condition: OwnershipCondition;
   notes: string | null;
   game: GameBrief;

@@ -184,6 +184,15 @@ test.describe('Jogos', () => {
       await expect(games.shelves('Coup')).toHaveText([/^Tabuleiros do Porto\s*×3\s*1\.\d km$/]);
     });
 
+    test('uma estante só para membros não aparece em Jogos a quem não é membro', async ({ page, backend, locateAt }) => {
+      backend.db.communities.find((c) => c.slug === 'tabuleiros-do-porto')!.shelf_visibility = 'private';
+      await locateAt('porto');
+      const games = new GamesPage(page);
+      await games.goto();
+      await expect(games.count()).toHaveText('0 jogos encontrados');
+      await expect(page.getByRole('heading', { name: 'Ainda não há jogos ao teu alcance' })).toBeVisible();
+    });
+
     test('alargar o raio junta comunidades mais longe e fica guardado', async ({ page, backend, locateAt }) => {
       // Braga (~41 km do Porto) passa a pública só neste teste.
       backend.db.communities.find((c) => c.id === BRAGA)!.visibility = 'public';
