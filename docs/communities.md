@@ -25,11 +25,12 @@ games                                   (catálogo global, independente)
 | Criar comunidade | qualquer utilizador autenticado (torna-se dono, via trigger) |
 | Entrar | pública: ativo de imediato; privada: `pending` |
 | Aprovar, suspender, remover | owner, admin e moderator, só sobre quem tem papel inferior |
-| Mudar papéis | owner e admin, nunca para um papel igual ou superior ao seu; `owner` só por transferência |
+| Mudar papéis | owner e admin, nunca para um papel igual ou superior ao seu; os donos podem adicionar co-donos ativos |
 | Editar comunidade | owner e admin |
 | Apagar comunidade | owner |
 | Gerir biblioteca da comunidade | owner, admin e moderator |
 | Sair | qualquer um, exceto suspensos; o **último dono ativo não pode sair** (erro `last_owner`) |
+| Co-propriedade | RPCs `add_community_owner` e `remove_community_owner`; só donos ativos, e nunca se remove o último dono |
 | Transferir propriedade | RPC `transfer_community_ownership` (dono atual -> membro ativo; o dono passa a admin) |
 
 `src/features/communities/permissions.ts` espelha estas regras para a interface; a base de dados é a fonte de verdade.

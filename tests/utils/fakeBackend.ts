@@ -719,6 +719,23 @@ export class FakeBackend {
       this.recompute(p_new_owner); // trigger community_memberships_progress
       return { status: 204 };
     }
+    if (name === 'add_community_owner') {
+      const { p_community, p_member } = (body ?? {}) as { p_community: string; p_member: string };
+      const me = db.memberships.find((m) => m.community_id === p_community && m.user_id === uid && m.role === 'owner' && m.status === 'active');
+      const target = db.memberships.find((m) => m.community_id === p_community && m.user_id === p_member && m.status === 'active');
+      if (!me || !target) return this.forbidden();
+      target.role = 'owner';
+      this.recompute(p_member);
+      return { status: 204 };
+    }
+    if (name === 'remove_community_owner') {
+      const { p_community, p_member } = (body ?? {}) as { p_community: string; p_member: string };
+      const me = db.memberships.find((m) => m.community_id === p_community && m.user_id === uid && m.role === 'owner' && m.status === 'active');
+      const target = db.memberships.find((m) => m.community_id === p_community && m.user_id === p_member && m.role === 'owner' && m.status === 'active');
+      if (!me || !target || p_member === uid || db.memberships.filter((m) => m.community_id === p_community && m.role === 'owner' && m.status === 'active').length < 2) return this.forbidden();
+      target.role = 'admin';
+      return { status: 204 };
+    }
     if (name === 'dev_reset_my_card') {
       db.identities = db.identities.filter((i) => i.player_id !== uid);
       return { status: 204 };

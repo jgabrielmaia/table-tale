@@ -115,7 +115,7 @@ export function CommunityPage() {
     <p className="notice" role="note">{t('communities.privateNotice')}</p>
   ) : (
     <>
-    {c.members.data && <FactionBalance members={c.members.data} />}
+    {c.members.data && <><OwnersShowcase members={c.members.data} userId={user?.id ?? null} /><FactionBalance members={c.members.data} /></>}
     <Tabs
       label={t('communities.tabs')}
       value={tab}
@@ -163,11 +163,10 @@ export function CommunityPage() {
   return (
     <div className="container section">
       <p className="eyebrow"><Link to="/communities">{t('communities.title')}</Link></p>
-      {community.coverUrl && (
-        <div className="community-cover community-cover--banner">
-          <img src={community.coverUrl} alt={t('communities.cover.alt', { name: community.name })} />
-        </div>
-      )}
+      <div className="community-cover community-cover--banner community-hero">
+        {community.coverUrl ? <img src={community.coverUrl} alt={t('communities.cover.alt', { name: community.name })} /> : <div className="community-hero__fallback" aria-hidden="true" />}
+        <div className="community-hero__veil" aria-hidden="true" />
+      </div>
       <div className="section-head">
         <div>
           <h1>{community.name}</h1>
@@ -184,6 +183,18 @@ export function CommunityPage() {
       {body}
     </div>
   );
+}
+
+function OwnersShowcase({ members, userId }: { members: CommunityMember[]; userId: string | null }) {
+  const { t, tn } = useI18n();
+  const owners = members.filter((member) => member.role === 'owner' && member.status === 'active');
+  if (!owners.length) return null;
+  return <section className="community-owners" aria-label={t('communities.owners')}>
+    <div><p className="eyebrow">{tn('communities.ownersCount', owners.length)}</p><h2>{t('communities.owners')}</h2></div>
+    <ul className="community-owners__list" role="list">
+      {owners.map((owner) => <li key={owner.id}><Link to={owner.userId === userId ? '/profile' : `/players/${owner.userId}`}><PlayerAvatar playerId={owner.userId} name={owner.displayName} src={owner.avatarUrl} size="sm" decorative /><span>{owner.displayName}</span></Link></li>)}
+    </ul>
+  </section>;
 }
 
 type Run = (action: () => Promise<unknown>, success: string) => Promise<void>;
@@ -248,17 +259,18 @@ function MembersPanel({ community, c, userId, run }: { community: Community; c: 
             )}
           </span>
         )}
-        {m?.role === 'owner' && m.status === 'active' && x.status === 'active' && x.userId !== userId && (
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => {
-              if (!window.confirm(t('communities.transferConfirm', { name: x.displayName }))) return;
-              void run(() => c.transfer.mutateAsync(x.userId), t('communities.transferred'));
-            }}
-          >
-            {t('communities.makeOwner')}
-          </Button>
+        {m?.role === 'owner' && m.status === 'active' && x.status === 'active' && x.userId !== userId && x.role !== 'owner' && (
+          <><Button size="sm" variant="secondary" onClick={() => {
+            if (!window.confirm(t('communities.addOwnerConfirm', { name: x.displayName }))) return;
+            void run(() => c.addOwner.mutateAsync(x.userId), t('communities.ownerAdded'));
+          }}>{t('communities.addOwner')}</Button>
+          <Button size="sm" variant="ghost" onClick={() => {
+            if (!window.confirm(t('communities.transferConfirm', { name: x.displayName }))) return;
+            void run(() => c.transfer.mutateAsync(x.userId), t('communities.transferred'));
+          }}>{t('communities.makeOwner')}</Button></>
+        )}
+        {m?.role === 'owner' && m.status === 'active' && x.status === 'active' && x.userId !== userId && x.role === 'owner' && (
+          <Button size="sm" variant="ghost" onClick={() => void run(() => c.removeOwner.mutateAsync(x.userId), t('communities.ownerRemoved'))}>{t('communities.removeOwner')}</Button>
         )}
       </li>
     );
@@ -290,8 +302,22 @@ function GamesPanel({ c, run }: { c: CommunityState; run: Run }) {
   const [filters, setFilters] = useState<GameFilterValues>(EMPTY_FILTERS);
   const [sort, setSort] = useState<GamesSort>('title');
   const [editing, setEditing] = useState<string | null>(null);
+  const [shelfOwner, setShelfOwner] = useState<string>('all');
 
-  const entries = useMemo(() => c.games.data ?? [], [c.games.data]);
+  const allEntries = useMemo(() => c.games.data ?? [], [c.games.data]);
+  const shelfOptions = useMemo(() => {
+    const owners = new Map((c.members.data ?? []).filter((m) => m.status === 'active').map((m) => [m.userId, m.displayName]));
+    const used = new Set(allEntries.flatMap((entry) => entry.copyList.map((copy) => copy.ownerId ?? 'community')));
+    return [
+      { value: 'all', label: t('communities.shelves.all') },
+      ...(used.has('community') ? [{ value: 'community', label: t('communities.gameEditor.communityOwned') }] : []),
+      ...[...owners].filter(([id]) => used.has(id)).map(([id, name]) => ({ value: id, label: t('communities.shelves.member', { name }) })),
+    ];
+  }, [allEntries, c.members.data, t]);
+  const entries = useMemo(() => shelfOwner === 'all' ? allEntries : allEntries.map((entry) => {
+    const copyList = entry.copyList.filter((copy) => shelfOwner === 'community' ? copy.ownerId === null : copy.ownerId === shelfOwner);
+    return { ...entry, copies: copyList.length, copyList };
+  }).filter((entry) => entry.copyList.length > 0), [allEntries, shelfOwner]);
   const byGame = useMemo(() => new Map(entries.map((e) => [e.game.id, e])), [entries]);
   const games = useMemo(() => catalogue.games.filter((g) => byGame.has(g.id)), [catalogue.games, byGame]);
   const categories = useMemo(() => uniqueSorted(games.flatMap((g) => g.categories)), [games]);
@@ -341,6 +367,7 @@ function GamesPanel({ c, run }: { c: CommunityState; run: Run }) {
           </Button>
         </div>
       )}
+      {shelfOptions.length > 2 && <div className="community-shelf-picker"><Select label={t('communities.shelves.label')} value={shelfOwner} options={shelfOptions} onChange={(e) => setShelfOwner(e.target.value)} /></div>}
       {games.length === 0 ? (
         <EmptyState compact title={t('communities.libraryEmpty')} />
       ) : (

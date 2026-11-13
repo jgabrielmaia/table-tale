@@ -318,6 +318,17 @@ test.describe('Comunidades', () => {
       await expect(page.getByText('Saíste da comunidade.')).toBeVisible();
     });
 
+    test('um dono pode adicionar um co-dono sem perder a propriedade', async ({ page, backend }) => {
+      await page.goto('communities/clube-secreto-braga');
+      await page.getByRole('tab', { name: 'Membros' }).click();
+      page.once('dialog', (d) => void d.accept());
+      await page.getByRole('button', { name: 'Adicionar co-dono' }).click();
+      await expect(page.getByText('Co-dono adicionado.')).toBeVisible();
+      expect(backend.db.memberships.find((m) => m.id === 'm-owner')?.role).toBe('owner');
+      expect(backend.db.memberships.find((m) => m.id === 'm-other')?.role).toBe('owner');
+      await expect(page.getByText('2 donos')).toBeVisible();
+    });
+
     test('aprova pedidos pendentes, altera papéis e suspende membros', async ({ page, backend }) => {
       const cid = backend.db.communities.find((c) => c.slug === 'clube-secreto-braga')!.id;
       backend.db.profiles.push({ id: 'p-new', display_name: 'Rita Nova', avatar_url: null, level: 1, experience_points: 0, faction_id: null, bio: null, created_at: '2026-01-01T10:00:00.000Z', updated_at: '2026-01-01T10:00:00.000Z' });
