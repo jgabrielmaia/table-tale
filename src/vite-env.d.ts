@@ -10,6 +10,7 @@ interface ImportMetaEnv {
   readonly VITE_LOCAL_AUTH_BYPASS?: string;
   readonly VITE_LOCAL_AUTH_BYPASS_EMAIL?: string;
   readonly VITE_LOCAL_AUTH_BYPASS_PASSWORD?: string;
+  readonly VITE_FEATURE_BGG?: string;
 }
 
 interface ImportMeta {

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout/AppShell';
 import { LoadingState, ToastProvider } from '@/components/ui';
@@ -7,7 +7,7 @@ import { AuthProvider } from '@/features/auth/AuthProvider';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { HomePage } from '@/features/home/HomePage';
 import { NotFoundPage } from '@/features/home/NotFoundPage';
-import { basePath } from '@/lib/env';
+import { basePath, features } from '@/lib/env';
 import { RouteSeo } from '@/seo/RouteSeo';
 import { I18nProvider, LangBoundary } from '@/i18n';
 import { createQueryClient } from '@/lib/queryClient';
@@ -50,7 +50,8 @@ function ShellRoutes() {
           <Route path="/register" element={<LoginPage mode="register" />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/games" element={<GamesPage />} />
-          <Route path="/games/import" element={<RequireAuth><BggImportPage /></RequireAuth>} />
+          {/* Kept as a route when the BGG flag is off so /games/import doesn't fall through to /games/:slug. */}
+          <Route path="/games/import" element={features.bgg ? <RequireAuth><BggImportPage /></RequireAuth> : <Navigate to="/games" replace />} />
           <Route path="/games/:slug" element={<GameDetailPage />} />
           <Route path="/lore" element={<LorePage />} />
           <Route path="/events" element={<EventsPage />} />

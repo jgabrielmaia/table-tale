@@ -31,6 +31,10 @@ export interface BggClientOptions {
   /** Retries after the first attempt, with exponential backoff from `backoffMs`. */
   maxRetries?: number;
   backoffMs?: number;
+  /** Give up on a single BGG request after this long (a hung request would block the queue for everyone). */
+  timeoutMs?: number;
+  /** A Retry-After longer than this is not waited for: the caller gets rate_limited straight away. */
+  maxRetryAfterMs?: number;
   searchTtlMs?: number;
   thingTtlMs?: number;
 }
@@ -51,6 +55,8 @@ export function createBggClient(options: BggClientOptions): BggClient {
     minIntervalMs = 5000,
     maxRetries = 3,
     backoffMs = 2000,
+    timeoutMs = 20_000,
+    maxRetryAfterMs = 15_000,
     searchTtlMs = 10 * 60_000,
     thingTtlMs = 60 * 60_000,
   } = options;
@@ -67,7 +73,10 @@ export function createBggClient(options: BggClientOptions): BggClient {
       lastRequestAt = now();
       let res: Response;
       try {
-        res = await fetchFn(`${baseUrl}${path}`, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/xml' } });
+        res = await fetchFn(`${baseUrl}${path}`, {
+          headers: { Authorization: `Bearer ${token}`, Accept: 'application/xml' },
+          signal: AbortSignal.timeout(timeoutMs),
+        });
       } catch {
         if (n >= maxRetries) throw new BggError('unavailable', 'BGG is unreachable');
         await sleep(backoffMs * 2 ** n);
@@ -76,9 +85,12 @@ export function createBggClient(options: BggClientOptions): BggClient {
       if (res.status === 401 || res.status === 403) throw new BggError('unauthorized', 'BGG rejected the API token', res.status);
       if (res.ok && res.status !== 202) return res.text();
       if (RETRYABLE.has(res.status) && n < maxRetries) {
-        const retryAfter = Number(res.headers.get('retry-after'));
-        await sleep(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : backoffMs * 2 ** n);
-        continue;
+        const retryAfterMs = Number(res.headers.get('retry-after')) * 1000;
+        const delay = Number.isFinite(retryAfterMs) && retryAfterMs > 0 ? retryAfterMs : backoffMs * 2 ** n;
+        if (delay <= maxRetryAfterMs) {
+          await sleep(delay);
+          continue;
+        }
       }
       throw new BggError(res.status === 429 ? 'rate_limited' : 'unavailable', `BGG answered ${res.status}`, res.status);
     }

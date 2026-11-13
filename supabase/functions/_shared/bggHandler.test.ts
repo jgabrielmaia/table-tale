@@ -2,7 +2,7 @@ import searchXml from './fixtures/search.xml?raw';
 import thingXml from './fixtures/thing.xml?raw';
 import { describe, expect, it, vi } from 'vitest';
 import { BggError, createBggClient } from './bggClient';
-import { handleBgg, type GameRecord, type GameStore, type HandlerDeps } from './bggHandler';
+import { handleBgg, normaliseQuery, type CachedSearch, type GameRecord, type GameStore, type HandlerDeps } from './bggHandler';
 
 const NOW = Date.parse('2026-11-06T12:00:00Z');
 
@@ -13,6 +13,10 @@ function deps(over: Partial<HandlerDeps> & { existing?: GameRecord[]; xml?: stri
   const store: GameStore = {
     findByBggIds: async (ids) => rows.filter((r) => ids.includes(r.bgg_id!)).map((r) => ({ bgg_id: r.bgg_id!, slug: r.slug })),
     findByBggId: async (id) => rows.find((r) => r.bgg_id === id) ?? null,
+    findUnlinkedByTitle: async (title) => {
+      const hits = rows.filter((r) => r.bgg_id === null && typeof r.title === 'string' && r.title.toLowerCase() === title.toLowerCase());
+      return hits.length === 1 ? hits[0] : null;
+    },
     slugTaken: async (slug) => rows.some((r) => r.slug === slug),
     insert: vi.fn(async (row) => {
       const rec = { ...row, id: `id-${rows.length + 1}` } as unknown as GameRecord;
@@ -66,6 +70,53 @@ describe('bgg handler', () => {
     expect(results[1]).toMatchObject({ id: 27710, gameSlug: null });
   });
 
+  describe('search cache', () => {
+    const memoryCache = (entries: Record<string, CachedSearch> = {}) => ({
+      entries,
+      get: vi.fn(async (q: string) => entries[q] ?? null),
+      put: vi.fn(async (q: string, results: CachedSearch['results']) => {
+        entries[q] = { results, fetchedAt: new Date(NOW).toISOString() };
+      }),
+    });
+
+    it('normalises the query into the cache key', () => {
+      expect(normaliseQuery('  CATAN   Seafarers ')).toBe('catan seafarers');
+      expect(normaliseQuery('x'.repeat(300))).toHaveLength(200);
+    });
+
+    it('stores a BGG answer and serves the same search from the cache for a week, with fresh catalogue slugs', async () => {
+      const cache = memoryCache();
+      const { d, fetchFn, rows } = deps({ xml: [searchXml], searchCache: cache });
+      await call(d, { action: 'search', query: 'Catan' });
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+      expect(cache.put).toHaveBeenCalledWith('catan', expect.any(Array));
+
+      rows.push({ id: 'g1', slug: 'catan', bgg_id: 13, bgg_synced_at: null });
+      const res = await call(d, { action: 'search', query: '  CATAN ' });
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+      expect((await res.json()).results[0]).toMatchObject({ id: 13, gameSlug: 'catan' });
+    });
+
+    it('asks BGG again once the cached search is a week old', async () => {
+      const stale = new Date(NOW - 8 * 24 * 60 * 60 * 1000).toISOString();
+      const cache = memoryCache({ catan: { results: [], fetchedAt: stale } });
+      const { d, fetchFn } = deps({ xml: [searchXml], searchCache: cache });
+      const { results } = await (await call(d, { action: 'search', query: 'catan' })).json();
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+      expect(results.length).toBeGreaterThan(0);
+    });
+
+    it('still searches when the cache fails, and rejects a blank query', async () => {
+      const cache = { get: vi.fn(async () => { throw new Error('db down'); }), put: vi.fn(async () => { throw new Error('db down'); }) };
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const { d, fetchFn } = deps({ xml: [searchXml], searchCache: cache });
+      expect((await call(d, { action: 'search', query: 'catan' })).status).toBe(200);
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+      expect((await call(d, { action: 'search', query: '   ' })).status).toBe(400);
+      error.mockRestore();
+    });
+  });
+
   it('previews the full BGG item without writing', async () => {
     const { d, store } = deps({ xml: [thingXml] });
     const { thing, gameSlug } = await (await call(d, { action: 'preview', id: 13 })).json();
@@ -100,6 +151,47 @@ describe('bgg handler', () => {
     const { game } = await (await call(b.d, { action: 'import', id: 13 })).json();
     expect(game).toMatchObject({ id: 'g1', slug: 'my-catan', title: 'CATAN' });
     expect(b.store.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the data we hold on a stale game and only fills its gaps, while refreshing BGG\'s own columns', async () => {
+    const stale = {
+      id: 'g1', slug: 'my-catan', bgg_id: 13, bgg_synced_at: new Date(NOW - 30 * 86_400_000).toISOString(),
+      title: 'Catan (edição BR)', description: 'Nossa descrição', cover_url: 'https://example.com/catan.jpg',
+      min_players: 3, max_players: null, categories: [], mechanics: ['Trading'], bgg_rank: 999,
+    };
+    const { d, store } = deps({ existing: [stale], xml: [thingXml] });
+    const { game } = await (await call(d, { action: 'import', id: 13 })).json();
+    expect(game).toMatchObject({
+      title: 'Catan (edição BR)', description: 'Nossa descrição', cover_url: 'https://example.com/catan.jpg',
+      min_players: 3, mechanics: ['Trading'], categories: ['Economic', 'Negotiation'], bgg_rank: 450,
+      bgg_synced_at: '2026-11-06T12:00:00.000Z',
+    });
+    expect(game.max_players).not.toBeNull();
+    const sent = vi.mocked(store.update).mock.calls[0][1];
+    expect(sent).not.toHaveProperty('title');
+    expect(sent).not.toHaveProperty('cover_url');
+  });
+
+  it('links a hand-made game with the same title instead of creating a duplicate', async () => {
+    const manual = { id: 'g7', slug: 'catan', bgg_id: null, bgg_synced_at: null, title: 'catan', cover_url: 'https://example.com/mine.jpg', description: '' };
+    const { d, store, rows } = deps({ existing: [manual], xml: [thingXml] });
+    const res = await call(d, { action: 'import', id: 13 });
+    expect(res.status).toBe(200);
+    const { game } = await res.json();
+    expect(game).toMatchObject({ id: 'g7', slug: 'catan', bgg_id: 13, title: 'catan', cover_url: 'https://example.com/mine.jpg' });
+    expect(game.description).not.toBe('');
+    expect(store.insert).not.toHaveBeenCalled();
+    expect(rows).toHaveLength(1);
+  });
+
+  it('creates a new game when several hand-made games share the title', async () => {
+    const twins = [
+      { id: 'a', slug: 'catan', bgg_id: null, bgg_synced_at: null, title: 'Catan' },
+      { id: 'b', slug: 'catan-2', bgg_id: null, bgg_synced_at: null, title: 'CATAN' },
+    ];
+    const { d, store } = deps({ existing: twins, xml: [thingXml] });
+    expect((await call(d, { action: 'import', id: 13 })).status).toBe(201);
+    expect(store.update).not.toHaveBeenCalled();
   });
 
   it('returns 404 when BGG does not know the id', async () => {
