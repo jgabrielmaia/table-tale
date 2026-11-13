@@ -166,6 +166,7 @@ export function CommunityPage() {
       <div className="community-cover community-cover--banner community-hero">
         {community.coverUrl ? <img src={community.coverUrl} alt={t('communities.cover.alt', { name: community.name })} /> : <div className="community-hero__fallback" aria-hidden="true" />}
         <div className="community-hero__veil" aria-hidden="true" />
+        {canEditCommunity(m) && <Button className="community-hero__edit" size="sm" variant="secondary" icon={<Icon name="edit" />} onClick={() => setTab('manage')}>{t('communities.cover.edit')}</Button>}
       </div>
       <div className="section-head">
         <div>

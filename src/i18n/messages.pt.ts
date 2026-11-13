@@ -616,6 +616,7 @@ export const pt = {
   'communities.cover.add': 'Adicionar foto de capa',
   'communities.cover.replace': 'Substituir a foto de capa',
   'communities.cover.remove': 'Remover foto de capa',
+  'communities.cover.edit': 'Editar capa',
   'communities.cover.uploading': 'A enviar…',
   'communities.cover.alt': 'Foto de capa de {name}',
   'communities.cover.saved': 'Foto de capa atualizada.',
