@@ -117,6 +117,7 @@ test.describe('Comunidades', () => {
       const ownerCard = page.locator('.member-card[data-role="owner"]');
       await expect(ownerCard.locator('.chip.role-owner')).toHaveText('Dono');
       await expect(ownerCard.locator('.chip.role-owner')).toHaveCSS('background-image', /radial-gradient/);
+      await expect(page.getByRole('button', { name: 'Editar capa' })).toBeVisible();
 
       await page.goto('profile');
       await expect(page.getByRole('region', { name: /Descobertas/ }).getByRole('heading', { name: 'Guardião da Estante' })).toBeVisible();

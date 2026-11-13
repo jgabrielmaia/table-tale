@@ -617,6 +617,7 @@ export const en: Record<MessageKey, string> = {
   'communities.cover.add': 'Add a cover photo',
   'communities.cover.replace': 'Replace the cover photo',
   'communities.cover.remove': 'Remove cover photo',
+  'communities.cover.edit': 'Edit cover',
   'communities.cover.uploading': 'Uploading…',
   'communities.cover.alt': 'Cover photo of {name}',
   'communities.cover.saved': 'Cover photo updated.',
