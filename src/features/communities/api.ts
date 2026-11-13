@@ -189,6 +189,16 @@ export async function transferOwnership(communityId: string, newOwnerId: string)
   );
 }
 
+/** Adds an active member as a co-owner without changing the existing owners. */
+export async function addCommunityOwner(communityId: string, userId: string): Promise<void> {
+  unwrap(await supabase.rpc('add_community_owner', { p_community: communityId, p_member: userId }), t('communities.err.owner'));
+}
+
+/** Removes co-ownership while preserving the member as an admin. The database protects the last owner. */
+export async function removeCommunityOwner(communityId: string, userId: string): Promise<void> {
+  unwrap(await supabase.rpc('remove_community_owner', { p_community: communityId, p_member: userId }), t('communities.err.owner'));
+}
+
 // ---- community library ----------------------------------------------------------------------------------------------
 
 type CopyQueryRow = Pick<CommunityGameCopyRow, 'id' | 'owner_id' | 'added_at'> & { profiles: { display_name: string } | null };

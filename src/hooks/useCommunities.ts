@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   addCommunityCopy,
+  addCommunityOwner,
   addCommunityGame,
   addUserGame,
   createCommunity,
@@ -17,6 +18,7 @@ import {
   joinCommunity,
   leaveCommunity,
   removeCommunityCopy,
+  removeCommunityOwner,
   removeCommunityGame,
   removeMember,
   removeUserGame,
@@ -165,6 +167,8 @@ export function useCommunity(slug: string) {
   });
   const kick = useMutation({ mutationFn: (membershipId: string) => removeMember(membershipId), ...refresh });
   const transfer = useMutation({ mutationFn: (newOwnerId: string) => transferOwnership(need().id, newOwnerId), ...refresh });
+  const addOwner = useMutation({ mutationFn: (userId: string) => addCommunityOwner(need().id, userId), ...refresh });
+  const removeOwner = useMutation({ mutationFn: (userId: string) => removeCommunityOwner(need().id, userId), ...refresh });
   const addGame = useMutation({ mutationFn: (gameId: string) => addCommunityGame(need().userId, need().id, gameId), ...refresh });
   const removeGame = useMutation({ mutationFn: (entryId: string) => removeCommunityGame(entryId), ...refresh });
   const setGameNotes = useMutation({ mutationFn: (v: { entryId: string; notes: string }) => updateCommunityGameNotes(v.entryId, v.notes), ...refresh });
@@ -174,7 +178,7 @@ export function useCommunity(slug: string) {
 
   const activeOwners = (members.data ?? []).filter((m) => m.role === 'owner' && m.status === 'active').length;
 
-  return { community, membership, members, games, activeOwners, canSeeContent, canSeeShelf, join, leave, update, remove, setCover, removeCover, setMember, kick, transfer, addGame, removeGame, setGameNotes, addCopy, setCopyOwner, removeCopy };
+  return { community, membership, members, games, activeOwners, canSeeContent, canSeeShelf, join, leave, update, remove, setCover, removeCover, setMember, kick, transfer, addOwner, removeOwner, addGame, removeGame, setGameNotes, addCopy, setCopyOwner, removeCopy };
 }
 
 /** The viewer's personal collection (table `user_games`). */
