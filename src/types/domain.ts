@@ -185,6 +185,8 @@ export interface Community {
   createdBy: string;
   /** Cover photo uploaded by an owner or admin; null shows the branded fallback. */
   coverUrl: string | null;
+  /** Vertical position of the cover photo, in percent (0 = top, 100 = bottom). */
+  coverPosition: number;
   memberCount: number;
 }
 

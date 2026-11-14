@@ -13,3 +13,8 @@ export function coverPath(url: string | null, communityId: string): string | nul
   const path = decodeURIComponent(url.slice(at + marker.length).split('?')[0] ?? '');
   return path.startsWith(`${communityId}/`) && !path.includes('..') ? path : null;
 }
+
+/** Recommended cover size: the banner spans the viewport (4:1, height capped at 20rem), so ~1500 px wide doubled for high-DPI screens. */
+export const COVER_RECOMMENDED = { width: 3000, height: 750 };
+/** Below this width the banner is upscaled on a desktop screen and looks blurry. */
+export const COVER_MIN_WIDTH = 1500;
