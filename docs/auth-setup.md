@@ -25,6 +25,7 @@ Estes passos não podem ser feitos por código nem por scripts: precisam das tua
 5. **Supabase Dashboard** → *Authentication* → *URL Configuration*:
    - *Site URL* (desenvolvimento): `http://localhost:5173/table-tale`
    - *Redirect URLs*: `http://localhost:5173/table-tale/auth/callback` e `https://jgabrielmaia.com/table-tale/auth/callback`
+   - O desenvolvimento local usa o projeto Supabase de produção, por isso o callback de `localhost` tem de estar nesta lista do projeto alojado (o `supabase/config.toml` só configura o CLI local). Se o endereço não for aceite, o Supabase manda o utilizador para o *Site URL* (produção) em vez de voltar ao `localhost`.
 6. **Supabase Dashboard** → *Authentication* → *Sign In / Providers*: mantém *Allow new users to sign up* e *Manual linking* ativos.
 
 Produção: Site URL `https://jgabrielmaia.com/table-tale` e `VITE_SITE_URL` definido no ambiente de build.
@@ -35,9 +36,9 @@ Produção: Site URL `https://jgabrielmaia.com/table-tale` e `VITE_SITE_URL` def
 
 ## Fluxo OAuth
 
-1. O botão chama `supabase.auth.signInWithOAuth({ provider, redirectTo })` com PKCE. O `redirectTo` é `…/auth/callback?next=<destino>`.
-2. O destino original (`from`) é guardado ao abrir `/login` e só é aceite se for um caminho interno (`safeNextPath` rejeita `//`, URLs absolutos e `\`).
-3. `/auth/callback` troca o código por sessão e navega para `next`.
+1. O botão chama `supabase.auth.signInWithOAuth({ provider, redirectTo })` com PKCE. O `redirectTo` é sempre `…/auth/callback`, **sem query string**: o Supabase compara-o com as *Redirect URLs* e uma entrada exata deixa de corresponder se lhe juntarmos `?next=…` (era a causa do #75).
+2. O destino original (`from`) é guardado em `localStorage` (`tt:auth-next`) antes de sair para o fornecedor ou de enviar o link mágico (não em `sessionStorage`, para que um link mágico aberto noutro separador o encontre), e só é aceite se for um caminho interno (`safeNextPath` rejeita `//`, URLs absolutos e `\`).
+3. `/auth/callback` troca o código por sessão, lê o destino guardado (ou `?next=` em links antigos), apaga-o e navega para lá. Sem destino guardado, vai para `/games`.
 4. Erros do fornecedor (`error`, `error_code`, `error_description` na query ou no fragmento) são traduzidos para mensagens localizadas: permissões recusadas ou login cancelado, link expirado, conta já associada, e-mail por verificar, e-mail não partilhado, fornecedor desativado e erro genérico. O texto cru do fornecedor nunca é mostrado.
 5. Sessão expirada ou sem resposta em 12 s mostra o erro «link expirado» com um botão para voltar ao login.
 
