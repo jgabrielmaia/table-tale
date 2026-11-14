@@ -96,6 +96,19 @@ export interface LibraryGame extends Game {
   isFavorite: boolean;
 }
 
+/** Where a home page highlight comes from: the player's own plays, their communities, or public communities. */
+export type HighlightSource = 'recent' | 'community' | 'public';
+
+export interface ShelfHighlight {
+  gameId: string;
+  source: HighlightSource;
+  /** 'YYYY-MM-DD', for recent games. */
+  lastPlayedAt: string | null;
+  /** Distinct members who played it lately, for popular games. */
+  players: number;
+  copies: number;
+}
+
 export interface GameSession {
   id: string;
   gameId: string;

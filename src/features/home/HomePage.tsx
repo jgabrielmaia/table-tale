@@ -5,24 +5,35 @@ import { GameGrid } from '@/components/games/GameGrid';
 import { Logo } from '@/components/brand/Logo';
 import { Scenery } from '@/components/layout/Scenery';
 import { ButtonLink, ErrorState, LoadingState } from '@/components/ui';
-import { fetchShelfEntries } from '@/features/games/api';
+import { fetchShelfHighlights } from '@/features/games/api';
 import { useAuth } from '@/hooks/useAuth';
 import { useGames } from '@/hooks/useGames';
 import { useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { queryKeys } from '@/lib/queryKeys';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import type { LibraryGame } from '@/types/domain';
+import { highlightNote, highlightsHeading, highlightsSource } from './highlights';
+
+const HIGHLIGHTS = 3;
 
 export function HomePage() {
   const { t } = useI18n();
   const { user } = useAuth();
   const { games, isLoading, isError, error } = useGames();
-  const shelves = useQuery({ queryKey: queryKeys.shelves, queryFn: fetchShelfEntries, enabled: isSupabaseConfigured });
-  // Only games that sit on some community shelf: the catalogue itself is never browsed.
-  const highlights = useMemo(() => {
-    const onShelves = new Set((shelves.data ?? []).map((e) => e.gameId));
-    return games.filter((g) => onShelves.has(g.id)).slice(0, 3);
-  }, [games, shelves.data]);
+  // The player's last played games, falling back to their communities' and then public favourites (shelf_highlights).
+  const highlights = useQuery({
+    queryKey: queryKeys.highlights(user?.id ?? null),
+    queryFn: () => fetchShelfHighlights(HIGHLIGHTS),
+    enabled: isSupabaseConfigured,
+  });
+  const list = useMemo(() => highlights.data ?? [], [highlights.data]);
+  const cards = useMemo(() => {
+    const byId = new Map(games.map((g) => [g.id, g]));
+    return list.map((h) => byId.get(h.gameId)).filter((g): g is LibraryGame => Boolean(g));
+  }, [games, list]);
+  const notes = new Map(list.map((h) => [h.gameId, highlightNote(h)]));
+  const heading = highlightsHeading(highlightsSource(list));
 
   return (
     <>
@@ -48,17 +59,17 @@ export function HomePage() {
       <section className="container section" aria-labelledby="destaques-title">
         <div className="section-head">
           <div>
-            <p className="eyebrow">{t('home.weekEyebrow')}</p>
-            <h2 id="destaques-title">{t('home.highlights')}</h2>
+            <p className="eyebrow">{t(heading.eyebrow)}</p>
+            <h2 id="destaques-title">{t(heading.title)}</h2>
           </div>
           <Link to="/games">{t('home.seeAll')}</Link>
         </div>
-        {isLoading || shelves.isLoading ? (
-          <LoadingState variant="cards" count={3} />
-        ) : isError || shelves.isError ? (
-          <ErrorState message={errorMessage(error ?? shelves.error)} />
+        {isLoading || highlights.isLoading ? (
+          <LoadingState variant="cards" count={HIGHLIGHTS} />
+        ) : isError || highlights.isError ? (
+          <ErrorState message={errorMessage(error ?? highlights.error)} />
         ) : (
-          <GameGrid games={highlights} label={t('home.highlightsLabel')} />
+          <GameGrid games={cards} label={t('home.highlightsLabel')} noteOf={(g) => notes.get(g.id)} />
         )}
       </section>
     </>

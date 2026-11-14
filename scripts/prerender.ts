@@ -64,7 +64,7 @@ const FACTIONS = [
 function homePage(seo: (typeof PAGES)[number]): Page {
   const body = shell(
     `<h1>${esc(pt['home.title'])}</h1><p>${esc(pt['home.lead'])}</p>` +
-    `<h2>${esc(pt['home.highlights'])}</h2><ul>${games.slice(0, 3).map(gameLi).join('')}</ul>` +
+    `<h2>${esc(pt['home.highlights.public'])}</h2><ul>${games.slice(0, 3).map(gameLi).join('')}</ul>` +
     `<p><a href="${href('/games')}">${esc(pt['home.ctaExplore'])}</a> · <a href="${href('/lore')}">${esc(pt['home.ctaLore'])}</a></p>`,
   );
   return { path: '/', title: seo.title.pt, description: seo.description.pt, index: true, ogType: 'website', jsonLd: [organization, website], body };

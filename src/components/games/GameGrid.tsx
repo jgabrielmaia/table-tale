@@ -13,9 +13,11 @@ export interface GameGridProps {
   shelfOf?: (game: LibraryGame) => ShelfInfo | undefined;
   onEdit?: (game: LibraryGame) => void;
   onRemove?: (game: LibraryGame) => void;
+  /** A short line per game under its details (home page highlights). */
+  noteOf?: (game: LibraryGame) => string | undefined;
 }
 
-export function GameGrid({ games, compact, onToggleFavorite, onStatusChange, busyId, label, shelfOf, onEdit, onRemove }: GameGridProps) {
+export function GameGrid({ games, compact, onToggleFavorite, onStatusChange, busyId, label, shelfOf, onEdit, onRemove, noteOf }: GameGridProps) {
   return (
     <ul className={cn('game-grid', compact && 'game-grid-compact')} role="list" aria-label={label}>
       {games.map((g) => (
@@ -29,6 +31,7 @@ export function GameGrid({ games, compact, onToggleFavorite, onStatusChange, bus
           shelf={shelfOf?.(g)}
           onEdit={onEdit}
           onRemove={onRemove}
+          note={noteOf?.(g)}
         />
       ))}
     </ul>

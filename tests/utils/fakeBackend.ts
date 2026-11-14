@@ -356,7 +356,7 @@ export class FakeBackend {
         const input = body as Row;
         let row = db.gameStatus.find((s) => s.user_id === input.user_id && s.game_id === input.game_id);
         if (!row) { row = { user_id: input.user_id, game_id: input.game_id, status: 'unplayed', is_favorite: false }; db.gameStatus.push(row); }
-        Object.assign(row, input);
+        Object.assign(row, input, { updated_at: new Date().toISOString() });
         this.recompute(input.user_id);
         return done({ game_id: row.game_id, status: row.status, is_favorite: row.is_favorite }, true);
       }
@@ -691,6 +691,8 @@ export class FakeBackend {
 
   private rpc(name: string, uid: string | null, body?: unknown): Result {
     const db = this.db;
+    // Granted to anon: visitors get the public ranking.
+    if (name === 'shelf_highlights') return { status: 200, body: this.shelfHighlights(uid, (body as { p_limit?: number } | undefined)?.p_limit) };
     if (!uid) return { status: 401, body: { code: '28000', message: 'not authenticated', details: null, hint: null } };
     if (name === 'my_profile_stats') {
       const m = this.metrics(uid);
@@ -744,6 +746,46 @@ export class FakeBackend {
   }
 
   // ---- server-side rules the app relies on (mirrors the SQL functions) ---------------------------------------------
+
+  /** Mirrors public.shelf_highlights(): the viewer's played games, then their communities' favourites, then public shelves'. */
+  private shelfHighlights(uid: string | null, limit = 3): Row[] {
+    const db = this.db;
+    const n = Math.min(Math.max(limit, 1), 24);
+    const since = new Date(Date.now() - 90 * 86_400_000).toLocaleDateString('sv-SE');
+    const out: Row[] = [];
+    const add = (row: Row) => { if (out.length < n && !out.some((r) => r.game_id === row.game_id)) out.push(row); };
+
+    // Own plays: a session by its date, a Playing/Played status without sessions by the day it last changed.
+    const recent = new Map<string, { day: string; at: string }>();
+    const keep = (gameId: string, day: string, at: string) => {
+      const cur = recent.get(gameId);
+      recent.set(gameId, cur ? { day: cur.day > day ? cur.day : day, at: cur.at > at ? cur.at : at } : { day, at });
+    };
+    const mine = db.sessions.filter((s) => s.user_id === uid);
+    for (const s of mine) keep(s.game_id, s.played_at, s.created_at ?? '');
+    for (const s of db.gameStatus) {
+      if (s.user_id !== uid || s.status === 'unplayed' || mine.some((x) => x.game_id === s.game_id)) continue;
+      const at = s.updated_at ?? new Date().toISOString();
+      keep(s.game_id, at.slice(0, 10), at);
+    }
+    [...recent].sort(([a, x], [b, y]) => y.day.localeCompare(x.day) || y.at.localeCompare(x.at) || a.localeCompare(b))
+      .forEach(([gameId, r]) => add({ game_id: gameId, source: 'recent', last_played_at: r.day, players: null, sessions: null, copies: null }));
+
+    // Popularity over a set of communities (community_game_popularity), most played first.
+    const popular = (communityIds: string[], source: string, onShelfOnly: boolean) => {
+      const members = new Set(db.memberships.filter((m) => communityIds.includes(m.community_id) && m.status === 'active').map((m) => m.user_id));
+      const stats = new Map<string, { players: Set<string>; sessions: number; copies: number }>();
+      const stat = (gameId: string) => stats.get(gameId) ?? stats.set(gameId, { players: new Set(), sessions: 0, copies: 0 }).get(gameId)!;
+      for (const s of db.sessions) if (members.has(s.user_id) && s.played_at >= since) { stat(s.game_id).players.add(s.user_id); stat(s.game_id).sessions += 1; }
+      for (const g of db.communityGames) if (communityIds.includes(g.community_id)) stat(g.game_id).copies += g.copies;
+      [...stats].filter(([, s]) => !onShelfOnly || s.copies > 0)
+        .sort(([a, x], [b, y]) => y.players.size - x.players.size || y.sessions - x.sessions || y.copies - x.copies || a.localeCompare(b))
+        .forEach(([gameId, s]) => add({ game_id: gameId, source, last_played_at: null, players: s.players.size, sessions: s.sessions, copies: s.copies }));
+    };
+    popular(db.memberships.filter((m) => m.user_id === uid && m.status === 'active').map((m) => m.community_id), 'community', false);
+    popular(db.communities.filter((c) => c.visibility === 'public' && c.shelf_visibility === 'public').map((c) => c.id), 'public', true);
+    return out;
+  }
 
   private syncFaction(userId: string) {
     const identity = this.db.identities.find((i) => i.player_id === userId && i.is_active);

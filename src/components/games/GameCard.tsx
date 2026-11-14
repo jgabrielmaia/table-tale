@@ -25,6 +25,8 @@ export interface GameCardProps {
   /** On a community page, for its managers: removes the game from the community. */
   onRemove?: (game: LibraryGame) => void;
   removeLabel?: string;
+  /** A short line under the details, e.g. on the home page: "Played yesterday", "3 members played it lately". */
+  note?: string;
 }
 
 export interface ShelfInfo {
@@ -34,7 +36,7 @@ export interface ShelfInfo {
   notes: string | null;
 }
 
-export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact, headingLevel = 3, shelf, onEdit, onRemove, removeLabel }: GameCardProps) {
+export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact, headingLevel = 3, shelf, onEdit, onRemove, removeLabel, note }: GameCardProps) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   const shelves = 'shelves' in game ? (game as ShelfGame).shelves : null;
   const owner = game.owners[0];
@@ -72,6 +74,12 @@ export function GameCard({ game, onToggleFavorite, onStatusChange, busy, compact
             <li><Icon name="users" />{playersText(game.minPlayers, game.maxPlayers)}</li>
             <li><Icon name="clock" />{minutesText(game.durationMinutes)}</li>
           </ul>
+          {note && (
+            <p className="game-card-note">
+              <Icon name="play" />
+              {note}
+            </p>
+          )}
           {shelf ? (
             <div className="game-card-copies">
               <p>{tn('communities.copies', shelf.copies)}</p>

@@ -55,7 +55,7 @@ begin
   if exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname in (
       'community_rank', 'my_community_role', 'has_community_role', 'is_community_member', 'is_community_participant',
       'is_community_public', 'tg_community_creator_is_owner', 'tg_guard_membership', 'transfer_community_ownership',
-      'ensure_default_community', 'tg_join_default_community')) then
+      'ensure_default_community', 'tg_join_default_community', 'shelf_highlights', 'community_game_popularity')) then
     raise exception 'rollback left community functions behind';
   end if;
   if exists (select 1 from pg_trigger where tgname = 'profiles_join_default_community') then
@@ -67,6 +67,9 @@ begin
   end if;
   if not exists (select 1 from pg_policies where tablename = 'game_ownerships' and policyname = 'ownerships are public') then
     raise exception 'original game_ownerships policies not restored';
+  end if;
+  if exists (select 1 from pg_indexes where indexname = 'game_sessions_game_played_idx') then
+    raise exception 'rollback left the shelf highlights index behind';
   end if;
   if not exists (select 1 from pg_indexes where indexname = 'game_ownerships_user_idx') then
     raise exception 'original game_ownerships index not restored';

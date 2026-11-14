@@ -1,8 +1,8 @@
 import { supabase } from '@/lib/supabase';
 import { unwrap } from '@/lib/errors';
 import { t } from '@/i18n';
-import type { GameRow, GameSessionRow, OwnershipCondition, UserGameStatusRow } from '@/types/database';
-import type { Game, GameOwner, GameSession, GameStatus, GameUserState } from '@/types/domain';
+import type { GameRow, GameSessionRow, OwnershipCondition, ShelfHighlightRow, UserGameStatusRow } from '@/types/database';
+import type { Game, GameOwner, GameSession, GameStatus, GameUserState, ShelfHighlight } from '@/types/domain';
 import type { ShelfEntry } from './shelves';
 
 const LIST_COLUMNS =
@@ -182,4 +182,16 @@ export async function fetchShelfEntries(): Promise<ShelfEntry[]> {
       copies: r.copies,
       community: { ...r.communities!, latitude: num(r.communities!.latitude), longitude: num(r.communities!.longitude) },
     }));
+}
+
+/** Home page highlights for the current viewer (or a visitor), best first. Ranking and fallbacks live in the database. */
+export async function fetchShelfHighlights(limit = 3): Promise<ShelfHighlight[]> {
+  const rows = unwrap(await supabase.rpc('shelf_highlights', { p_limit: limit }), t('games.err.load')) as ShelfHighlightRow[] | null;
+  return (rows ?? []).map((r) => ({
+    gameId: r.game_id,
+    source: r.source,
+    lastPlayedAt: r.last_played_at,
+    players: r.players ?? 0,
+    copies: r.copies ?? 0,
+  }));
 }

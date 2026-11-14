@@ -222,6 +222,16 @@ export interface CommunityGameCopyRow {
   added_at: string;
 }
 
+/** One row of shelf_highlights(): the home page's games, best first. Counts are null for the player's own (recent) games. */
+export interface ShelfHighlightRow {
+  game_id: string;
+  source: 'recent' | 'community' | 'public';
+  last_played_at: string | null;
+  players: number | null;
+  sessions: number | null;
+  copies: number | null;
+}
+
 export interface ProfileStatsRow {
   sessions: number;
   games_played: number;
