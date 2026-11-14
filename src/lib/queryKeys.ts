@@ -21,6 +21,8 @@ export const queryKeys = {
   myMemberships: (userId: string | null) => ['my-memberships', userId] as const,
   myUserGames: (userId: string | null) => ['my-user-games', userId] as const,
   shelves: ['shelves'] as const,
+  /** Home page highlights: depend on the viewer's plays and communities. */
+  highlights: (userId: string | null) => ['highlights', userId] as const,
 };
 
 /** Keys whose data depends on the user's progress (refreshed after any activity change). */
@@ -28,4 +30,5 @@ export const progressKeys = (userId: string | null) => [
   queryKeys.profile(userId),
   queryKeys.stats(userId),
   queryKeys.achievements(userId),
+  queryKeys.highlights(userId),
 ];

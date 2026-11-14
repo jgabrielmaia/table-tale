@@ -86,6 +86,7 @@ function useInvalidateCommunities() {
     void qc.invalidateQueries({ queryKey: ['community-games'] });
     void qc.invalidateQueries({ queryKey: queryKeys.shelves });
     void qc.invalidateQueries({ queryKey: ['my-memberships'] });
+    void qc.invalidateQueries({ queryKey: ['highlights'] });
   };
 }
 

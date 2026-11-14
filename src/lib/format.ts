@@ -9,6 +9,17 @@ export function formatDate(value: string, options: Intl.DateTimeFormatOptions = 
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(getLocale(), options);
 }
 
+/** How long ago a 'YYYY-MM-DD' day was, in the active locale: "today", "yesterday", "3 days ago", "2 weeks ago"... */
+export function relativeDay(value: string, today = todayIso()) {
+  const days = Math.max(0, Math.round((Date.parse(`${today}T12:00:00Z`) - Date.parse(`${value}T12:00:00Z`)) / 86_400_000));
+  if (Number.isNaN(days)) return formatDate(value);
+  const rtf = new Intl.RelativeTimeFormat(getLocale(), { numeric: 'auto' });
+  if (days < 7) return rtf.format(-days, 'day');
+  if (days < 30) return rtf.format(-Math.floor(days / 7), 'week');
+  if (days < 365) return rtf.format(-Math.floor(days / 30), 'month');
+  return rtf.format(-Math.floor(days / 365), 'year');
+}
+
 export const formatNumber = (value: number) => value.toLocaleString(getLocale());
 
 export const playersLabel = (min: number, max: number) =>
