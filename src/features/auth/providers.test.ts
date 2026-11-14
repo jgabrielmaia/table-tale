@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { callbackErrorKey, isOAuthProvider, providerName, readCallbackError } from './providers';
-import { safeNextPath } from './api';
+import { forgetNextPath, readNextPath, rememberNextPath, safeNextPath } from './api';
 
 describe('callback errors', () => {
   it('maps denial, expiry, existing accounts and unverified emails to dedicated messages', () => {
@@ -40,5 +40,27 @@ describe('post-login destination', () => {
     expect(safeNextPath('https://evil.example')).toBe('/games');
     expect(safeNextPath('/\\evil')).toBe('/games');
     expect(safeNextPath(null)).toBe('/games');
+  });
+});
+
+describe('remembered destination', () => {
+  it('survives the round trip to the provider and is used once', () => {
+    rememberNextPath('/events');
+    expect(readNextPath()).toBe('/events');
+    forgetNextPath();
+    expect(readNextPath()).toBe('/games');
+  });
+
+  it('never stores an external destination', () => {
+    rememberNextPath('https://evil.example');
+    expect(readNextPath()).toBe('/games');
+  });
+
+  it('falls back to /games when storage is unavailable', () => {
+    const get = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    expect(readNextPath()).toBe('/games');
+    get.mockRestore();
   });
 });

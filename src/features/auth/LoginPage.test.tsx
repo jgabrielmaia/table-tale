@@ -13,7 +13,7 @@ vi.mock('@/lib/supabase', () => ({
 vi.mock('@/lib/env', () => ({
   env: { supabaseUrl: 'https://project.supabase.co', supabaseAnonKey: 'anon', siteUrl: 'http://localhost:5173/table-tale' },
   isSupabaseConfigured: true,
-  authCallbackUrl: (next = '/games') => `http://localhost:5173/table-tale/auth/callback?next=${encodeURIComponent(next)}`,
+  authCallbackUrl: () => 'http://localhost:5173/table-tale/auth/callback',
   basePath: '/',
 }));
 
@@ -78,7 +78,9 @@ describe('LoginPage providers', () => {
     await waitFor(() => expect(signInWithOAuth).toHaveBeenCalled());
     const arg = signInWithOAuth.mock.calls[0]?.[0] as { provider: string; options: { redirectTo: string } };
     expect(arg.provider).toBe('github');
-    expect(arg.options.redirectTo).toContain('next=%2Ffate');
+    // No query string: Supabase only matches exact Redirect URLs, so the destination is kept in storage instead.
+    expect(arg.options.redirectTo).toBe('http://localhost:5173/table-tale/auth/callback');
+    expect(localStorage.getItem('tt:auth-next')).toBe('/fate');
   });
 
   it('never redirects to a provider that is switched off and says so in the user language', async () => {

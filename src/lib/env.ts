@@ -29,5 +29,9 @@ export const features = {
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
-export const authCallbackUrl = (next = '/games') =>
-  `${env.siteUrl}/auth/callback?next=${encodeURIComponent(next)}`;
+/**
+ * Where Supabase sends the browser after OAuth / magic link. Kept free of query parameters on purpose: Supabase
+ * matches it against the project's Redirect URLs, and an exact entry stops matching once `?next=…` is appended,
+ * so it silently falls back to the Site URL (production). The post-login destination travels via `rememberNextPath`.
+ */
+export const authCallbackUrl = () => `${env.siteUrl}/auth/callback`;

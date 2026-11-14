@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useFate } from '@/hooks/useFate';
 import { useI18n } from '@/i18n';
 import { supabase } from '@/lib/supabase';
-import { safeNextPath } from './api';
+import { forgetNextPath, readNextPath, safeNextPath } from './api';
 import { callbackErrorKey, readCallbackError } from './providers';
 
 /** OAuth / magic-link landing page (/table-tale/auth/callback). Supabase exchanges the PKCE code on load. */
@@ -15,7 +15,9 @@ export function AuthCallbackPage() {
   const fate = useFate();
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const next = safeNextPath(params.get('next'));
+  // `next` in the query is still honoured for links sent before the destination moved to storage.
+  const fromQuery = params.get('next');
+  const next = fromQuery === null ? readNextPath() : safeNextPath(fromQuery);
   const providerError = readCallbackError(window.location.search, window.location.hash);
   const [timedOut, setTimedOut] = useState(false);
   const [exchangeFailed, setExchangeFailed] = useState(false);
@@ -26,6 +28,7 @@ export function AuthCallbackPage() {
     if (!fate.identities.isError && (fate.state === 'loading' || fate.season.isLoading)) return;
     // A first-time player goes straight to discover their destiny.
     const firstTime = !fate.identities.isError && fate.state === 'uninitiated' && fate.canDraw;
+    forgetNextPath();
     navigate(firstTime ? '/fate' : next, { replace: true });
   }, [user, providerError, next, navigate, fate.state, fate.canDraw, fate.season.isLoading, fate.identities.isError]);
 

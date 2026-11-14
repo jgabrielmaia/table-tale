@@ -73,6 +73,18 @@ test.describe('Autenticação', () => {
       await new AppShell(page).expectSignedIn();
     });
 
+    test('regressa ao destino pedido mesmo sem next no link (Redirect URL exato no Supabase)', async ({ page, backend }) => {
+      backend.giveCard();
+      await page.goto('profile'); // rota protegida: leva ao login e lembra o destino
+      const login = new LoginPage(page);
+      await login.requestMagicLink(EMAIL);
+      await expect(page.getByRole('heading', { name: 'Verifica o teu correio' })).toBeVisible();
+
+      await page.goto('auth/callback?code=e2e-magic');
+      await expect(page).toHaveURL(/\/profile$/);
+      await new AppShell(page).expectSignedIn();
+    });
+
     test('mostra mensagem clara quando há demasiados pedidos', async ({ page, backend }) => {
       backend.fail(/POST \/auth\/v1\/otp/, { status: 429, body: { code: 429, error_code: 'over_email_send_rate_limit', msg: 'email rate limit exceeded' } });
       const login = new LoginPage(page);
