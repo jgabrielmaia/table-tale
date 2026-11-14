@@ -187,6 +187,8 @@ export interface CommunityRow {
   longitude: number | null;
   created_by: string;
   cover_url: string | null;
+  /** Vertical position of the cover photo, in percent (0 = top, 100 = bottom). */
+  cover_position: number;
   created_at: string;
   updated_at: string;
 }

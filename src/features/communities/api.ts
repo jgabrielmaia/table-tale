@@ -50,6 +50,7 @@ export const mapCommunity = (r: CommunityRow & Partial<CountEmbed>): Community =
   longitude: r.longitude,
   createdBy: r.created_by,
   coverUrl: r.cover_url ?? null,
+  coverPosition: r.cover_position ?? 50,
   memberCount: r.member_count ?? 0,
 });
 
@@ -117,13 +118,19 @@ export async function setCommunityCover(community: Pick<Community, 'id' | 'cover
   const path = `${community.id}/cover-${Date.now()}.${ext}`;
   unwrap(await supabase.storage.from(COVER_BUCKET).upload(path, file, { contentType: file.type, upsert: false }), t('communities.cover.errUpload'));
   const url = supabase.storage.from(COVER_BUCKET).getPublicUrl(path).data.publicUrl;
-  unwrap(await supabase.from('communities').update({ cover_url: url }).eq('id', community.id), t('communities.cover.errUpload'));
+  unwrap(await supabase.from('communities').update({ cover_url: url, cover_position: 50 }).eq('id', community.id), t('communities.cover.errUpload'));
   await removeCoverFile(community.coverUrl, community.id);
 }
 
 export async function removeCommunityCover(community: Pick<Community, 'id' | 'coverUrl'>): Promise<void> {
-  unwrap(await supabase.from('communities').update({ cover_url: null }).eq('id', community.id), t('communities.cover.errRemove'));
+  unwrap(await supabase.from('communities').update({ cover_url: null, cover_position: 50 }).eq('id', community.id), t('communities.cover.errRemove'));
   await removeCoverFile(community.coverUrl, community.id);
+}
+
+/** Saves which part of the cover shows: the vertical object-position, in percent (0 = top, 100 = bottom). */
+export async function setCommunityCoverPosition(id: string, position: number): Promise<void> {
+  const value = Math.round(Math.min(100, Math.max(0, position)));
+  unwrap(await supabase.from('communities').update({ cover_position: value }).eq('id', id), t('communities.cover.errPosition'));
 }
 
 // A leftover file only costs storage, so a failed clean-up never fails the action.

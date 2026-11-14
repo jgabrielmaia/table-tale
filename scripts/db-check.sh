@@ -45,6 +45,7 @@ psql_ -f supabase/ci/assert-community-cover.sql
 psql_ -f supabase/ci/assert-bgg-search-cache.sql
 psql_ -f supabase/ci/assert-community-game-copies.sql
 psql_ -f supabase/ci/assert-community-shelf-visibility.sql
+psql_ -f supabase/ci/assert-community-cover-position.sql
 echo "ok: migrated"
 
 # The full rollback below drops the default-community trigger again with the community schema, so prove on its own
@@ -72,6 +73,7 @@ psql_ -f supabase/ci/assert-community-cover.sql
 psql_ -f supabase/ci/assert-bgg-search-cache.sql
 psql_ -f supabase/ci/assert-community-game-copies.sql
 psql_ -f supabase/ci/assert-community-shelf-visibility.sql
+psql_ -f supabase/ci/assert-community-cover-position.sql
 echo "ok: round trip"
 
 # Contract phase (drop genre/complexity), last because dropping the columns discards the legacy values. It lives outside supabase/migrations on purpose, so it is only

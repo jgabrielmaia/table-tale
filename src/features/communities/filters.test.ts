@@ -4,7 +4,7 @@ import type { Community } from '@/types/domain';
 
 const c = (id: string, name: string, city: string, district: string): Community => ({
   id, slug: id, name, description: '', visibility: 'public', shelfVisibility: 'public', city, district, country: 'Portugal',
-  latitude: null, longitude: null, createdBy: 'u', coverUrl: null, memberCount: 1,
+  latitude: null, longitude: null, createdBy: 'u', coverUrl: null, coverPosition: 50, memberCount: 1,
 });
 
 const list = [

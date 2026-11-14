@@ -122,7 +122,7 @@ export function CommunityCard({ community: c, membership, distanceKm = null, act
       {c.coverUrl && (
         <div className="community-cover community-cover--card">
           {/* Decorative here: the card's title already names the community. */}
-          <img src={c.coverUrl} alt="" loading="lazy" />
+          <img src={c.coverUrl} alt="" loading="lazy" style={{ objectPosition: `50% ${c.coverPosition}%` }} />
         </div>
       )}
       <h2><Link to={`/communities/${c.slug}`}>{c.name}</Link></h2>

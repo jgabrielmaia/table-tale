@@ -6,6 +6,7 @@ import { COVER_MAX_BYTES, COVER_TYPES } from './cover';
 export interface CommunityCoverFieldProps {
   name: string;
   coverUrl: string | null;
+  coverPosition: number;
   uploading: boolean;
   removing: boolean;
   onUpload: (file: File) => Promise<void>;
@@ -13,7 +14,7 @@ export interface CommunityCoverFieldProps {
 }
 
 /** Owners and admins pick the community's cover photo (Manage tab). The file is sent as soon as it is chosen. */
-export function CommunityCoverField({ name, coverUrl, uploading, removing, onUpload, onRemove }: CommunityCoverFieldProps) {
+export function CommunityCoverField({ name, coverUrl, coverPosition, uploading, removing, onUpload, onRemove }: CommunityCoverFieldProps) {
   const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -36,7 +37,7 @@ export function CommunityCoverField({ name, coverUrl, uploading, removing, onUpl
       <p className="muted">{t('communities.cover.hint')}</p>
       <div className="community-cover-field__row">
         <div className="community-cover community-cover--thumb">
-          {coverUrl ? <img src={coverUrl} alt={t('communities.cover.alt', { name })} /> : <CoverFallback />}
+          {coverUrl ? <img src={coverUrl} alt={t('communities.cover.alt', { name })} style={{ objectPosition: `50% ${coverPosition}%` }} /> : <CoverFallback />}
         </div>
         <div className="field">
           <label htmlFor="community-cover-file">{coverUrl ? t('communities.cover.replace') : t('communities.cover.add')}</label>

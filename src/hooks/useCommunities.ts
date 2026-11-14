@@ -8,6 +8,7 @@ import {
   createCommunity,
   deleteCommunity,
   removeCommunityCover,
+  setCommunityCoverPosition,
   setCommunityCover,
   fetchCommunities,
   fetchCommunityBySlug,
@@ -159,6 +160,7 @@ export function useCommunity(slug: string) {
   const update = useMutation({ mutationFn: (values: CommunityFormValues) => updateCommunity(need().id, values), ...refresh });
   const remove = useMutation({ mutationFn: () => deleteCommunity(need().id), ...refresh });
   const setCover = useMutation({ mutationFn: (file: File) => setCommunityCover({ id: need().id, coverUrl: community.data!.coverUrl }, file), ...refresh });
+  const setCoverPosition = useMutation({ mutationFn: (position: number) => setCommunityCoverPosition(need().id, position), ...refresh });
   const removeCover = useMutation({ mutationFn: () => removeCommunityCover({ id: need().id, coverUrl: community.data!.coverUrl }), ...refresh });
   const setMember = useMutation({
     mutationFn: (v: { membershipId: string; role?: CommunityRole; status?: MembershipStatus }) =>
@@ -178,7 +180,7 @@ export function useCommunity(slug: string) {
 
   const activeOwners = (members.data ?? []).filter((m) => m.role === 'owner' && m.status === 'active').length;
 
-  return { community, membership, members, games, activeOwners, canSeeContent, canSeeShelf, join, leave, update, remove, setCover, removeCover, setMember, kick, transfer, addOwner, removeOwner, addGame, removeGame, setGameNotes, addCopy, setCopyOwner, removeCopy };
+  return { community, membership, members, games, activeOwners, canSeeContent, canSeeShelf, join, leave, update, remove, setCover, setCoverPosition, removeCover, setMember, kick, transfer, addOwner, removeOwner, addGame, removeGame, setGameNotes, addCopy, setCopyOwner, removeCopy };
 }
 
 /** The viewer's personal collection (table `user_games`). */

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PlayerAvatar } from '@/components/identity/PlayerAvatar';
 import { Badge, BrandSymbol, Button, ButtonLink, EmptyState, ErrorState, Icon, LoadingState, Select, Tabs, useToast } from '@/components/ui';
@@ -17,6 +17,8 @@ import { errorMessage } from '@/lib/errors';
 import { truncate } from '@/seo/pages';
 import { usePageSeo } from '@/seo/RouteSeo';
 import { CommunityCoverField } from './CommunityCoverField';
+import { CommunityHero } from './CommunityHero';
+import { useCoverAccent } from './accent';
 import { CommunityGameEditor } from './CommunityGameEditor';
 import { CommunityForm } from './CommunityForm';
 import { FactionBalance } from './FactionBalance';
@@ -43,6 +45,7 @@ export function CommunityPage() {
   const c = useCommunity(slug);
   const [tab, setTab] = useState('members');
   const loaded = c.community.data;
+  const accent = useCoverAccent(loaded?.coverUrl);
   const missing = c.community.isSuccess && !loaded;
   usePageSeo({
     title: loaded ? `${loaded.name} | Table Tale` : missing ? `${t('communities.notFound').replace(/\.$/, '')} | Table Tale` : `${t('communities.title')} | Table Tale`,
@@ -132,6 +135,7 @@ export function CommunityPage() {
                 <CommunityCoverField
                   name={community.name}
                   coverUrl={community.coverUrl}
+                  coverPosition={community.coverPosition}
                   uploading={c.setCover.isPending}
                   removing={c.removeCover.isPending}
                   onUpload={(file) => run(() => c.setCover.mutateAsync(file), t('communities.cover.saved'))}
@@ -161,13 +165,38 @@ export function CommunityPage() {
   );
 
   return (
-    <div className="container section">
+    <div
+      className={accent ? 'community-themed' : undefined}
+      style={accent ? ({ '--community-accent': accent } as CSSProperties) : undefined}
+    >
+    <CommunityHero
+      name={community.name}
+      coverUrl={community.coverUrl}
+      position={community.coverPosition}
+      canEdit={canEditCommunity(m)}
+      saving={c.setCoverPosition.isPending}
+      uploading={c.setCover.isPending}
+      onUpload={async (file) => {
+        try {
+          await c.setCover.mutateAsync(file);
+          notify(t('communities.cover.saved'));
+        } catch (e) {
+          notify(errorMessage(e), { tone: 'error' });
+          throw e;
+        }
+      }}
+      onSavePosition={async (position) => {
+        try {
+          await c.setCoverPosition.mutateAsync(position);
+          notify(t('communities.cover.positionSaved'));
+        } catch (e) {
+          notify(errorMessage(e), { tone: 'error' });
+          throw e;
+        }
+      }}
+    />
+    <div className="container section community-page">
       <p className="eyebrow"><Link to="/communities">{t('communities.title')}</Link></p>
-      <div className="community-cover community-cover--banner community-hero">
-        {community.coverUrl ? <img src={community.coverUrl} alt={t('communities.cover.alt', { name: community.name })} /> : <div className="community-hero__fallback" aria-hidden="true" />}
-        <div className="community-hero__veil" aria-hidden="true" />
-        {canEditCommunity(m) && <Button className="community-hero__edit" size="sm" variant="secondary" icon={<Icon name="edit" />} onClick={() => setTab('manage')}>{t('communities.cover.edit')}</Button>}
-      </div>
       <div className="section-head">
         <div>
           <h1>{community.name}</h1>
@@ -182,6 +211,7 @@ export function CommunityPage() {
         </div>
       </div>
       {body}
+    </div>
     </div>
   );
 }

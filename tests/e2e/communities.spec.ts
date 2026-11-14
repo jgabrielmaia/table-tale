@@ -269,7 +269,7 @@ test.describe('Comunidades', () => {
       await page.goto('communities/table-tale');
       await expect(page.getByRole('tab', { name: 'Gestão' })).toHaveCount(0);
       await page.getByRole('tab', { name: 'Membros' }).click();
-      await expect(page.getByText('Dono da Estante')).toBeVisible();
+      await expect(page.getByRole('link', { name: 'Ver o perfil de Dono da Estante' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Suspender' })).toHaveCount(0);
       await page.getByRole('tab', { name: 'Jogos' }).click();
       await expect(page.getByRole('link', { name: /Hitster|Dixit|Catan/ }).first()).toBeVisible();
@@ -466,6 +466,24 @@ test.describe('Comunidades', () => {
       expect(community().cover_url).toContain(`/community-covers/${community().id}/cover-`);
       await expect(page.getByRole('img', { name: 'Foto de capa de Clube Secreto de Braga' }).first()).toBeVisible();
 
+      // Reposicionar: começa centrada; Escape cancela; as setas mudam a posição e "Guardar posição" grava-a.
+      expect(community().cover_position).toBe(50);
+      await page.getByRole('button', { name: 'Reposicionar' }).click();
+      const slider = page.getByRole('slider', { name: 'Posição vertical da foto de capa' });
+      await expect(slider).toBeFocused();
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('Escape');
+      await expect(slider).toHaveCount(0);
+      await page.getByRole('button', { name: 'Reposicionar' }).click();
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('ArrowDown');
+      await expect(slider).toHaveAttribute('aria-valuenow', '60');
+      await page.getByRole('button', { name: 'Guardar posição' }).click();
+      await expect(page.getByText('Posição da capa guardada.')).toBeVisible();
+      await expect(slider).toHaveCount(0);
+      expect(community().cover_position).toBe(60);
+      await expect(page.locator('.community-hero img')).toHaveCSS('object-position', '50% 60%');
+
       await page.goto('communities');
       await expect(page.locator('.community-card--cover')).toHaveCount(1);
 
@@ -474,6 +492,25 @@ test.describe('Comunidades', () => {
       await page.getByRole('button', { name: 'Remover foto de capa' }).click();
       await expect(page.getByText('Foto de capa removida.')).toBeVisible();
       expect(community().cover_url).toBeNull();
+      expect(community().cover_position).toBe(50);
+    });
+
+    test('"Editar capa" abre logo o seletor de ficheiros e, depois de enviar, deixa reposicionar a foto', async ({ page, backend }) => {
+      const community = () => backend.db.communities.find((c) => c.slug === 'clube-secreto-braga')!;
+      await page.goto('communities/clube-secreto-braga');
+      const chooser = page.waitForEvent('filechooser');
+      await page.getByRole('button', { name: 'Editar capa' }).click();
+      await (await chooser).setFiles({ name: 'capa.png', mimeType: 'image/png', buffer: Buffer.from('fake-png') });
+      await expect(page.getByText('Foto de capa atualizada.')).toBeVisible();
+      expect(community().cover_url).toContain(`/community-covers/${community().id}/cover-`);
+      // Fica logo em modo de reposicionar, ainda na mesma aba.
+      await expect(page.getByRole('tab', { name: 'Membros' })).toHaveAttribute('aria-selected', 'true');
+      const slider = page.getByRole('slider', { name: 'Posição vertical da foto de capa' });
+      await expect(slider).toBeFocused();
+      await page.keyboard.press('ArrowUp');
+      await page.getByRole('button', { name: 'Guardar posição' }).click();
+      await expect(slider).toHaveCount(0);
+      expect(community().cover_position).toBe(45);
     });
   });
 });
