@@ -8,7 +8,7 @@ import { BggCredit } from '@/components/bgg/BggCredit';
 import { GameFilters } from '@/components/games/GameFilters';
 import { GameGrid } from '@/components/games/GameGrid';
 import { EMPTY_FILTERS, filterGames, hasActiveFilters, type GameFilterValues } from '@/features/games/filters';
-import { sortShelfGames, type GamesSort } from '@/features/games/shelves';
+import { activeSort, availableSorts, SORT_LABELS, sortShelfGames, type GamesSort } from '@/features/games/shelves';
 import { useGameCardActions } from '@/hooks/useGameCardActions';
 import { useGames } from '@/hooks/useGames';
 import { getLocale, useI18n } from '@/i18n';
@@ -332,6 +332,7 @@ function GamesPanel({ c, run }: { c: CommunityState; run: Run }) {
   const [pick, setPick] = useState('');
   const [filters, setFilters] = useState<GameFilterValues>(EMPTY_FILTERS);
   const [sort, setSort] = useState<GamesSort>('title');
+  const sorts = availableSorts({ bgg: features.bgg, nearest: false });
   const [editing, setEditing] = useState<string | null>(null);
   const [shelfOwner, setShelfOwner] = useState<string>('all');
 
@@ -353,7 +354,7 @@ function GamesPanel({ c, run }: { c: CommunityState; run: Run }) {
   const games = useMemo(() => catalogue.games.filter((g) => byGame.has(g.id)), [catalogue.games, byGame]);
   const categories = useMemo(() => uniqueSorted(games.flatMap((g) => g.categories)), [games]);
   const mechanics = useMemo(() => uniqueSorted(games.flatMap((g) => g.mechanics)), [games]);
-  const visible = useMemo(() => sortShelfGames(filterGames(games, filters), sort, getLocale()), [games, filters, sort]);
+  const visible = useMemo(() => sortShelfGames(filterGames(games, filters), activeSort(sort, sorts), getLocale()), [games, filters, sort, sorts]);
 
   if (!c.canSeeShelf) return <EmptyState compact title={t('communities.shelfMembersOnly')} />;
   if (c.games.isLoading || catalogue.isLoading) return <LoadingState variant="cards" label={t('games.loading')} />;
@@ -407,12 +408,9 @@ function GamesPanel({ c, run }: { c: CommunityState; run: Run }) {
             <p className="results-count" aria-live="polite">{tn('games.found', visible.length)}</p>
             <Select
               label={t('games.sort')}
-              value={sort}
+              value={activeSort(sort, sorts)}
               onChange={(e) => setSort(e.target.value as GamesSort)}
-              options={[
-                { value: 'title', label: t('games.sortTitle') },
-                { value: 'bgg', label: t('games.sortBgg') },
-              ]}
+              options={sorts.map((value) => ({ value, label: t(SORT_LABELS[value]) }))}
             />
           </div>
           <GameFilters values={filters} categories={categories} mechanics={mechanics} onChange={setFilters} onReset={reset} showPersonalFilters={Boolean(user)} />

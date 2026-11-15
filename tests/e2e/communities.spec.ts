@@ -52,6 +52,13 @@ test.describe('Comunidades', () => {
     expect(backend.calls(/\/rest\/v1\/communities\?.*member_count/).length).toBeGreaterThan(0);
   });
 
+  test('a ordenação por nota do BGG na estante da comunidade só aparece com o BGG ligado', async ({ page }) => {
+    await page.goto('communities/tabuleiros-do-porto');
+    await page.getByRole('tab', { name: 'Jogos' }).click();
+    const bggOn = (process.env.VITE_FEATURE_BGG ?? 'true').toLowerCase() === 'true';
+    await expect(page.getByRole('tabpanel').getByLabel('Ordenar por').locator('option')).toHaveText(bggOn ? ['Nome', 'Nota do BGG'] : ['Nome']);
+  });
+
   test('o separador Jogos mostra a estante da comunidade com exemplares e ligação ao jogo', async ({ page }) => {
     await page.goto('communities/tabuleiros-do-porto');
     await page.getByRole('tab', { name: 'Jogos' }).click();

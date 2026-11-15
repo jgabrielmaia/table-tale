@@ -12,7 +12,8 @@ import { useViewerLocation } from '@/hooks/useViewerLocation';
 import { getLocale, useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { EMPTY_FILTERS, filterGames, hasActiveFilters, type GameFilterValues } from './filters';
-import { RADIUS_OPTIONS_KM, shelfCommunities, sortShelfGames, type GamesSort } from './shelves';
+import { features } from '@/lib/env';
+import { activeSort, availableSorts, RADIUS_OPTIONS_KM, SORT_LABELS, shelfCommunities, sortShelfGames, type GamesSort } from './shelves';
 
 const uniqueSorted = (values: string[]) => [...new Set(values)].sort((a, b) => a.localeCompare(b, getLocale()));
 
@@ -25,6 +26,7 @@ export function GamesPage() {
   const [filters, setFilters] = useState<GameFilterValues>({ ...EMPTY_FILTERS, query: params.get('q') ?? '' });
   const [communityId, setCommunityId] = useState('');
   const [sort, setSort] = useState<GamesSort>('title');
+  const sorts = availableSorts({ bgg: features.bgg, nearest: true });
 
   const location = useViewerLocation();
   const { games, cities, city, origin, hasMemberships, isLoading, isError, error, refetch } = useShelfGames(location);
@@ -34,8 +36,8 @@ export function GamesPage() {
   const inView = useMemo(() => shelfCommunities(games), [games]);
   const visible = useMemo(() => {
     const filtered = filterGames(games, filters).filter((g) => !communityId || g.shelves.some((s) => s.communityId === communityId));
-    return sortShelfGames(filtered, sort, getLocale());
-  }, [games, filters, communityId, sort]);
+    return sortShelfGames(filtered, activeSort(sort, sorts), getLocale());
+  }, [games, filters, communityId, sort, sorts]);
 
   const changeFilters = (next: GameFilterValues) => {
     setFilters(next);
@@ -111,13 +113,9 @@ export function GamesPage() {
         />
         <Select
           label={t('games.sort')}
-          value={sort}
+          value={activeSort(sort, sorts)}
           onChange={(e) => setSort(e.target.value as GamesSort)}
-          options={[
-            { value: 'title', label: t('games.sortTitle') },
-            { value: 'nearest', label: t('games.sortNearest') },
-            { value: 'bgg', label: t('games.sortBgg') },
-          ]}
+          options={sorts.map((value) => ({ value, label: t(SORT_LABELS[value]) }))}
         />
       </section>
 

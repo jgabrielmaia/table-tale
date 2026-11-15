@@ -119,6 +119,20 @@ function compareShelves(a: GameShelf, b: GameShelf): number {
 
 export type GamesSort = 'title' | 'nearest' | 'bgg';
 
+/**
+ * The sorts a list offers, in menu order. "BGG rating" is a BoardGameGeek feature, so it is only there while the BGG
+ * flag is on; "nearest" only on lists whose games carry a distance.
+ */
+export function availableSorts({ bgg, nearest }: { bgg: boolean; nearest: boolean }): GamesSort[] {
+  return ['title', ...(nearest ? (['nearest'] as const) : []), ...(bgg ? (['bgg'] as const) : [])];
+}
+
+/** The menu text of each sort. */
+export const SORT_LABELS = { title: 'games.sortTitle', nearest: 'games.sortNearest', bgg: 'games.sortBgg' } as const;
+
+/** The sort to apply: the chosen one, or by title when it is not on offer (e.g. "bgg" once the flag is off). */
+export const activeSort = (sort: GamesSort, available: GamesSort[]): GamesSort => (available.includes(sort) ? sort : 'title');
+
 /** Sorts a copy of the list. Unknown values (no distance, no BGG rating) always go last; ties fall back to the title. */
 /** Works on any game list; "nearest" only applies to games that carry a distance (shelf games). */
 export function sortShelfGames<T extends LibraryGame & { nearestKm?: number | null }>(games: T[], sort: GamesSort, locale?: string): T[] {
