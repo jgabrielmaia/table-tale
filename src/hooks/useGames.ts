@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchGameStates, fetchGames, saveGameState } from '@/features/games/api';
+import { fetchGameStates, fetchGames, saveGameState, updateGameCategories } from '@/features/games/api';
 import { progressKeys, queryKeys } from '@/lib/queryKeys';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { t } from '@/i18n';
@@ -35,6 +35,15 @@ export function useGames() {
     error: catalogue.error ?? states.error,
     refetch: () => Promise.all([catalogue.refetch(), states.refetch()]),
   };
+}
+
+/** Saves a game's categories (owner only) and refreshes every game list and page. */
+export function useUpdateGameCategories() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { gameId: string; categories: string[] }) => updateGameCategories(vars.gameId, vars.categories),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.games }),
+  });
 }
 
 /** Optimistically updates a game's status and/or favourite flag. */

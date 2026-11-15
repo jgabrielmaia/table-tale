@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { LibraryGame } from '@/types/domain';
 import { cityOptions, distanceKm, groupShelves, shelfCommunities, sortShelfGames, type ShelfCommunity, type ShelfEntry, type ShelfScope } from './shelves';
 
-const BGG_NONE = { yearPublished: null, minAge: null, bggId: null, rating: null, ratingCount: null, rank: null, weight: null, bgg: null };
+const BGG_NONE = { ownerId: null, yearPublished: null, minAge: null, bggId: null, rating: null, ratingCount: null, rank: null, weight: null, bgg: null };
 const game = (id: string, title: string, rating: number | null = null): LibraryGame => ({
   id, title, slug: id, description: '', coverUrl: null, ...BGG_NONE, rating,
   categories: [], mechanics: [], minPlayers: 2, maxPlayers: 4, durationMinutes: 30, owners: [],

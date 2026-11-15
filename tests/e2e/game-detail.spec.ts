@@ -2,6 +2,8 @@ import { AppShell } from '../pages/AppShell';
 import { GamePage } from '../pages/GamePage';
 import { expect, test, PLAYER } from '../fixtures';
 
+const EDIT = 'Editar categorias';
+
 test.describe('Detalhe do jogo', () => {
   test.describe('visitante', () => {
     test('mostra a ficha completa do jogo @smoke', async ({ page }) => {
@@ -49,6 +51,101 @@ test.describe('Detalhe do jogo', () => {
       backend.fail(/GET \/rest\/v1\/games/, { status: 500, body: { code: 'XX000', message: 'falha simulada' } });
       await new GamePage(page).goto('dixit');
       await expect(page.getByText(/falha simulada/)).toBeVisible({ timeout: 15_000 });
+    });
+  });
+
+  test.describe('categorias do jogo', () => {
+    const dixit = (backend: { db: { games: Array<Record<string, unknown>> } }) => backend.db.games.find((g) => g.slug === 'dixit')!;
+
+    test('quem não adicionou o jogo não pode editar as categorias', async ({ page, signIn }) => {
+      const game = new GamePage(page);
+      await game.goto('dixit');
+      await expect(page.getByText('Card Game · Party Game')).toBeVisible();
+      await expect(page.getByRole('button', { name: EDIT })).toHaveCount(0);
+      await signIn();
+      await game.goto('dixit');
+      await expect(page.getByText('Card Game · Party Game')).toBeVisible();
+      await expect(page.getByRole('button', { name: EDIT })).toHaveCount(0);
+    });
+
+    test('o dono acrescenta e remove categorias, tantas quantas quiser, e a ficha atualiza @responsive', async ({ page, backend, signIn }) => {
+      dixit(backend).owner_id = PLAYER.id;
+      await signIn();
+      const game = new GamePage(page);
+      await game.goto('dixit');
+      await page.getByRole('button', { name: EDIT }).click();
+      const dialog = page.getByRole('dialog', { name: EDIT });
+      const save = dialog.getByRole('button', { name: 'Guardar alterações' });
+      await expect(dialog.getByRole('listitem')).toHaveText(['Card Game', 'Party Game']);
+      await expect(save).toBeDisabled();
+
+      await dialog.getByRole('button', { name: 'Remover Card Game' }).click();
+      await dialog.getByLabel('Nova categoria').fill('  Festa   familiar ');
+      await dialog.getByLabel('Nova categoria').press('Enter');
+      await dialog.getByLabel('Nova categoria').fill('Cooperativo');
+      await dialog.getByRole('button', { name: 'Adicionar' }).click();
+      await expect(dialog.getByRole('listitem')).toHaveText(['Party Game', 'Festa familiar', 'Cooperativo']);
+      await expect(dialog.getByText('3 de 30')).toBeVisible();
+
+      await save.click();
+      await expect(dialog).toBeHidden();
+      await expect(new AppShell(page).toast('Categorias atualizadas.')).toBeVisible();
+      await expect(page.getByText('Party Game · Festa familiar · Cooperativo')).toBeVisible();
+      expect(dixit(backend).categories).toEqual(['Party Game', 'Festa familiar', 'Cooperativo']);
+      expect(backend.calls(/PATCH \/rest\/v1\/games/)).toHaveLength(1);
+
+      // Fica gravado: depois de recarregar a ficha continua igual.
+      await page.reload();
+      await expect(page.getByText('Party Game · Festa familiar · Cooperativo')).toBeVisible();
+    });
+
+    test('recusa categorias em branco, repetidas ou demasiado longas antes de guardar', async ({ page, backend, signIn }) => {
+      dixit(backend).owner_id = PLAYER.id;
+      await signIn();
+      await new GamePage(page).goto('dixit');
+      await page.getByRole('button', { name: EDIT }).click();
+      const dialog = page.getByRole('dialog', { name: EDIT });
+      const field = dialog.getByLabel('Nova categoria');
+
+      await dialog.getByRole('button', { name: 'Adicionar' }).click();
+      await expect(dialog.getByText('Escreve primeiro uma categoria.')).toBeVisible();
+      await field.fill('card  GAME');
+      await field.press('Enter');
+      await expect(dialog.getByText('Esta categoria já está no jogo.')).toBeVisible();
+      await field.fill('x'.repeat(61));
+      await field.press('Enter');
+      await expect(dialog.getByText('Uma categoria pode ter até 60 caracteres.')).toBeVisible();
+      await expect(dialog.getByRole('listitem')).toHaveText(['Card Game', 'Party Game']);
+      await expect(dialog.getByRole('button', { name: 'Guardar alterações' })).toBeDisabled();
+      expect(backend.calls(/PATCH/)).toHaveLength(0);
+    });
+
+    test('se o jogo deixou de ser seu, o servidor recusa e o editor continua aberto', async ({ page, backend, signIn }) => {
+      dixit(backend).owner_id = PLAYER.id;
+      await signIn();
+      await new GamePage(page).goto('dixit');
+      await page.getByRole('button', { name: EDIT }).click();
+      const dialog = page.getByRole('dialog', { name: EDIT });
+      await dialog.getByLabel('Nova categoria').fill('Festa');
+      await dialog.getByLabel('Nova categoria').press('Enter');
+      dixit(backend).owner_id = null;
+      await dialog.getByRole('button', { name: 'Guardar alterações' }).click();
+      await expect(new AppShell(page).toast('Só quem adicionou este jogo pode mudar as categorias.')).toBeVisible();
+      await expect(dialog).toBeVisible();
+      expect(dixit(backend).categories).toEqual(['Card Game', 'Party Game']);
+    });
+
+    test('avisa quando o servidor falha ao guardar', async ({ page, backend, signIn }) => {
+      dixit(backend).owner_id = PLAYER.id;
+      await signIn();
+      backend.fail(/PATCH \/rest\/v1\/games/, { status: 500, body: { code: 'XX000', message: 'falha simulada' } });
+      await new GamePage(page).goto('dixit');
+      await page.getByRole('button', { name: EDIT }).click();
+      const dialog = page.getByRole('dialog', { name: EDIT });
+      await dialog.getByRole('button', { name: 'Remover Party Game' }).click();
+      await dialog.getByRole('button', { name: 'Guardar alterações' }).click();
+      await expect(new AppShell(page).toast(/Não foi possível guardar as categorias/)).toBeVisible();
+      await expect(dialog).toBeVisible();
     });
   });
 

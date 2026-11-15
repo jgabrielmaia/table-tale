@@ -72,6 +72,8 @@ export interface Game {
   /** BoardGameGeek categories and mechanics, shown as BGG returns them. */
   categories: string[];
   mechanics: string[];
+  /** Who added the game: the only one who can edit its categories. */
+  ownerId: string | null;
   yearPublished: number | null;
   minAge: number | null;
   bggId: number | null;

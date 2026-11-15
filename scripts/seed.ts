@@ -73,6 +73,8 @@ async function main() {
     | null;
   if (owner) {
     check('claim_owner', await db.rpc('claim_owner', { p_user: owner.id }));
+    // The collection owner owns the catalogue games nobody owns yet, so they can edit their categories.
+    check('game owner', await db.from('games').update({ owner_id: owner.id }).is('owner_id', null).in('slug', data.games.map((g) => g.slug)));
     console.log('✓ Jogos associados ao perfil do dono');
   } else {
     console.log('… O dono ainda não fez login; os jogos serão associados automaticamente no primeiro login.');

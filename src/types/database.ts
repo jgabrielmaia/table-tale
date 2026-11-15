@@ -67,6 +67,8 @@ export interface GameRow {
   bgg_rating_count: number | null;
   bgg_rank: number | null;
   bgg_weight: number | null;
+  /** The person who added the game; only they may edit its categories. Null once their account is gone. */
+  owner_id: string | null;
   created_at: string;
   updated_at: string;
 }
