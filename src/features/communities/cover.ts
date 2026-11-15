@@ -1,6 +1,12 @@
+import type { ShrinkTarget } from '@/lib/image';
+
 export const COVER_BUCKET = 'community-covers';
 export const COVER_TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
-export const COVER_MAX_BYTES = 2 * 1024 * 1024;
+/**
+ * Covers are shrunk in the browser to fit this before upload: a full-width banner needs ~1500 px, doubled for
+ * high-DPI screens. maxBytes is the `community-covers` bucket limit (2 MB).
+ */
+export const COVER_TARGET: ShrinkTarget = { maxWidth: 3000, maxHeight: 3000, maxBytes: 2 * 1024 * 1024 };
 
 /**
  * The storage path of a cover we uploaded for this community (`<community id>/cover-....ext`), or null for any other URL,

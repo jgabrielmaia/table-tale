@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Avatar, Button, Input, Modal, Textarea } from '@/components/ui';
 import { t } from '@/i18n';
-import { AVATAR_MAX_BYTES } from './api';
+import { shrinkErrorMessage, shrinkImage } from '@/lib/image';
+import { AVATAR_TARGET } from './api';
 import { profileSchema, type ProfileFormValues } from './schemas';
 import type { Profile } from '@/types/domain';
 
@@ -24,6 +25,7 @@ export function ProfileEditModal({ open, profile, saving, providerAvatar, onClos
   const [useProvider, setUseProvider] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ProfileFormValues>({
@@ -41,14 +43,22 @@ export function ProfileEditModal({ open, profile, saving, providerAvatar, onClos
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
-  const onFile = (file: File | undefined) => {
+  /** Any size of photo is accepted: it is shrunk in the browser to fit AVATAR_TARGET, and the preview shows the result. */
+  const onFile = async (file: File | undefined) => {
     setFileError(null);
     if (!file) return;
     if (!ACCEPTED.includes(file.type)) return setFileError(t('edit.fileType'));
-    if (file.size > AVATAR_MAX_BYTES) return setFileError(t('profile.err.size'));
-    setAvatarFile(file);
-    setUseProvider(false);
-    setPreview(URL.createObjectURL(file));
+    setPreparing(true);
+    try {
+      const photo = await shrinkImage(file, AVATAR_TARGET);
+      setAvatarFile(photo);
+      setUseProvider(false);
+      setPreview(URL.createObjectURL(photo));
+    } catch (e) {
+      setFileError(shrinkErrorMessage(e));
+    } finally {
+      setPreparing(false);
+    }
   };
 
   const submit = handleSubmit(async (values) => {
@@ -68,7 +78,7 @@ export function ProfileEditModal({ open, profile, saving, providerAvatar, onClos
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button variant="primary" type="submit" form="profile-form" loading={saving} loadingText={t('edit.saving')}>{t('edit.save')}</Button>
+          <Button variant="primary" type="submit" form="profile-form" loading={saving} loadingText={t('edit.saving')} disabled={preparing}>{t('edit.save')}</Button>
         </>
       }
     >
@@ -82,9 +92,11 @@ export function ProfileEditModal({ open, profile, saving, providerAvatar, onClos
               id="avatar-file"
               type="file"
               accept={ACCEPTED.join(',')}
+              disabled={preparing}
               aria-describedby={fileError ? 'avatar-error' : undefined}
-              onChange={(e) => onFile(e.target.files?.[0])}
+              onChange={(e) => void onFile(e.target.files?.[0])}
             />
+            {preparing && <p className="muted" role="status">{t('image.preparing')}</p>}
             {fileError && <p id="avatar-error" className="field-error" role="alert">{fileError}</p>}
             {providerAvatar && providerAvatar !== profile.avatarUrl && !avatarFile && !useProvider && (
               <Button variant="ghost" size="sm" onClick={() => setUseProvider(true)}>{t('edit.useProvider')}</Button>

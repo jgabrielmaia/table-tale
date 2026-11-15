@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Button, Icon } from '@/components/ui';
 import { useI18n } from '@/i18n';
-import { COVER_MAX_BYTES, COVER_TYPES } from './cover';
+import { COVER_TYPES } from './cover';
 
 export interface CommunityCoverFieldProps {
   name: string;
@@ -13,7 +13,10 @@ export interface CommunityCoverFieldProps {
   onRemove: () => Promise<void>;
 }
 
-/** Owners and admins pick the community's cover photo (Manage tab). The file is sent as soon as it is chosen. */
+/**
+ * Owners and admins pick the community's cover photo (Manage tab). The file is sent as soon as it is chosen; any size
+ * is fine, since setCommunityCover shrinks it first.
+ */
 export function CommunityCoverField({ name, coverUrl, coverPosition, uploading, removing, onUpload, onRemove }: CommunityCoverFieldProps) {
   const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +26,6 @@ export function CommunityCoverField({ name, coverUrl, coverPosition, uploading, 
     setError(null);
     if (!file) return;
     if (!COVER_TYPES[file.type]) return setError(t('edit.fileType'));
-    if (file.size > COVER_MAX_BYTES) return setError(t('communities.cover.errSize'));
     try {
       await onUpload(file);
     } finally {
