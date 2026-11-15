@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LibraryGame } from '@/types/domain';
-import { cityOptions, distanceKm, groupShelves, shelfCommunities, sortShelfGames, type ShelfCommunity, type ShelfEntry, type ShelfScope } from './shelves';
+import { activeSort, availableSorts, cityOptions, distanceKm, groupShelves, shelfCommunities, sortShelfGames, type ShelfCommunity, type ShelfEntry, type ShelfScope } from './shelves';
 
 const BGG_NONE = { yearPublished: null, minAge: null, bggId: null, rating: null, ratingCount: null, rank: null, weight: null, bgg: null };
 const game = (id: string, title: string, rating: number | null = null): LibraryGame => ({
@@ -81,6 +81,22 @@ describe('sortShelfGames', () => {
 
   it('lists the communities present on the cards', () => {
     expect(shelfCommunities(all).map((c) => c.id)).toEqual(['braga', 'gaia', 'lisbon', 'porto']);
+  });
+});
+
+describe('availableSorts', () => {
+  it('offers BGG rating only while the BGG flag is on, and nearest only where games have a distance', () => {
+    expect(availableSorts({ bgg: true, nearest: true })).toEqual(['title', 'nearest', 'bgg']);
+    expect(availableSorts({ bgg: false, nearest: true })).toEqual(['title', 'nearest']);
+    expect(availableSorts({ bgg: true, nearest: false })).toEqual(['title', 'bgg']);
+    expect(availableSorts({ bgg: false, nearest: false })).toEqual(['title']);
+  });
+
+  it('falls back to the title when the chosen sort is not on offer', () => {
+    const noBgg = availableSorts({ bgg: false, nearest: true });
+    expect(activeSort('bgg', noBgg)).toBe('title');
+    expect(activeSort('nearest', noBgg)).toBe('nearest');
+    expect(activeSort('bgg', availableSorts({ bgg: true, nearest: true }))).toBe('bgg');
   });
 });
 

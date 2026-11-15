@@ -2,6 +2,9 @@ import { GamesPage } from '../pages/GamesPage';
 import { AppShell } from '../pages/AppShell';
 import { expect, test, PLAYER } from '../fixtures';
 
+// The e2e build has the BGG flag on unless it is run with VITE_FEATURE_BGG=false (see playwright.config.ts).
+const BGG_ON = (process.env.VITE_FEATURE_BGG ?? 'true').toLowerCase() === 'true';
+
 const ALL_TITLES = ['Baralho Clássico', 'Cores com Dicas', 'Coup', 'Dixit', 'Duelo por Cardia', 'Hitster', 'Tranquility', 'Uno', 'Vaalbara'];
 /** What the Porto shelf holds (see tests/data/seed.ts). */
 const PORTO_TITLES = ['Coup', 'Dixit', 'Vaalbara'];
@@ -9,6 +12,12 @@ const LISBOA = '00000000-0000-4000-a000-000000000001';
 const BRAGA = '00000000-0000-4000-a000-000000000003';
 
 test.describe('Jogos', () => {
+  test('a ordenação por nota do BGG só aparece com o BGG ligado @responsive', async ({ page }) => {
+    const games = new GamesPage(page);
+    await games.goto();
+    await expect(games.sort().locator('option')).toHaveText(BGG_ON ? ['Nome', 'Mais perto', 'Nota do BGG'] : ['Nome', 'Mais perto']);
+  });
+
   test.describe('visitante em Lisboa', () => {
     // Table Tale Lisboa (~3 km) holds the whole catalogue; Porto and Braga are far outside the default 20 km.
     test.beforeEach(async ({ locateAt }) => {
