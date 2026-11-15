@@ -21,7 +21,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed": "tsx scripts/seed.ts",
-    "seed:communities": "tsx scripts/seed-communities.ts"
+    "seed:communities": "tsx scripts/seed-communities.ts",
+    "db:start": "tsx scripts/local-db.ts start",
+    "db:reset": "tsx scripts/local-db.ts reset",
+    "db:stop": "tsx scripts/local-db.ts stop"
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.1",

@@ -38,3 +38,6 @@ supabase/.temp/
 /blob-report/
 /playwright/.cache/
 /dist-e2e/
+
+# Supabase CLI local state
+supabase/.branches/
