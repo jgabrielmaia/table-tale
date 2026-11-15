@@ -1,5 +1,6 @@
 import { expect, test, PLAYER } from '../fixtures';
 import { OWNER } from '../data/seed';
+import { makePng } from '../utils/images';
 import { GamesPage } from '../pages/GamesPage';
 
 const card = (page: import('@playwright/test').Page, name: string) =>
@@ -457,13 +458,21 @@ test.describe('Comunidades', () => {
       await page.getByRole('tab', { name: 'Gestão' }).click();
       await expect(page.getByRole('heading', { name: 'Foto de capa' })).toBeVisible();
 
-      await page.getByLabel('Adicionar foto de capa').setInputFiles({ name: 'grande.png', mimeType: 'image/png', buffer: Buffer.alloc(2 * 1024 * 1024 + 1) });
-      await expect(page.getByText('A imagem não pode exceder 2 MB.')).toBeVisible();
+      await expect(page.getByText(/MB/)).toHaveCount(0);
+      await page.getByLabel('Adicionar foto de capa').setInputFiles({ name: 'avariada.png', mimeType: 'image/png', buffer: Buffer.from('fake-png') });
+      await expect(page.getByText('Não foi possível ler esta imagem. Experimenta outra foto.')).toBeVisible();
+      expect(backend.uploads).toHaveLength(0);
 
-      await page.getByLabel('Adicionar foto de capa').setInputFiles({ name: 'capa.png', mimeType: 'image/png', buffer: Buffer.from('fake-png') });
+      // A photo straight off a phone, well over the 2 MB the bucket takes: shrunk to 3000 px wide before it is sent.
+      const photo = makePng(3200, 800, { noise: true });
+      expect(photo.length).toBeGreaterThan(2 * 1024 * 1024);
+      await page.getByLabel('Adicionar foto de capa').setInputFiles({ name: 'capa.png', mimeType: 'image/png', buffer: photo });
       await expect(page.getByText('Foto de capa atualizada.')).toBeVisible();
       const community = () => backend.db.communities.find((c) => c.slug === 'clube-secreto-braga')!;
-      expect(community().cover_url).toContain(`/community-covers/${community().id}/cover-`);
+      expect(community().cover_url).toMatch(new RegExp(`/community-covers/${community().id}/cover-\\d+\\.webp$`));
+      expect(backend.uploads).toHaveLength(1);
+      expect(backend.uploads[0]).toMatchObject({ type: 'image/webp', width: 3000, height: 750 });
+      expect(backend.uploads[0]!.bytes).toBeLessThanOrEqual(2 * 1024 * 1024);
       await expect(page.getByRole('img', { name: 'Foto de capa de Clube Secreto de Braga' }).first()).toBeVisible();
 
       // Reposicionar: começa centrada; Escape cancela; as setas mudam a posição e "Guardar posição" grava-a.
@@ -500,7 +509,7 @@ test.describe('Comunidades', () => {
       await page.goto('communities/clube-secreto-braga');
       const chooser = page.waitForEvent('filechooser');
       await page.getByRole('button', { name: 'Editar capa' }).click();
-      await (await chooser).setFiles({ name: 'capa.png', mimeType: 'image/png', buffer: Buffer.from('fake-png') });
+      await (await chooser).setFiles({ name: 'capa.png', mimeType: 'image/png', buffer: makePng(1600, 400) });
       await expect(page.getByText('Foto de capa atualizada.')).toBeVisible();
       expect(community().cover_url).toContain(`/community-covers/${community().id}/cover-`);
       // Fica logo em modo de reposicionar, ainda na mesma aba.

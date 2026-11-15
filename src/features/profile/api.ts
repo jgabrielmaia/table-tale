@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { AppError, unwrap } from '@/lib/errors';
+import type { ShrinkTarget } from '@/lib/image';
 import type { AchievementRow, ProfileRow, ProfileStatsRow, UserAchievementRow } from '@/types/database';
 import type { Achievement, Profile, ProfileStats } from '@/types/domain';
 import { t } from '@/i18n';
@@ -43,12 +44,17 @@ export async function updateProfile(userId: string, patch: ProfileUpdate): Promi
 }
 
 const AVATAR_TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
-export const AVATAR_MAX_BYTES = 1024 * 1024;
+/**
+ * Profile pictures are shrunk in the browser to fit this before upload: shown at most ~128 px, so 512 px is plenty
+ * even on high-DPI screens. maxBytes is the `avatars` bucket limit (1 MB).
+ */
+export const AVATAR_TARGET: ShrinkTarget = { maxWidth: 512, maxHeight: 512, maxBytes: 1024 * 1024 };
 
 export async function uploadAvatar(userId: string, file: File): Promise<string> {
   const ext = AVATAR_TYPES[file.type];
   if (!ext) throw new AppError(t('profile.err.format'));
-  if (file.size > AVATAR_MAX_BYTES) throw new AppError(t('profile.err.size'));
+  // The profile form shrinks photos before this; the bucket would refuse anything bigger anyway.
+  if (file.size > AVATAR_TARGET.maxBytes) throw new AppError(t('image.err.tooLarge'));
   const path = `${userId}/avatar-${Date.now()}.${ext}`;
   unwrap(await supabase.storage.from('avatars').upload(path, file, { contentType: file.type, upsert: false }), t('profile.err.upload'));
   return supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;

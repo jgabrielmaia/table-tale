@@ -1,9 +1,10 @@
 import { AppShell } from '../pages/AppShell';
 import { ProfilePage } from '../pages/ProfilePage';
 import { AVATAR_URL, AUTH_STORAGE_KEY } from '../utils/constants';
+import { makePng } from '../utils/images';
 import { expect, test, PLAYER } from '../fixtures';
 
-const png = (bytes = 70) => Buffer.alloc(bytes, 1);
+const png = () => makePng(64, 64);
 
 test.describe('Perfil', () => {
   test.beforeEach(async ({ signIn }) => {
@@ -201,9 +202,28 @@ test.describe('Perfil', () => {
       await expect(profile.dialog()).toBeHidden();
       expect(backend.calls(/POST \/storage\/v1\/object\/avatars\//)).toHaveLength(1);
       await expect.poll(() => backend.profile().avatar_url).toContain(`/storage/v1/object/public/avatars/${PLAYER.id}/avatar-`);
+      // A small picture is sent as it is.
+      expect(backend.uploads[0]).toMatchObject({ type: 'image/png', width: 64, height: 64 });
     });
 
-    test('rejeita formatos e tamanhos de avatar inválidos antes de enviar', async ({ page, backend }) => {
+    test('aceita uma foto grande e reduz-a antes de enviar @responsive', async ({ page, backend }) => {
+      const profile = new ProfilePage(page);
+      await profile.goto();
+      await profile.edit().click();
+      await expect(profile.dialog()).not.toContainText('MB');
+      const photo = makePng(1200, 900, { noise: true });
+      expect(photo.length).toBeGreaterThan(1024 * 1024);
+
+      await profile.avatarField().setInputFiles({ name: 'telemovel.png', mimeType: 'image/png', buffer: photo });
+      await profile.save().click();
+      await expect(profile.dialog()).toBeHidden();
+      const [upload] = backend.uploads;
+      expect(upload).toMatchObject({ type: 'image/webp', width: 512, height: 384 });
+      expect(upload!.path).toMatch(new RegExp(`^avatars/${PLAYER.id}/avatar-\\d+\\.webp$`));
+      expect(upload!.bytes).toBeLessThanOrEqual(1024 * 1024);
+    });
+
+    test('rejeita formatos inválidos e imagens que não se conseguem ler antes de enviar', async ({ page, backend }) => {
       const profile = new ProfilePage(page);
       await profile.goto();
       await profile.edit().click();
@@ -211,8 +231,8 @@ test.describe('Perfil', () => {
       await profile.avatarField().setInputFiles({ name: 'doc.txt', mimeType: 'text/plain', buffer: Buffer.from('não sou imagem') });
       await expect(profile.dialog().getByRole('alert')).toHaveText('Usa uma imagem PNG, JPEG ou WebP.');
 
-      await profile.avatarField().setInputFiles({ name: 'grande.png', mimeType: 'image/png', buffer: png(1024 * 1024 + 1) });
-      await expect(profile.dialog().getByRole('alert')).toHaveText('A imagem não pode exceder 1 MB.');
+      await profile.avatarField().setInputFiles({ name: 'avariada.png', mimeType: 'image/png', buffer: Buffer.alloc(70, 1) });
+      await expect(profile.dialog().getByRole('alert')).toHaveText('Não foi possível ler esta imagem. Experimenta outra foto.');
       expect(backend.calls(/\/storage\//)).toHaveLength(0);
     });
 

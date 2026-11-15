@@ -43,6 +43,33 @@ interface Result {
   body?: unknown;
 }
 
+/** A file the app sent to Storage: its object path, the type and size of the file part, and its pixel size when known. */
+export interface Upload {
+  path: string;
+  type: string | null;
+  bytes: number;
+  width: number | null;
+  height: number | null;
+}
+
+/** Reads the file part out of a storage-js multipart upload, and the pixel size of a PNG or WebP. */
+function parseUpload(path: string, body: Buffer | null): Upload {
+  const text = body?.toString('latin1') ?? '';
+  const header = /Content-Type: (image\/[\w+-]+)\r\n\r\n/i.exec(text);
+  const start = header ? header.index + header[0].length : 0;
+  const end = header ? text.indexOf('\r\n--', start) : -1;
+  const file = body && header && end > start ? body.subarray(start, end) : Buffer.alloc(0);
+  let size: [number, number] | null = null;
+  if (file.subarray(1, 4).toString('latin1') === 'PNG') size = [file.readUInt32BE(16), file.readUInt32BE(20)];
+  if (file.subarray(0, 4).toString('latin1') === 'RIFF') {
+    const kind = file.subarray(12, 16).toString('latin1');
+    if (kind === 'VP8 ') size = [file.readUInt16LE(26) & 0x3fff, file.readUInt16LE(28) & 0x3fff];
+    if (kind === 'VP8X') size = [file.readUIntLE(24, 3) + 1, file.readUIntLE(27, 3) + 1];
+    if (kind === 'VP8L') { const b = file.readUInt32LE(21); size = [(b & 0x3fff) + 1, ((b >> 14) & 0x3fff) + 1]; }
+  }
+  return { path, type: header?.[1] ?? null, bytes: file.length, width: size?.[0] ?? null, height: size?.[1] ?? null };
+}
+
 /** The same recorded-shape XML the parser unit tests use, so the fake function runs the real parser and mapping. */
 const BGG_ITEMS = parseThings(readFileSync(resolve(process.cwd(), 'supabase/functions/_shared/fixtures/thing.xml'), 'utf8'));
 
@@ -57,6 +84,8 @@ export class FakeBackend {
   db: Db = baseDb();
   users: FakeUser[] = [{ id: PLAYER.id, email: PLAYER.email, providers: ['email'] }];
   requests: RecordedRequest[] = [];
+  /** Files uploaded to Storage, in order. */
+  uploads: Upload[] = [];
   otpRequests: string[] = [];
   /** Providers reported as enabled by /auth/v1/settings. */
   providers: Record<string, boolean> = { google: true, github: true };
@@ -183,6 +212,7 @@ export class FakeBackend {
     if (url.pathname === '/functions/v1/city-search') return this.json(route, this.citySearch(body, uid));
     if (url.pathname.startsWith('/auth/v1/')) return this.auth(route, req.method(), url, body, uid);
     if (url.pathname.startsWith('/storage/v1/')) {
+      if (req.method() === 'POST') this.uploads.push(parseUpload(url.pathname.replace('/storage/v1/object/', ''), req.postDataBuffer()));
       if (req.method() === 'POST') return this.json(route, { status: 200, body: { Key: url.pathname.replace('/storage/v1/object/', ''), Id: this.id('2000') } });
       return route.fulfill({ status: 200, headers: { ...CORS, 'content-type': 'image/png' }, body: PNG });
     }

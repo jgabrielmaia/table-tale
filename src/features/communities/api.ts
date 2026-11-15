@@ -14,7 +14,8 @@ import type {
   MyMembership,
   UserGameEntry,
 } from '@/types/domain';
-import { COVER_BUCKET, COVER_MAX_BYTES, COVER_TYPES, coverPath } from './cover';
+import { COVER_BUCKET, COVER_TARGET, COVER_TYPES, coverPath } from './cover';
+import { shrinkErrorMessage, shrinkImage } from '@/lib/image';
 import { joinOutcome } from './permissions';
 import type { CommunityFormValues } from './schemas';
 
@@ -110,11 +111,19 @@ export async function deleteCommunity(id: string): Promise<void> {
 
 // ---- cover photo ---------------------------------------------------------------------------------------------------
 
-/** Uploads a new cover, points the community at it, then removes the previous file (best effort). */
-export async function setCommunityCover(community: Pick<Community, 'id' | 'coverUrl'>, file: File): Promise<void> {
+/**
+ * Shrinks the photo to fit COVER_TARGET (any size is accepted), uploads it, points the community at it, then removes
+ * the previous file (best effort).
+ */
+export async function setCommunityCover(community: Pick<Community, 'id' | 'coverUrl'>, picked: File): Promise<void> {
+  if (!COVER_TYPES[picked.type]) throw new AppError(t('edit.fileType'));
+  let file: File;
+  try {
+    file = await shrinkImage(picked, COVER_TARGET);
+  } catch (e) {
+    throw new AppError(shrinkErrorMessage(e));
+  }
   const ext = COVER_TYPES[file.type];
-  if (!ext) throw new AppError(t('edit.fileType'));
-  if (file.size > COVER_MAX_BYTES) throw new AppError(t('communities.cover.errSize'));
   const path = `${community.id}/cover-${Date.now()}.${ext}`;
   unwrap(await supabase.storage.from(COVER_BUCKET).upload(path, file, { contentType: file.type, upsert: false }), t('communities.cover.errUpload'));
   const url = supabase.storage.from(COVER_BUCKET).getPublicUrl(path).data.publicUrl;
