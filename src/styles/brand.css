@@ -482,6 +482,10 @@ input[aria-invalid="true"] { border-color: #e0604f; }
 .category-chip__remove { display: inline-grid; place-items: center; width: 2.25rem; height: 2.25rem; border: 0; border-radius: 999px; background: transparent; color: var(--text-2); cursor: pointer; }
 .category-chip__remove:hover, .category-chip__remove:focus-visible { background: var(--line); color: var(--text); }
 .category-chip__remove .ui-icon { width: 1rem; height: 1rem; }
+.new-game-numbers { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; }
+.new-game-categories { margin: 0; padding: 0; border: 0; min-width: 0; }
+.new-game-categories legend { padding: 0; margin-bottom: .5rem; font-weight: 600; }
+@media (max-width: 30rem) { .new-game-numbers { grid-template-columns: 1fr 1fr; } }
 .category-add { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: .75rem; }
 .category-add .btn { margin-top: 1.65rem; }
 @media (max-width: 30rem) { .category-add { grid-template-columns: 1fr; } .category-add .btn { margin-top: 0; justify-self: start; } }

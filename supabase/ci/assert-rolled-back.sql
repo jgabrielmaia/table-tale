@@ -76,6 +76,9 @@ begin
      or exists (select 1 from pg_policies where tablename = 'games' and policyname = 'owners edit their game categories') then
     raise exception 'rollback left the game owner behind';
   end if;
+  if exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'create_game') then
+    raise exception 'rollback left create_game behind';
+  end if;
   if not exists (select 1 from pg_indexes where indexname = 'game_ownerships_user_idx') then
     raise exception 'original game_ownerships index not restored';
   end if;

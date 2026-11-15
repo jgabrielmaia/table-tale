@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchGameStates, fetchGames, saveGameState, updateGameCategories } from '@/features/games/api';
+import { createGame, fetchGameStates, fetchGames, saveGameState, updateGameCategories } from '@/features/games/api';
+import type { NewGameValues } from '@/features/games/schemas';
 import { progressKeys, queryKeys } from '@/lib/queryKeys';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { t } from '@/i18n';
@@ -35,6 +36,15 @@ export function useGames() {
     error: catalogue.error ?? states.error,
     refetch: () => Promise.all([catalogue.refetch(), states.refetch()]),
   };
+}
+
+/** Adds a game to the catalogue by hand (without BGG); the caller becomes its owner. */
+export function useCreateGame() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { values: NewGameValues; categories: string[] }) => createGame(vars.values, vars.categories),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.games }),
+  });
 }
 
 /** Saves a game's categories (owner only) and refreshes every game list and page. */

@@ -741,6 +741,32 @@ export class FakeBackend {
       const m = this.metrics(uid);
       return { status: 200, body: [{ ...m, achievements: db.userAchievements.filter((a) => a.user_id === uid).length }] };
     }
+    if (name === 'create_game') {
+      // Mirrors public.create_game(): validation, slug from the title without accents, owner = caller, 20 games a day.
+      const a = (body ?? {}) as { p_title?: string; p_description?: string; p_min_players?: number | null; p_max_players?: number | null; p_duration_minutes?: number | null; p_categories?: string[] };
+      const bad = (message: string): Result => ({ status: 400, body: { code: '22023', message, details: null, hint: null } });
+      const title = (a.p_title ?? '').trim();
+      const categories = (a.p_categories ?? []).map((c) => c.trim());
+      const players = [a.p_min_players ?? null, a.p_max_players ?? null];
+      if (title.length < 1 || title.length > 80) return bad('the title must have 1 to 80 characters');
+      if ((a.p_description ?? '').trim().length > 2000) return bad('the description is too long');
+      if (players.some((n) => n !== null && (n < 1 || n > 99)) || (players[0] !== null && players[1] !== null && players[0] > players[1])) return bad('invalid number of players');
+      if (a.p_duration_minutes != null && (a.p_duration_minutes < 1 || a.p_duration_minutes > 1440)) return bad('invalid duration');
+      if (categories.length > 30 || categories.some((c) => c.length < 1 || c.length > 60)) return bad('invalid categories');
+      if (db.games.filter((g) => g.owner_id === uid && Date.now() - Date.parse(String(g.created_at ?? new Date().toISOString())) < 86_400_000).length >= 20) {
+        return { status: 400, body: { code: '54000', message: 'too many games added today', details: null, hint: null } };
+      }
+      const base = title.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60).replace(/-+$/g, '') || 'game';
+      let slug = base;
+      for (let n = 2; db.games.some((g) => g.slug === slug); n++) slug = `${base}-${n}`;
+      const game = {
+        id: this.id('8000'), title, slug, description: (a.p_description ?? '').trim(), cover_url: null, categories, mechanics: [], bgg_id: null, bgg_data: null, bgg_synced_at: null,
+        year_published: null, min_age: null, bgg_rating: null, bgg_rating_count: null, bgg_rank: null, bgg_weight: null, owner_id: uid,
+        min_players: players[0], max_players: players[1], duration_minutes: a.p_duration_minutes ?? null, created_at: new Date().toISOString(),
+      };
+      db.games.push(game);
+      return { status: 200, body: [{ game_id: game.id, slug }] };
+    }
     if (name === 'draw_fate_card') {
       const season = db.seasons.find((s) => s.is_active);
       if (!season) return { status: 400, body: { code: 'P0001', message: 'no active season', details: null, hint: 'no_active_season' } };

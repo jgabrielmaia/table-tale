@@ -33,5 +33,22 @@ export const sessionSchema = z.object({
   notes: z.string().max(1000, { error: () => t('val.notesMax') }).optional().default(''),
 });
 
+/** A game added by hand: only the title is required. The categories are chosen next to the form, not in it. */
+export const newGameSchema = z
+  .object({
+    title: z.string().trim().min(1, { error: () => t('val.titleRequired') }).max(80, { error: () => t('val.titleMax') }),
+    description: z.string().trim().max(2000, { error: () => t('val.gameDescriptionMax') }).optional().default(''),
+    minPlayers: optionalInt(1, 99, 'val.playersLabel'),
+    maxPlayers: optionalInt(1, 99, 'val.playersLabel'),
+    durationMinutes: optionalInt(1, 1440, 'val.durationLabel'),
+  })
+  .refine((v) => v.minPlayers === null || v.maxPlayers === null || v.minPlayers <= v.maxPlayers, {
+    path: ['maxPlayers'],
+    error: () => t('val.playersOrder'),
+  });
+
+export type NewGameInput = z.input<typeof newGameSchema>;
+export type NewGameValues = z.output<typeof newGameSchema>;
+
 export type SessionFormInput = z.input<typeof sessionSchema>;
 export type SessionFormValues = z.output<typeof sessionSchema>;

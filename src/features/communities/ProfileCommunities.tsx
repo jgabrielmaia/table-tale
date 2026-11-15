@@ -5,6 +5,7 @@ import { useGames } from '@/hooks/useGames';
 import { useMyCommunities, useMyLibrary } from '@/hooks/useCommunities';
 import { useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
+import { NewGameButton } from '@/features/games/NewGameButton';
 import { MembershipBadge } from './CommunitiesPage';
 
 /** Profile section: the communities the user belongs to. Memberships are independent of the personal library. */
@@ -67,12 +68,13 @@ export function MyLibraryCard() {
         <Select
           label={t('communities.addGameLabel')}
           value={pick}
-          options={[{ value: '', label: t('communities.pickGame') }, ...catalogue.map((g) => ({ value: g.id, label: g.title }))]}
+          options={[{ value: '', label: t('communities.pickGame'), disabled: true }, ...catalogue.map((g) => ({ value: g.id, label: g.title }))]}
           onChange={(e) => setPick(e.target.value)}
         />
         <Button variant="gold" disabled={!pick} loading={lib.add.isPending} onClick={() => void act(() => lib.add.mutateAsync(pick)).then(() => setPick(''))}>
           {t('communities.myLibraryAdd')}
         </Button>
+        <NewGameButton addTo={(gameId) => lib.add.mutateAsync(gameId)} />
       </div>
       {lib.isLoading ? (
         <LoadingState variant="lines" count={2} />

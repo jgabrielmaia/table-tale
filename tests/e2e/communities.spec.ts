@@ -1,3 +1,4 @@
+import { AppShell } from '../pages/AppShell';
 import { expect, test, PLAYER } from '../fixtures';
 import { OWNER } from '../data/seed';
 import { makePng } from '../utils/images';
@@ -263,13 +264,28 @@ test.describe('Comunidades', () => {
     test('os meus jogos permitem adicionar e remover jogos', async ({ page, backend }) => {
       await page.goto('profile');
       const lib = page.getByRole('region', { name: 'Os meus jogos' });
-      await lib.getByLabel('Jogo', { exact: true }).selectOption({ label: 'Dixit' });
+      await lib.getByLabel('Adicionar do catálogo').selectOption({ label: 'Dixit' });
       await lib.getByRole('button', { name: 'Adicionar aos meus jogos' }).click();
       await expect(lib.getByRole('link', { name: 'Dixit' })).toBeVisible();
       expect(backend.db.ownerships.filter((o) => o.user_id === PLAYER.id)).toHaveLength(1);
       await lib.getByRole('button', { name: 'Remover Dixit dos meus jogos' }).click();
       await expect(lib.getByText('Ainda não adicionaste nenhum jogo.')).toBeVisible();
       expect(backend.db.ownerships.filter((o) => o.user_id === PLAYER.id)).toHaveLength(0);
+    });
+
+    test('nos meus jogos, "Novo jogo" cria um jogo sem BGG e põe-no logo na coleção @responsive', async ({ page, backend }) => {
+      await page.goto('profile');
+      const lib = page.getByRole('region', { name: 'Os meus jogos' });
+      await expect(lib.getByLabel('Adicionar do catálogo').locator('option').first()).toBeDisabled();
+      await lib.getByRole('button', { name: 'Novo jogo' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Adicionar um jogo novo' });
+      await dialog.getByLabel('Título').fill('Jogo do Café');
+      await dialog.getByRole('button', { name: 'Adicionar jogo' }).click();
+      await expect(dialog).toBeHidden();
+      await expect(lib.getByRole('link', { name: 'Jogo do Café' })).toBeVisible();
+      const game = backend.db.games.find((g) => g.slug === 'jogo-do-cafe')!;
+      expect(game).toMatchObject({ owner_id: PLAYER.id, categories: [], min_players: null, duration_minutes: null });
+      expect(backend.db.ownerships.filter((o) => o.user_id === PLAYER.id && o.game_id === game.id)).toHaveLength(1);
     });
 
     test('um membro vê membros e jogos, mas não tem gestão', async ({ page, backend }) => {
@@ -281,7 +297,7 @@ test.describe('Comunidades', () => {
       await expect(page.getByRole('button', { name: 'Suspender' })).toHaveCount(0);
       await page.getByRole('tab', { name: 'Jogos' }).click();
       await expect(page.getByRole('link', { name: /Hitster|Dixit|Catan/ }).first()).toBeVisible();
-      await expect(page.getByLabel('Jogo', { exact: true })).toHaveCount(0);
+      await expect(page.getByLabel('Adicionar do catálogo')).toHaveCount(0);
       await expect(page.getByRole('button', { name: /^Editar .* nesta estante$/ })).toHaveCount(0);
     });
 
@@ -368,7 +384,7 @@ test.describe('Comunidades', () => {
 
       await page.goto('communities/clube-secreto-braga');
       await page.getByRole('tab', { name: 'Jogos' }).click();
-      await page.getByLabel('Jogo', { exact: true }).selectOption({ label: 'Hitster' });
+      await page.getByLabel('Adicionar do catálogo').selectOption({ label: 'Hitster' });
       await page.getByRole('button', { name: 'Adicionar jogo' }).click();
       await expect(page.getByRole('tabpanel').getByRole('link', { name: 'Hitster' })).toBeVisible();
 
@@ -386,10 +402,89 @@ test.describe('Comunidades', () => {
       await expect(games.shelves('Hitster')).toHaveText([/^Table Tale Lisboa/]);
     });
 
+    test('o dono acrescenta um jogo novo à estante, sem BGG, e fica a ser o dono do jogo @responsive', async ({ page, backend }) => {
+      await page.goto('communities/clube-secreto-braga');
+      await page.getByRole('tab', { name: 'Jogos' }).click();
+      await page.getByRole('button', { name: 'Novo jogo' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Adicionar um jogo novo' });
+      await dialog.getByLabel('Título').fill('  Jogo do Café ');
+      await dialog.getByLabel('Descrição').fill('Um jogo de cartas para o fim de tarde.');
+      await dialog.getByLabel('Jogadores (mín.)').fill('2');
+      await dialog.getByLabel('Jogadores (máx.)').fill('4');
+      await dialog.getByLabel('Duração (min)').fill('30');
+      await dialog.getByLabel('Nova categoria').fill('Cartas');
+      await dialog.getByLabel('Nova categoria').press('Enter');
+      await dialog.getByLabel('Nova categoria').fill('Festa');
+      await dialog.getByRole('button', { name: 'Adicionar', exact: true }).click();
+      await expect(dialog.getByRole('listitem')).toHaveText(['Cartas', 'Festa']);
+      await dialog.getByRole('button', { name: 'Adicionar jogo' }).click();
+
+      await expect(new AppShell(page).toast('Jogo do Café adicionado.')).toBeVisible();
+      await expect(dialog).toBeHidden();
+      const link = page.getByRole('tabpanel').getByRole('link', { name: 'Jogo do Café' });
+      await expect(link).toBeVisible();
+      const game = backend.db.games.find((g) => g.slug === 'jogo-do-cafe')!;
+      expect(game).toMatchObject({ title: 'Jogo do Café', description: 'Um jogo de cartas para o fim de tarde.', min_players: 2, max_players: 4, duration_minutes: 30, categories: ['Cartas', 'Festa'], owner_id: PLAYER.id, bgg_id: null });
+      expect(backend.db.communityGames.some((g) => g.game_id === game.id && g.added_by === PLAYER.id)).toBe(true);
+
+      // O jogador é o dono: na ficha pode editar as categorias.
+      await link.click();
+      await expect(page).toHaveURL(/\/games\/jogo-do-cafe$/);
+      await expect(page.getByText('Cartas · Festa')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Editar categorias' })).toBeVisible();
+    });
+
+    test('o formulário de jogo novo valida o título, os jogadores e a duração antes de enviar', async ({ page, backend }) => {
+      await page.goto('communities/clube-secreto-braga');
+      await page.getByRole('tab', { name: 'Jogos' }).click();
+      await page.getByRole('button', { name: 'Novo jogo' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Adicionar um jogo novo' });
+      await dialog.getByRole('button', { name: 'Adicionar jogo' }).click();
+      await expect(dialog.getByText('Indica o título.')).toBeVisible();
+
+      await dialog.getByLabel('Título').fill('Jogo');
+      await dialog.getByLabel('Jogadores (mín.)').fill('5');
+      await dialog.getByLabel('Jogadores (máx.)').fill('3');
+      await dialog.getByLabel('Duração (min)').fill('0');
+      await dialog.getByRole('button', { name: 'Adicionar jogo' }).click();
+      await expect(dialog.getByText(/mínimo 1/)).toBeVisible();
+      await dialog.getByLabel('Duração (min)').fill('30');
+      await dialog.getByRole('button', { name: 'Adicionar jogo' }).click();
+      await expect(dialog.getByText('O máximo não pode ser inferior ao mínimo.')).toBeVisible();
+      expect(backend.calls(/rpc\/create_game/)).toHaveLength(0);
+    });
+
+    test('se o servidor recusa o jogo novo, o formulário fica aberto com o que foi escrito', async ({ page, backend }) => {
+      backend.fail(/POST \/rest\/v1\/rpc\/create_game/, { status: 400, body: { code: '54000', message: 'too many games added today' } });
+      await page.goto('communities/clube-secreto-braga');
+      await page.getByRole('tab', { name: 'Jogos' }).click();
+      await page.getByRole('button', { name: 'Novo jogo' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Adicionar um jogo novo' });
+      await dialog.getByLabel('Título').fill('Jogo do Café');
+      await dialog.getByRole('button', { name: 'Adicionar jogo' }).click();
+      await expect(new AppShell(page).toast(/demasiados jogos hoje/)).toBeVisible();
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByLabel('Título')).toHaveValue('Jogo do Café');
+    });
+
+    test('se o jogo é criado mas não entra na estante, avisa e o jogo fica no catálogo', async ({ page, backend }) => {
+      backend.fail(/POST \/rest\/v1\/community_games/, { status: 500, body: { code: 'XX000', message: 'falha simulada' } });
+      await page.goto('communities/clube-secreto-braga');
+      await page.getByRole('tab', { name: 'Jogos' }).click();
+      await page.getByRole('button', { name: 'Novo jogo' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Adicionar um jogo novo' });
+      await dialog.getByLabel('Título').fill('Jogo do Café');
+      await dialog.getByRole('button', { name: 'Adicionar jogo' }).click();
+      await expect(new AppShell(page).toast(/Jogo do Café já está no catálogo/)).toBeVisible();
+      await expect(dialog).toBeHidden();
+      expect(backend.db.games.some((g) => g.slug === 'jogo-do-cafe')).toBe(true);
+      await expect(page.getByLabel('Adicionar do catálogo').locator('option', { hasText: 'Jogo do Café' })).toHaveCount(1);
+    });
+
     test('o dono edita a localização e gere os jogos da comunidade', async ({ page, backend }) => {
       await page.goto('communities/clube-secreto-braga');
       await page.getByRole('tab', { name: 'Jogos' }).click();
-      await page.getByLabel('Jogo', { exact: true }).selectOption({ label: 'Dixit' });
+      await page.getByLabel('Adicionar do catálogo').selectOption({ label: 'Dixit' });
       await page.getByRole('button', { name: 'Adicionar jogo' }).click();
       await expect(page.getByRole('link', { name: 'Dixit' })).toBeVisible();
       expect(backend.db.communityGames.some((g) => g.added_by === PLAYER.id)).toBe(true);

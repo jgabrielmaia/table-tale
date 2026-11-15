@@ -3,6 +3,7 @@ import { AppError, unwrap } from '@/lib/errors';
 import { t } from '@/i18n';
 import type { GameRow, GameSessionRow, OwnershipCondition, ShelfHighlightRow, UserGameStatusRow } from '@/types/database';
 import type { Game, GameOwner, GameSession, GameStatus, GameUserState, ShelfHighlight } from '@/types/domain';
+import type { NewGameValues } from './schemas';
 import type { ShelfEntry } from './shelves';
 
 const LIST_COLUMNS =
@@ -85,6 +86,23 @@ export async function fetchGameBySlug(slug: string): Promise<Game | null> {
     t('games.err.game'),
   );
   return row ? mapGame(row as unknown as GameQueryRow) : null;
+}
+
+/** A game added by hand, without BGG: the database makes the caller its owner and picks a free slug. */
+export async function createGame(values: NewGameValues, categories: string[]): Promise<{ id: string; slug: string }> {
+  const result = await supabase.rpc('create_game', {
+    p_title: values.title,
+    p_description: values.description,
+    p_min_players: values.minPlayers,
+    p_max_players: values.maxPlayers,
+    p_duration_minutes: values.durationMinutes,
+    p_categories: categories,
+  });
+  if (result.error?.code === '54000') throw new AppError(t('newGame.errLimit'), result.error);
+  const rows = unwrap(result, t('newGame.errCreate')) as { game_id: string; slug: string }[] | null;
+  const created = rows?.[0];
+  if (!created) throw new AppError(t('newGame.errCreate'));
+  return { id: created.game_id, slug: created.slug };
 }
 
 /** Saves the game's categories. Row-level security lets only the game's owner through, which shows as no row updated. */
