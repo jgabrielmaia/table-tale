@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { GameCover, coverAccent } from '@/components/games/GameCover';
 import { GameGrid } from '@/components/games/GameGrid';
@@ -12,13 +12,15 @@ import { LoginRequiredNotice } from '@/features/auth/LoginPage';
 import { useAuth } from '@/hooks/useAuth';
 import { useGame } from '@/hooks/useGame';
 import { useGameSessions } from '@/hooks/useGameSessions';
-import { useUpdateGameState } from '@/hooks/useGames';
+import { useUpdateGameCategories, useUpdateGameState } from '@/hooks/useGames';
 import { getLang, localizeGame, useI18n } from '@/i18n';
 import { gameSeo, NOT_FOUND_SEO } from '@/seo/pages';
 import { usePageSeo } from '@/seo/RouteSeo';
 import { errorMessage } from '@/lib/errors';
 import { statusLabel, formatDate, minutesText, playersText, todayIso } from '@/lib/format';
 import type { GameStatus } from '@/types/domain';
+import { GameCategoriesEditor } from './GameCategoriesEditor';
+import { suggestCategories } from './categories';
 import { relatedGames } from './filters';
 import type { SessionFormValues } from './schemas';
 
@@ -37,6 +39,9 @@ export function GameDetailPage() {
     : { title: NOT_FOUND_SEO.title[lang], description: NOT_FOUND_SEO.description[lang], path: `/games/${slug}`, noindex: !isLoading });
   const { sessions, query: sessionsQuery, create, remove } = useGameSessions(game?.id);
   const updateState = useUpdateGameState();
+  const updateCategories = useUpdateGameCategories();
+  const [editingCategories, setEditingCategories] = useState(false);
+  const suggestions = useMemo(() => suggestCategories(allGames.map((g) => g.categories), rawGame?.categories ?? []), [allGames, rawGame]);
   const { notify } = useToast();
 
   if (isLoading) return <div className="container section"><LoadingState label={t('game.loading')} /></div>;
@@ -49,6 +54,12 @@ export function GameDetailPage() {
     );
   }
 
+  const isOwner = Boolean(user && game.ownerId === user.id);
+  const saveCategories = (categories: string[]) =>
+    updateCategories.mutateAsync({ gameId: game.id, categories }).then(
+      () => notify(t('game.categories.saved')),
+      (e) => { notify(errorMessage(e), { tone: 'error' }); throw e; },
+    );
   const related = relatedGames(game, allGames);
   const copies = game.owners.reduce((sum, o) => sum + o.copies, 0);
   const style = { '--accent': coverAccent(game.slug) } as CSSProperties;
@@ -119,7 +130,14 @@ export function GameDetailPage() {
               <GameCover slug={game.slug} title={game.title} coverUrl={game.coverUrl} loading="eager" />
             </figure>
             <div className="detail-info">
-              {game.categories.length > 0 && <p className="eyebrow">{game.categories.slice(0, 3).join(' · ')}</p>}
+              {(game.categories.length > 0 || isOwner) && (
+                <div className="detail-eyebrow">
+                  {game.categories.length > 0 && <p className="eyebrow">{game.categories.slice(0, 3).join(' · ')}</p>}
+                  {isOwner && (
+                    <Button size="sm" variant="ghost" icon={<Icon name="edit" />} onClick={() => setEditingCategories(true)}>{t('game.categories.edit')}</Button>
+                  )}
+                </div>
+              )}
               <h1 id="game-title">{game.title}</h1>
               <p className="lead bgg-description">{game.description}</p>
               <dl className="facts">
@@ -233,6 +251,16 @@ export function GameDetailPage() {
           {related.length ? <GameGrid games={related} compact label={t('game.related')} /> : <p className="muted">{t('game.noRelated')}</p>}
         </section>
       </div>
+      {isOwner && (
+        <GameCategoriesEditor
+          open={editingCategories}
+          categories={game.categories}
+          suggestions={suggestions}
+          saving={updateCategories.isPending}
+          onClose={() => setEditingCategories(false)}
+          onSave={saveCategories}
+        />
+      )}
     </>
   );
 }

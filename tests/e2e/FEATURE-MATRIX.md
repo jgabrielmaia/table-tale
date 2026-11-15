@@ -32,6 +32,7 @@ Estado: **Coberto** = fluxo principal + validações/erros relevantes; **Parcial
 | Jogos: ordenar | `/games` | Visitante, Jogador | Nome, mais perto | `games.spec.ts` | Coberto (sem paginação) |
 | Favoritos e estado do jogo | Cartões de Jogos, detalhe | Jogador | Marcar/desmarcar, estado, persistência, desfazer em erro, 403, token expirado, sem duplo clique | `games.spec.ts`, `game-detail.spec.ts` | Coberto |
 | Detalhe do jogo | `/games/:slug` | Visitante, Jogador | Ficha, proprietário, relacionados, jogo inexistente, erro de carregamento, convite a entrar | `game-detail.spec.ts` | Coberto |
+| Categorias do jogo (editar) | `/games/:slug` | Dono do jogo | Só o dono edita, acrescentar/remover várias, validações (vazia, repetida, longa), recusa do servidor (não é dono), erro 500 | `game-detail.spec.ts` | Coberto |
 | Diário de sessões (criar / listar / apagar) | `/games/:slug` | Jogador | Sessão completa, "jogado hoje", validações (data, jogadores, duração, notas), avaliação, apagar, erro 500, duplicado (23505), permissão (42501), sem duplo envio, HTML nas notas, notas longas, teclado | `game-detail.spec.ts` | Coberto |
 | Diário de sessões: editar / confirmar exclusão | — | — | — | — | N/A (não há edição nem confirmação; o apagar é imediato) |
 | Eventos | `/events` | Visitante, Jogador | Lista, inscrição e cancelamento, evento passado, persistência, erro, sem duplo clique, carregamento, vazio, texto longo, reflexo na experiência do perfil | `events.spec.ts` | Coberto |

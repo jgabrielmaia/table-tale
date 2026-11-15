@@ -7,7 +7,8 @@
  *                                    BGG answers are cached for a week per normalised query (see SearchCache).
  *   { action: 'preview', id }     -> { thing, gameSlug }      full BGG item, nothing written
  *   { action: 'import', id }      -> { game }                 creates the catalogue row, or links and fills the gaps of an
- *                                                             existing one (by bgg_id, else by title); data we hold wins
+ *                                                             existing one (by bgg_id, else by title); data we hold wins.
+ *                                                             A new game is owned by the importing user; a linked one keeps its owner.
  * Adding the game to a personal or community library is done by the app afterwards, under the user's own row-level security.
  */
 import { BggError, type BggClient } from './bggClient.ts';
@@ -27,7 +28,8 @@ export interface GameStore {
   /** The one catalogue game with this title (case-insensitive) and no BGG link yet, or null if none or several. */
   findUnlinkedByTitle(title: string): Promise<GameRecord | null>;
   slugTaken(slug: string): Promise<boolean>;
-  insert(row: GameColumns & { slug: string }): Promise<GameRecord>;
+  /** `owner_id` is the importing user: the owner of a game may edit its categories. */
+  insert(row: GameColumns & { slug: string; owner_id: string }): Promise<GameRecord>;
   update(id: string, row: Partial<GameColumns>): Promise<GameRecord>;
 }
 
@@ -165,7 +167,7 @@ export async function handleBgg(req: Request, deps: HandlerDeps): Promise<Respon
 
         let slug = slugify(columns.title, id);
         if (await store.slugTaken(slug)) slug = `${slug}-${id}`;
-        return json({ game: await store.insert({ ...columns, slug }) }, 201);
+        return json({ game: await store.insert({ ...columns, slug, owner_id: user.id }) }, 201);
       }
 
       default:

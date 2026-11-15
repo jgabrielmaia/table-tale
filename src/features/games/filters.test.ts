@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { EMPTY_FILTERS, filterGames, relatedGames } from './filters';
 import type { LibraryGame } from '@/types/domain';
 
-const BGG_NONE = { yearPublished: null, minAge: null, bggId: null, rating: null, ratingCount: null, rank: null, weight: null, bgg: null };
+const BGG_NONE = { ownerId: null, yearPublished: null, minAge: null, bggId: null, rating: null, ratingCount: null, rank: null, weight: null, bgg: null };
 
 const games: LibraryGame[] = [
   {

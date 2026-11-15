@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { unwrap } from '@/lib/errors';
+import { AppError, unwrap } from '@/lib/errors';
 import { t } from '@/i18n';
 import type { GameRow, GameSessionRow, OwnershipCondition, ShelfHighlightRow, UserGameStatusRow } from '@/types/database';
 import type { Game, GameOwner, GameSession, GameStatus, GameUserState, ShelfHighlight } from '@/types/domain';
@@ -7,7 +7,7 @@ import type { ShelfEntry } from './shelves';
 
 const LIST_COLUMNS =
   'id,title,slug,description,cover_url,min_players,max_players,duration_minutes,bgg_id,bgg_synced_at,categories,mechanics,' +
-  'year_published,min_age,bgg_rating,bgg_rating_count,bgg_rank,bgg_weight';
+  'year_published,min_age,bgg_rating,bgg_rating_count,bgg_rank,bgg_weight,owner_id';
 const OWNERS = 'user_games(user_id,copy_number,condition,profiles(id,display_name,avatar_url))';
 const GAME_SELECT = `${LIST_COLUMNS},${OWNERS}`;
 /** The game page also loads the full BGG item (designers, artists, publishers...). */
@@ -47,6 +47,7 @@ export function mapGame(row: GameQueryRow): Game {
     durationMinutes: row.duration_minutes,
     categories: row.categories ?? [],
     mechanics: row.mechanics ?? [],
+    ownerId: row.owner_id ?? null,
     yearPublished: row.year_published,
     minAge: row.min_age,
     bggId: row.bgg_id,
@@ -84,6 +85,12 @@ export async function fetchGameBySlug(slug: string): Promise<Game | null> {
     t('games.err.game'),
   );
   return row ? mapGame(row as unknown as GameQueryRow) : null;
+}
+
+/** Saves the game's categories. Row-level security lets only the game's owner through, which shows as no row updated. */
+export async function updateGameCategories(gameId: string, categories: string[]): Promise<void> {
+  const rows = unwrap(await supabase.from('games').update({ categories }).eq('id', gameId).select('id'), t('game.categories.errSave')) as { id: string }[] | null;
+  if (!rows?.length) throw new AppError(t('game.categories.errNotOwner'));
 }
 
 export async function fetchGameStates(userId: string): Promise<GameUserState[]> {

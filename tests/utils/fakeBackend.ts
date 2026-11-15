@@ -372,6 +372,19 @@ export class FakeBackend {
 
     switch (resource) {
       case 'games': {
+        if (method === 'PATCH') {
+          // Mirrors the database: only `categories` is updatable (column grant), only by the game's owner (RLS: other rows are
+          // filtered out, so nothing is updated and nothing comes back), and the list must pass games_categories_valid.
+          const input = body as Row;
+          if (Object.keys(input).some((k) => k !== 'categories')) return { status: 401, body: { code: '42501', message: 'permission denied for table games', details: null, hint: null } };
+          const list = input.categories as unknown[];
+          if (!Array.isArray(list) || list.length > 30 || list.some((c) => typeof c !== 'string' || c.trim().length < 1 || c.trim().length > 60)) {
+            return { status: 400, body: { code: '23514', message: 'new row for relation "games" violates check constraint "games_categories_valid"', details: null, hint: null } };
+          }
+          const mine = this.filtered(db.games, params).filter((g) => uid !== null && g.owner_id === uid);
+          for (const row of mine) Object.assign(row, input, { updated_at: new Date().toISOString() });
+          return done(mine.map((g) => ({ id: g.id })));
+        }
         const rows = this.filtered(db.games, params).map((g) => ({
           ...g,
           user_games: db.ownerships.filter((o) => o.game_id === g.id).map((o) => {

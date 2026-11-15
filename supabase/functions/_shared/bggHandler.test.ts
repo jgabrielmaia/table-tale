@@ -133,6 +133,7 @@ describe('bgg handler', () => {
     expect(game).toMatchObject({ slug: 'catan', bgg_id: 13, categories: ['Economic', 'Negotiation'], bgg_rank: 450, bgg_synced_at: '2026-11-06T12:00:00.000Z' });
     expect(game).not.toHaveProperty('genre');
     expect(store.insert).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(store.insert).mock.calls[0][0]).toMatchObject({ owner_id: 'u1' });
   });
 
   it('suffixes the slug with the BGG id when it is taken by another game', async () => {
@@ -170,6 +171,19 @@ describe('bgg handler', () => {
     const sent = vi.mocked(store.update).mock.calls[0][1];
     expect(sent).not.toHaveProperty('title');
     expect(sent).not.toHaveProperty('cover_url');
+  });
+
+  it('keeps categories the owner edited on a stale game, and never touches its owner', async () => {
+    const stale = {
+      id: 'g1', slug: 'my-catan', bgg_id: 13, bgg_synced_at: new Date(NOW - 30 * 86_400_000).toISOString(),
+      categories: ['Party', 'Family'], owner_id: 'owner-1',
+    };
+    const { d, store } = deps({ existing: [stale], xml: [thingXml] });
+    const { game } = await (await call(d, { action: 'import', id: 13 })).json();
+    expect(game).toMatchObject({ categories: ['Party', 'Family'], owner_id: 'owner-1', bgg_rank: 450 });
+    const sent = vi.mocked(store.update).mock.calls[0][1];
+    expect(sent).not.toHaveProperty('categories');
+    expect(sent).not.toHaveProperty('owner_id');
   });
 
   it('links a hand-made game with the same title instead of creating a duplicate', async () => {
