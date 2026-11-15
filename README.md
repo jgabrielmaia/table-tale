@@ -60,7 +60,22 @@ cp .env.example .env   # then fill in your Supabase URL and anon key
 npm run dev            # http://localhost:5173/table-tale/
 ```
 
-Without Supabase configured the pages show setup and error states. For real data, apply the migrations in `supabase/migrations` and run the seed, as described in [docs/auth-setup.md](docs/auth-setup.md).
+Without Supabase configured the pages show setup and error states.
+
+### Local database
+
+Develop against a Supabase running on your machine, never against production. It needs [Docker Desktop](https://www.docker.com/products/docker-desktop/) running.
+
+```bash
+npm run db:start   # start Supabase in Docker, apply all migrations, seed, create the dev account
+npm run dev        # signs in as "Dev" (dev@table-tale.local) automatically
+```
+
+`db:start` writes `.env.development.local`, which only `npm run dev` reads: it points the app at `http://127.0.0.1:54321` and turns on the local sign-in shortcut for the dev account. Builds and deploys keep using `.env`. Delete that file to develop against `.env` again.
+
+The dev account owns the seeded games and a test community, so owner-only screens (covers, shelf, members) work straight away. Supabase Studio is at http://127.0.0.1:54323 and emails (magic links) land in Mailpit at http://127.0.0.1:54324. `npm run db:reset` wipes the local database and rebuilds it from the migrations; `npm run db:stop` stops the containers.
+
+Production setup (migrations, seed, OAuth) is in [docs/auth-setup.md](docs/auth-setup.md).
 
 | Command | What it does |
 |---|---|
@@ -69,6 +84,7 @@ Without Supabase configured the pages show setup and error states. For real data
 | `npm run test:e2e` | End-to-end tests (Playwright) |
 | `npm run typecheck` | Type checks |
 | `npm run build` | Production build with prerendered pages in `dist/table-tale/` |
+| `npm run db:start` / `db:reset` / `db:stop` | Local Supabase in Docker (see above) |
 | `npm run seed` | Seed the catalogue (needs the service role key) |
 
 ### Feature flags
