@@ -42,15 +42,11 @@ async function main() {
   ));
   console.log(`✓ ${data.arcanas.length} Arcanos, ${data.elementals.length} Elementais`);
 
-  // Arte de editora por URL quando disponível; o cliente gera a capa de marca quando faltar.
-  const games = [];
-  for (const g of data.games) {
-    const coverUrl = g.cover.imageUrl ?? null;
-    const { cover: _cover, copies: _copies, ...row } = g;
-    games.push({ ...row, cover_url: coverUrl });
-  }
+  // Capas: o seed não mexe em cover_url (as fotos abertas vêm de `npm run covers`, as outras das comunidades);
+  // sem capa, o cliente gera a capa de marca.
+  const games = data.games.map(({ cover: _cover, copies: _copies, openCover: _open, ...row }) => row);
   check('games', await db.from('games').upsert(games, { onConflict: 'slug' }));
-  console.log(`✓ ${games.length} jogos (com capas)`);
+  console.log(`✓ ${games.length} jogos (capas: npm run covers)`);
 
   check('achievements', await db.from('achievements').upsert(data.achievements, { onConflict: 'slug' }));
   if (data.events.length) check('events', await db.from('events').upsert(data.events, { onConflict: 'slug' }));

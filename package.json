@@ -22,6 +22,7 @@
     "test:watch": "vitest",
     "seed": "tsx scripts/seed.ts",
     "seed:communities": "tsx scripts/seed-communities.ts",
+    "covers": "tsx scripts/open-covers.ts",
     "db:start": "tsx scripts/local-db.ts start",
     "db:reset": "tsx scripts/local-db.ts reset",
     "db:stop": "tsx scripts/local-db.ts stop"
