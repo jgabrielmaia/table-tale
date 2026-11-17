@@ -22,6 +22,7 @@ import { CommunityHero } from './CommunityHero';
 import { useCoverAccent } from './accent';
 import { CommunityGameEditor } from './CommunityGameEditor';
 import { CommunityForm } from './CommunityForm';
+import { RemoveMemberDialog } from './RemoveMemberDialog';
 import { FactionBalance } from './FactionBalance';
 import { MembershipBadge } from './CommunitiesPage';
 import {
@@ -235,6 +236,7 @@ type CommunityState = ReturnType<typeof useCommunity>;
 function MembersPanel({ community, c, userId, run }: { community: Community; c: CommunityState; userId: string | null; run: Run }) {
   const { t, tn } = useI18n();
   const m = c.membership;
+  const [removing, setRemoving] = useState<CommunityMember | null>(null);
   if (!userId) {
     return (
       <EmptyState
@@ -287,7 +289,7 @@ function MembersPanel({ community, c, userId, run }: { community: Community; c: 
               <Button size="sm" variant="ghost" onClick={() => void run(() => c.setMember.mutateAsync({ membershipId: x.id, status: 'active' }), t('communities.memberUpdated'))}>{t('communities.reinstate')}</Button>
             )}
             {x.status !== 'pending' && (
-              <Button size="sm" variant="ghost" onClick={() => void run(() => c.kick.mutateAsync(x.id), t('communities.memberUpdated'))}>{t('communities.remove')}</Button>
+              <Button size="sm" variant="ghost" onClick={() => setRemoving(x)}>{t('communities.remove')}</Button>
             )}
           </span>
         )}
@@ -317,6 +319,16 @@ function MembersPanel({ community, c, userId, run }: { community: Community; c: 
         </section>
       )}
       <ul className="member-grid" role="list" aria-label={community.name}>{(canManageMembers(m) ? rest : list).map(row)}</ul>
+      <RemoveMemberDialog
+        member={removing}
+        busy={c.kick.isPending}
+        onClose={() => setRemoving(null)}
+        onConfirm={() => {
+          const target = removing;
+          if (!target) return;
+          void run(() => c.kick.mutateAsync(target.id), t('communities.memberUpdated')).then(() => setRemoving(null));
+        }}
+      />
     </div>
   );
 }

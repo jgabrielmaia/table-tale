@@ -375,7 +375,37 @@ test.describe('Comunidades', () => {
       await expect(page).toHaveURL(/\/communities\/clube-secreto-braga$/);
     });
 
-    test('um jogo posto na estante aparece em Jogos com a comunidade e sai quando é removido', async ({ page, locateAt }) => {
+    test('remover um membro pede para escrever o nome dele @responsive', async ({ page, backend }) => {
+      await page.goto('communities/clube-secreto-braga');
+      await page.getByRole('tab', { name: 'Membros' }).click();
+      const row = page.getByRole('listitem').filter({ hasText: 'Dono da Estante' });
+      await row.getByRole('button', { name: 'Remover', exact: true }).click();
+
+      const dialog = page.getByRole('dialog', { name: 'Remover Dono da Estante?' });
+      const confirm = dialog.getByRole('button', { name: 'Remover', exact: true });
+      const field = dialog.getByLabel('Escreve Dono da Estante para confirmar');
+      await expect(field).toBeFocused();
+      await expect(confirm).toBeDisabled();
+
+      await field.fill('Dono da');
+      await expect(confirm).toBeDisabled();
+
+      // Cancelar não remove ninguém, e reabrir começa com o campo vazio.
+      await dialog.getByRole('button', { name: 'Cancelar' }).click();
+      await expect(dialog).toBeHidden();
+      expect(backend.db.memberships.some((m) => m.id === 'm-other')).toBe(true);
+      await row.getByRole('button', { name: 'Remover', exact: true }).click();
+      await expect(field).toHaveValue('');
+
+      // Maiúsculas e espaços a mais não contam; Enter confirma.
+      await field.fill('  dono   da ESTANTE ');
+      await expect(confirm).toBeEnabled();
+      await field.press('Enter');
+      await expect(dialog).toBeHidden();
+      await expect.poll(() => backend.db.memberships.some((m) => m.id === 'm-other')).toBe(false);
+    });
+
+    test('um jogo posto na estante aparece em Jogos com a comunidade e sai quando é removido',async ({ page, locateAt }) => {
       await locateAt('lisboa');
       const games = new GamesPage(page);
       await games.goto();
