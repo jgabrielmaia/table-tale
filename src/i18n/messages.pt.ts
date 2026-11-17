@@ -51,6 +51,10 @@ export const pt = {
   'shell.noSupabase': 'Supabase não configurado: define VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY (ver .env.example).',
   'footer.tagline': 'Make stories. Play them.',
   'footer.components': 'Componentes',
+  'footer.data': 'Dados dos jogos: BoardGameGeek, através do dataset do Kaggle (CC BY 4.0).',
+  'footer.dataLink': 'Board Games',
+  'gamePicker.empty': 'Nenhum jogo corresponde.',
+  'gamePicker.more': 'Mais {n}: continua a escrever para afinar.',
 
   // home
   'home.eyebrow': 'Make stories. Play them.',

@@ -23,6 +23,7 @@
     "seed": "tsx scripts/seed.ts",
     "seed:communities": "tsx scripts/seed-communities.ts",
     "covers": "tsx scripts/open-covers.ts",
+    "catalogue:import": "tsx scripts/catalogue-import.ts",
     "db:start": "tsx scripts/local-db.ts start",
     "db:reset": "tsx scripts/local-db.ts reset",
     "db:stop": "tsx scripts/local-db.ts stop"

@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button, ButtonLink, Card, EmptyState, ErrorState, Icon, LoadingState, Select, useToast } from '@/components/ui';
+import { Button, ButtonLink, Card, EmptyState, ErrorState, Icon, LoadingState, useToast } from '@/components/ui';
 import { useGames } from '@/hooks/useGames';
 import { useMyCommunities, useMyLibrary } from '@/hooks/useCommunities';
 import { useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
+import { GamePicker } from '@/features/games/GamePicker';
 import { NewGameButton } from '@/features/games/NewGameButton';
 import { MembershipBadge } from './CommunitiesPage';
 
@@ -65,11 +66,11 @@ export function MyLibraryCard() {
   return (
     <Card title={t('communities.myLibraryTitle')} titleId="my-library-title" description={t('communities.myLibraryDesc')} className="my-library">
       <div className="library-add">
-        <Select
+        <GamePicker
           label={t('communities.addGameLabel')}
           value={pick}
-          options={[{ value: '', label: t('communities.pickGame'), disabled: true }, ...catalogue.map((g) => ({ value: g.id, label: g.title }))]}
-          onChange={(e) => setPick(e.target.value)}
+          options={catalogue.map((g) => ({ value: g.id, label: g.title }))}
+          onChange={setPick}
         />
         <Button variant="gold" disabled={!pick} loading={lib.add.isPending} onClick={() => void act(() => lib.add.mutateAsync(pick)).then(() => setPick(''))}>
           {t('communities.myLibraryAdd')}

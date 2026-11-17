@@ -264,7 +264,8 @@ test.describe('Comunidades', () => {
     test('os meus jogos permitem adicionar e remover jogos', async ({ page, backend }) => {
       await page.goto('profile');
       const lib = page.getByRole('region', { name: 'Os meus jogos' });
-      await lib.getByLabel('Adicionar do catálogo').selectOption({ label: 'Dixit' });
+      await lib.getByRole('combobox', { name: 'Adicionar do catálogo' }).fill('dixi');
+      await lib.getByRole('option', { name: 'Dixit' }).click();
       await lib.getByRole('button', { name: 'Adicionar aos meus jogos' }).click();
       await expect(lib.getByRole('link', { name: 'Dixit' })).toBeVisible();
       expect(backend.db.ownerships.filter((o) => o.user_id === PLAYER.id)).toHaveLength(1);
@@ -273,10 +274,37 @@ test.describe('Comunidades', () => {
       expect(backend.db.ownerships.filter((o) => o.user_id === PLAYER.id)).toHaveLength(0);
     });
 
+    test('o catálogo pesquisa-se a escrever: sem acentos, com setas e Enter, e diz quando não há jogo @responsive', async ({ page, backend }) => {
+      await page.goto('profile');
+      const lib = page.getByRole('region', { name: 'Os meus jogos' });
+      const box = lib.getByRole('combobox', { name: 'Adicionar do catálogo' });
+      await expect(box).toHaveValue('');
+      await expect(lib.getByRole('button', { name: 'Adicionar aos meus jogos' })).toBeDisabled();
+
+      await box.fill('zzzz');
+      await expect(lib.getByText('Nenhum jogo corresponde.')).toBeVisible();
+      await expect(lib.getByRole('option')).toHaveCount(0);
+
+      // Titles that start with the text come first; accents and case do not matter.
+      await box.fill('COUP');
+      await expect(lib.getByRole('option').first()).toHaveText('Coup');
+      await box.press('ArrowDown');
+      await box.press('Enter');
+      await expect(box).toHaveValue('Coup');
+      await expect(lib.getByRole('button', { name: 'Adicionar aos meus jogos' })).toBeEnabled();
+
+      // Typing again drops the choice.
+      await box.fill('Dix');
+      await expect(lib.getByRole('button', { name: 'Adicionar aos meus jogos' })).toBeDisabled();
+      await box.press('Escape');
+      await box.press('Tab');
+      await expect(box).toHaveValue('');
+      expect(backend.db.ownerships.filter((o) => o.user_id === PLAYER.id)).toHaveLength(0);
+    });
+
     test('nos meus jogos, "Novo jogo" cria um jogo sem BGG e põe-no logo na coleção @responsive', async ({ page, backend }) => {
       await page.goto('profile');
       const lib = page.getByRole('region', { name: 'Os meus jogos' });
-      await expect(lib.getByLabel('Adicionar do catálogo').locator('option').first()).toBeDisabled();
       await lib.getByRole('button', { name: 'Novo jogo' }).click();
       const dialog = page.getByRole('dialog', { name: 'Adicionar um jogo novo' });
       await dialog.getByLabel('Título').fill('Jogo do Café');
@@ -384,7 +412,8 @@ test.describe('Comunidades', () => {
 
       await page.goto('communities/clube-secreto-braga');
       await page.getByRole('tab', { name: 'Jogos' }).click();
-      await page.getByLabel('Adicionar do catálogo').selectOption({ label: 'Hitster' });
+      await page.getByRole('combobox', { name: 'Adicionar do catálogo' }).fill('hitster');
+      await page.getByRole('option', { name: 'Hitster' }).click();
       await page.getByRole('button', { name: 'Adicionar jogo' }).click();
       await expect(page.getByRole('tabpanel').getByRole('link', { name: 'Hitster' })).toBeVisible();
 
@@ -605,13 +634,15 @@ test.describe('Comunidades', () => {
       await expect(new AppShell(page).toast(/Jogo do Café já está no catálogo/)).toBeVisible();
       await expect(dialog).toBeHidden();
       expect(backend.db.games.some((g) => g.slug === 'jogo-do-cafe')).toBe(true);
-      await expect(page.getByLabel('Adicionar do catálogo').locator('option', { hasText: 'Jogo do Café' })).toHaveCount(1);
+      await page.getByRole('combobox', { name: 'Adicionar do catálogo' }).fill('jogo do cafe');
+      await expect(page.getByRole('option', { name: 'Jogo do Café' })).toHaveCount(1);
     });
 
     test('o dono edita a localização e gere os jogos da comunidade', async ({ page, backend }) => {
       await page.goto('communities/clube-secreto-braga');
       await page.getByRole('tab', { name: 'Jogos' }).click();
-      await page.getByLabel('Adicionar do catálogo').selectOption({ label: 'Dixit' });
+      await page.getByRole('combobox', { name: 'Adicionar do catálogo' }).fill('dixit');
+      await page.getByRole('option', { name: 'Dixit' }).click();
       await page.getByRole('button', { name: 'Adicionar jogo' }).click();
       await expect(page.getByRole('link', { name: 'Dixit' })).toBeVisible();
       expect(backend.db.communityGames.some((g) => g.added_by === PLAYER.id)).toBe(true);

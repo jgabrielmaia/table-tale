@@ -49,6 +49,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <p className="footer-note">
             <Link to="/lore">{t('nav.lore')}</Link>{import.meta.env.DEV && <> · <Link to="/ui">{t('footer.components')}</Link></>}
           </p>
+          <p className="footer-note">
+            {t('footer.data')} <a href="https://www.kaggle.com/datasets/andrewmvd/board-games" target="_blank" rel="noopener noreferrer">{t('footer.dataLink')}</a>
+          </p>
         </div>
       </footer>
       <MobileNavigation />

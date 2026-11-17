@@ -8,6 +8,7 @@ import { BggCredit } from '@/components/bgg/BggCredit';
 import { GameFilters } from '@/components/games/GameFilters';
 import { GameGrid } from '@/components/games/GameGrid';
 import { EMPTY_FILTERS, filterGames, hasActiveFilters, type GameFilterValues } from '@/features/games/filters';
+import { GamePicker } from '@/features/games/GamePicker';
 import { NewGameButton } from '@/features/games/NewGameButton';
 import { activeSort, availableSorts, SORT_LABELS, sortShelfGames, type GamesSort } from '@/features/games/shelves';
 import { useGameCardActions } from '@/hooks/useGameCardActions';
@@ -384,12 +385,7 @@ function GamesPanel({ c, run }: { c: CommunityState; run: Run }) {
       {manage && (
         <div className="library-add">
           {options.length > 0 && (
-            <Select
-              label={t('communities.addGameLabel')}
-              value={pick}
-              options={[{ value: '', label: t('communities.pickGame'), disabled: true }, ...options]}
-              onChange={(e) => setPick(e.target.value)}
-            />
+            <GamePicker label={t('communities.addGameLabel')} value={pick} options={options} onChange={setPick} />
           )}
           {features.bgg && <ButtonLink to={`/games/import?community=${c.community.data?.slug ?? ''}`} variant="ghost">{t('bgg.link')}</ButtonLink>}
           {options.length > 0 && (

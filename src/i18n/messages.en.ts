@@ -52,6 +52,10 @@ export const en: Record<MessageKey, string> = {
   'shell.noSupabase': 'Supabase is not configured: set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (see .env.example).',
   'footer.tagline': 'Make stories. Play them.',
   'footer.components': 'Components',
+  'footer.data': 'Game data: BoardGameGeek, via the Kaggle dataset (CC BY 4.0).',
+  'footer.dataLink': 'Board Games',
+  'gamePicker.empty': 'No game matches that.',
+  'gamePicker.more': '{n} more: keep typing to narrow it down.',
 
   // home
   'home.eyebrow': 'Make stories. Play them.',
