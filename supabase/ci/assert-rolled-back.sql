@@ -79,6 +79,11 @@ begin
   if exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'create_game') then
     raise exception 'rollback left create_game behind';
   end if;
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'games' and column_name in ('cover_credit', 'cover_credit_url'))
+     or exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname in ('update_game', 'check_game_input'))
+     or exists (select 1 from storage.buckets where id = 'game-covers') then
+    raise exception 'rollback left the game covers behind';
+  end if;
   if not exists (select 1 from pg_indexes where indexname = 'game_ownerships_user_idx') then
     raise exception 'original game_ownerships index not restored';
   end if;
