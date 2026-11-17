@@ -9,12 +9,13 @@
  * downloads a ~1200 px copy, uploads it to `game-covers/catalogue/<slug>.<ext>` and sets cover_url, cover_credit and
  * cover_credit_url. Seed games without an open cover whose cover_url still points at a store website (blocked by the
  * site's CSP, and not ours to reuse) get cover_url cleared, so the illustrated cover shows without a failed request.
- * Covers uploaded by communities are never touched.
+ * Covers someone uploaded in the app (a game's owner, under their own folder) are never replaced, and a cover already at
+ * the current Commons version is skipped.
  */
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 import { games } from './seed-data';
-import { isOwnCover, toOpenCover, type CommonsImageInfo } from './open-covers-lib';
+import { isCatalogueCover, isOwnCover, toOpenCover, type CommonsImageInfo } from './open-covers-lib';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -33,7 +34,7 @@ const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession
 async function commonsInfo(file: string): Promise<CommonsImageInfo> {
   const url = new URL('https://commons.wikimedia.org/w/api.php');
   url.search = new URLSearchParams({
-    action: 'query', format: 'json', formatversion: '2', titles: file, prop: 'imageinfo', iiprop: 'url|extmetadata', iiurlwidth: '1200',
+    action: 'query', format: 'json', formatversion: '2', titles: file, prop: 'imageinfo', iiprop: 'url|extmetadata|sha1', iiurlwidth: '1200',
   }).toString();
   const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
   if (!res.ok) throw new Error(`Commons respondeu ${res.status}`);
@@ -68,9 +69,17 @@ async function main() {
       continue;
     }
 
+    if (isOwnCover(coverUrl, SUPABASE_URL!) && !isCatalogueCover(coverUrl)) {
+      console.log(`- ${g.slug}: tem uma capa enviada na app; fica como está`);
+      continue;
+    }
     try {
       const cover = toOpenCover(await commonsInfo(g.openCover));
       if ('error' in cover) throw new Error(cover.error);
+      if (isCatalogueCover(coverUrl) && coverUrl!.endsWith(`?v=${cover.version}`)) {
+        console.log(`= ${g.slug}: já tem a versão atual`);
+        continue;
+      }
       console.log(`✓ ${g.slug}: ${g.openCover} — ${cover.credit}`);
       if (DRY_RUN) { copied += 1; continue; }
 
@@ -84,7 +93,7 @@ async function main() {
       const { error: upErr } = await db.storage.from(BUCKET).upload(path, bytes, { contentType: type, upsert: true });
       if (upErr) throw new Error(`upload: ${upErr.message}`);
       // A version marker, so browsers and the CDN pick up a replaced file under the same path.
-      const publicUrl = `${db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl}?v=${bytes.length}`;
+      const publicUrl = `${db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl}?v=${cover.version}`;
       const { error: e } = await db.from('games')
         .update({ cover_url: publicUrl, cover_credit: cover.credit, cover_credit_url: cover.sourceUrl })
         .eq('slug', g.slug);

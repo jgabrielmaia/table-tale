@@ -57,7 +57,11 @@ begin
     $q$select public.create_game('CI Cover Bad', '', null, null, null, '{}', -1)$q$,
     $q$select public.create_game('CI Cover Bad', '', null, null, null, '{}', null, 'https://m.media-amazon.com/x.jpg')$q$,
     $q$select public.create_game('CI Cover Bad', '', null, null, null, '{}', null, 'https://x.supabase.co/storage/v1/object/public/game-covers/00000000-0000-0000-0000-00000000000c/a.webp')$q$,
-    $q$select public.create_game('CI Cover Bad', '', null, null, null, '{}', null, 'https://x.supabase.co/storage/v1/object/public/game-covers/catalogue/uno.jpg')$q$
+    $q$select public.create_game('CI Cover Bad', '', null, null, null, '{}', null, 'https://x.supabase.co/storage/v1/object/public/game-covers/catalogue/uno.jpg')$q$,
+    $q$select public.create_game('CI Cover Bad', '', null, null, null, '{}', null, 'https://x.supabase.co/storage/v1/object/public/game-covers/00000000-0000-0000-0000-00000000000b/../catalogue/uno.jpg')$q$,
+    $q$select public.create_game('CI Cover Bad', '', null, null, null, '{}', null, 'https://x.supabase.co/storage/v1/object/public/game-covers/00000000-0000-0000-0000-00000000000b/never-uploaded.webp')$q$,
+    $q$select public.create_game('CI Cover Bad', '', null, null, null, '{}', null, 'https://x.supabase.co/x/storage/v1/object/public/game-covers/00000000-0000-0000-0000-00000000000b/game-1.webp')$q$,
+    $q$select public.create_game('CI Cover Bad', '', null, null, null, '{}', null, 'https://x.supabase.co/storage/v1/object/public/game-covers/00000000-0000-0000-0000-00000000000b/game-1.webp?x=1')$q$
   ] loop
     begin
       execute q;

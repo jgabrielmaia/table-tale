@@ -5,13 +5,6 @@
 drop function public.update_game(uuid, text, text, int, int, int, text[], int, text);
 drop function public.create_game(text, text, int, int, int, text[], int, text);
 drop function public.check_game_input(uuid, text, text, int, int, int, text[], int, text);
-drop policy "game covers listed by uploader" on storage.objects;
-drop policy "game covers upload own folder" on storage.objects;
-drop policy "game covers update own folder" on storage.objects;
-drop policy "game covers delete own folder" on storage.objects;
-delete from storage.buckets b
-where b.id = 'game-covers' and not exists (select 1 from storage.objects o where o.bucket_id = b.id);
-alter table public.games drop column cover_credit_url, drop column cover_credit;
 
 -- create_game as in 20261115000002_create_game.sql
 create or replace function public.create_game(
@@ -81,3 +74,12 @@ $$;
 
 revoke execute on function public.create_game(text, text, int, int, int, text[]) from public, anon;
 grant execute on function public.create_game(text, text, int, int, int, text[]) to authenticated;
+
+-- Storage last.
+drop policy "game covers listed by uploader" on storage.objects;
+drop policy "game covers upload own folder" on storage.objects;
+drop policy "game covers update own folder" on storage.objects;
+drop policy "game covers delete own folder" on storage.objects;
+delete from storage.buckets b
+where b.id = 'game-covers' and not exists (select 1 from storage.objects o where o.bucket_id = b.id);
+alter table public.games drop column cover_credit_url, drop column cover_credit;

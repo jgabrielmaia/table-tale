@@ -276,6 +276,7 @@ export function GameDetailPage() {
           open={editingGame}
           game={rawGame!}
           suggestions={suggestions}
+          catalogue={allGames}
           onClose={() => setEditingGame(false)}
           onSubmit={saveGame}
         />

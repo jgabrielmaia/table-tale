@@ -55,17 +55,21 @@ export function NewGameModal({ open, game, suggestions, catalogue = [], alreadyH
     register, handleSubmit, reset, watch, formState: { errors, isSubmitting },
   } = useForm<NewGameInput, unknown, NewGameValues>({ resolver: zodResolver(newGameSchema), defaultValues: EMPTY });
 
-  // A fresh form (or the saved game) every time it opens.
+  // A fresh form (or the saved game) every time it opens. Keyed on the game's id, not the object, so a background
+  // refetch while the form is open never throws away what was typed.
+  const gameRef = useRef(game);
+  gameRef.current = game;
   useEffect(() => {
     if (!open) return;
-    reset(game ? fromGame(game) : EMPTY);
-    setCategories(game?.categories ?? []);
+    const g = gameRef.current;
+    reset(g ? fromGame(g) : EMPTY);
+    setCategories(g?.categories ?? []);
     setCover(undefined);
     setCoverError(null);
-  }, [open, game, reset]);
+  }, [open, game?.id, reset]);
 
   const title = watch('title') ?? '';
-  const match = editing ? null : findTitleMatch(title, catalogue);
+  const match = findTitleMatch(title, catalogue, game?.id);
   const matchHere = Boolean(match && alreadyHere?.has(match.id));
 
   // Preview: the picked file, else the saved image unless it is being removed.

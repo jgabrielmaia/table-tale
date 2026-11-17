@@ -54,9 +54,12 @@ begin
   if p_min_age is not null and p_min_age not between 0 and 21 then
     raise exception 'invalid age' using errcode = '22023';
   end if;
-  -- Only a file the player uploaded to their own folder: no hotlinks, no other people's files.
+  -- Only a file the player uploaded to their own folder and that is really in the bucket: no hotlinks, no other
+  -- people's files, no path tricks. The URL is the one Storage hands out: <host>/storage/v1/object/public/game-covers/<uid>/<file>.
   if p_cover_url is not null and (char_length(p_cover_url) > 1000
-     or position('/storage/v1/object/public/game-covers/' || p_uid::text || '/' in p_cover_url) = 0) then
+     or p_cover_url !~ ('^https?://[^/?#]+/storage/v1/object/public/game-covers/' || p_uid::text || '/[A-Za-z0-9_-][A-Za-z0-9_.-]*$')
+     or not exists (select 1 from storage.objects o where o.bucket_id = 'game-covers'
+                    and o.name = p_uid::text || '/' || substring(p_cover_url from '[^/]+$'))) then
     raise exception 'invalid cover' using errcode = '22023';
   end if;
 end;

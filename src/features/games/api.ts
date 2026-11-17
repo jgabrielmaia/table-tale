@@ -156,7 +156,10 @@ export async function updateGame(
   if (result.error || result.data !== true) await removeGameCover(uploaded?.path ?? null);
   const saved = unwrap(result, t('newGame.errSave')) as boolean | null;
   if (saved !== true) throw new AppError(t('newGame.errNotOwner'));
-  if (coverUrl !== game.coverUrl) await removeGameCover(ownCoverPath(game.coverUrl, userId));
+  if (coverUrl !== game.coverUrl && game.coverUrl) {
+    const { data: others } = await supabase.from('games').select('id').eq('cover_url', game.coverUrl).limit(1);
+    if (others && others.length === 0) await removeGameCover(ownCoverPath(game.coverUrl, userId));
+  }
 }
 
 /** Saves the game's categories. Row-level security lets only the game's owner through, which shows as no row updated. */

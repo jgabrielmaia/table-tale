@@ -601,10 +601,21 @@ export class FakeBackend {
     return { status: 401, body: { code: '42501', message: `permission denied for table ${table}`, details: null, hint: null } };
   }
 
-  /** check_game_input(): the age range, and a cover the player uploaded to their own game-covers folder. */
-  private badAgeOrCover(a: GameInput, uid: string | null): string | null {
+  /** check_game_input(): the shared limits, and a cover the player really uploaded to their own game-covers folder. */
+  private checkGameInput(a: GameInput, uid: string | null): string | null {
+    const title = (a.p_title ?? '').trim();
+    const categories = (a.p_categories ?? []).map((c) => c.trim());
+    const players = [a.p_min_players ?? null, a.p_max_players ?? null];
+    if (title.length < 1 || title.length > 80) return 'the title must have 1 to 80 characters';
+    if ((a.p_description ?? '').trim().length > 2000) return 'the description is too long';
+    if (players.some((n) => n !== null && (n < 1 || n > 99)) || (players[0] !== null && players[1] !== null && players[0] > players[1])) return 'invalid number of players';
+    if (a.p_duration_minutes != null && (a.p_duration_minutes < 1 || a.p_duration_minutes > 1440)) return 'invalid duration';
+    if (categories.length > 30 || categories.some((c) => c.length < 1 || c.length > 60)) return 'invalid categories';
     if (a.p_min_age != null && (a.p_min_age < 0 || a.p_min_age > 21)) return 'invalid age';
-    if (a.p_cover_url != null && !a.p_cover_url.includes(`/storage/v1/object/public/game-covers/${uid}/`)) return 'invalid cover';
+    if (a.p_cover_url != null) {
+      const m = new RegExp(`^https?://[^/?#]+/storage/v1/object/public/game-covers/${uid}/([A-Za-z0-9_-][A-Za-z0-9_.-]*)$`).exec(a.p_cover_url);
+      if (!m || !this.uploads.some((u) => u.path === `game-covers/${uid}/${m[1]}`)) return 'invalid cover';
+    }
     return null;
   }
 
@@ -761,13 +772,8 @@ export class FakeBackend {
       const title = (a.p_title ?? '').trim();
       const categories = (a.p_categories ?? []).map((c) => c.trim());
       const players = [a.p_min_players ?? null, a.p_max_players ?? null];
-      if (title.length < 1 || title.length > 80) return bad('the title must have 1 to 80 characters');
-      if ((a.p_description ?? '').trim().length > 2000) return bad('the description is too long');
-      if (players.some((n) => n !== null && (n < 1 || n > 99)) || (players[0] !== null && players[1] !== null && players[0] > players[1])) return bad('invalid number of players');
-      if (a.p_duration_minutes != null && (a.p_duration_minutes < 1 || a.p_duration_minutes > 1440)) return bad('invalid duration');
-      if (categories.length > 30 || categories.some((c) => c.length < 1 || c.length > 60)) return bad('invalid categories');
-      const extra = this.badAgeOrCover(a, uid);
-      if (extra) return bad(extra);
+      const problem = this.checkGameInput(a, uid);
+      if (problem) return bad(problem);
       if (db.games.filter((g) => g.owner_id === uid && Date.now() - Date.parse(String(g.created_at ?? new Date().toISOString())) < 86_400_000).length >= 20) {
         return { status: 400, body: { code: '54000', message: 'too many games added today', details: null, hint: null } };
       }
@@ -790,11 +796,9 @@ export class FakeBackend {
       const bad = (message: string): Result => ({ status: 400, body: { code: '22023', message, details: null, hint: null } });
       const title = (a.p_title ?? '').trim();
       const players = [a.p_min_players ?? null, a.p_max_players ?? null];
-      if (title.length < 1 || title.length > 80) return bad('the title must have 1 to 80 characters');
-      if (players.some((n) => n !== null && (n < 1 || n > 99)) || (players[0] !== null && players[1] !== null && players[0] > players[1])) return bad('invalid number of players');
       const keepCover = (a.p_cover_url ?? null) === game.cover_url;
-      const extra = this.badAgeOrCover({ ...a, p_cover_url: keepCover ? null : a.p_cover_url }, uid);
-      if (extra) return bad(extra);
+      const problem = this.checkGameInput({ ...a, p_cover_url: keepCover ? null : a.p_cover_url }, uid);
+      if (problem) return bad(problem);
       Object.assign(game, {
         title, description: (a.p_description ?? '').trim(), min_players: players[0], max_players: players[1], duration_minutes: a.p_duration_minutes ?? null,
         categories: (a.p_categories ?? []).map((c) => c.trim()), min_age: a.p_min_age ?? null, cover_url: a.p_cover_url ?? null,

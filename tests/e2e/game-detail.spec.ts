@@ -69,7 +69,7 @@ test.describe('Detalhe do jogo', () => {
     });
 
     test('o dono acrescenta e remove categorias, tantas quantas quiser, e a ficha atualiza @responsive', async ({ page, backend, signIn }) => {
-      dixit(backend).owner_id = PLAYER.id;
+      Object.assign(dixit(backend), { owner_id: PLAYER.id, bgg_id: 39856 }); // a BGG import: its owner edits only the categories
       await signIn();
       const game = new GamePage(page);
       await game.goto('dixit');
@@ -100,7 +100,7 @@ test.describe('Detalhe do jogo', () => {
     });
 
     test('recusa categorias em branco, repetidas ou demasiado longas antes de guardar', async ({ page, backend, signIn }) => {
-      dixit(backend).owner_id = PLAYER.id;
+      Object.assign(dixit(backend), { owner_id: PLAYER.id, bgg_id: 39856 }); // a BGG import: its owner edits only the categories
       await signIn();
       await new GamePage(page).goto('dixit');
       await page.getByRole('button', { name: EDIT }).click();
@@ -121,7 +121,7 @@ test.describe('Detalhe do jogo', () => {
     });
 
     test('se o jogo deixou de ser seu, o servidor recusa e o editor continua aberto', async ({ page, backend, signIn }) => {
-      dixit(backend).owner_id = PLAYER.id;
+      Object.assign(dixit(backend), { owner_id: PLAYER.id, bgg_id: 39856 }); // a BGG import: its owner edits only the categories
       await signIn();
       await new GamePage(page).goto('dixit');
       await page.getByRole('button', { name: EDIT }).click();
@@ -136,7 +136,7 @@ test.describe('Detalhe do jogo', () => {
     });
 
     test('avisa quando o servidor falha ao guardar', async ({ page, backend, signIn }) => {
-      dixit(backend).owner_id = PLAYER.id;
+      Object.assign(dixit(backend), { owner_id: PLAYER.id, bgg_id: 39856 }); // a BGG import: its owner edits only the categories
       await signIn();
       backend.fail(/PATCH \/rest\/v1\/games/, { status: 500, body: { code: 'XX000', message: 'falha simulada' } });
       await new GamePage(page).goto('dixit');

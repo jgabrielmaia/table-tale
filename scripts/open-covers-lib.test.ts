@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { isOwnCover, toOpenCover } from './open-covers-lib';
+import { isCatalogueCover, isOwnCover, toOpenCover } from './open-covers-lib';
 
 const info = (licence: string, artist = '<a href="//commons.wikimedia.org/wiki/User:Budew1234">Budew1234</a>') => ({
   url: 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Hues_and_Cues.jpg',
+  sha1: '0123456789abcdef0123',
   thumburl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Hues_and_Cues.jpg/1200px-Hues_and_Cues.jpg',
   descriptionurl: 'https://commons.wikimedia.org/wiki/File:Hues_and_Cues.jpg',
   extmetadata: { LicenseShortName: { value: licence }, Artist: { value: artist } },
@@ -14,6 +15,7 @@ describe('toOpenCover', () => {
       downloadUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Hues_and_Cues.jpg/1200px-Hues_and_Cues.jpg',
       credit: 'Budew1234 · CC BY-SA 4.0 · Wikimedia Commons',
       sourceUrl: 'https://commons.wikimedia.org/wiki/File:Hues_and_Cues.jpg',
+      version: '0123456789ab',
     });
   });
 
@@ -26,6 +28,14 @@ describe('toOpenCover', () => {
     expect(toOpenCover(info('CC BY-NC 2.0'))).toHaveProperty('error');
     expect(toOpenCover(info('Fair use'))).toHaveProperty('error');
     expect(toOpenCover({ url: 'x', descriptionurl: 'y' })).toHaveProperty('error');
+  });
+});
+
+describe('isCatalogueCover', () => {
+  it('recognises the covers this script copied, and nothing else', () => {
+    expect(isCatalogueCover('https://abc.supabase.co/storage/v1/object/public/game-covers/catalogue/uno.jpg?v=1')).toBe(true);
+    expect(isCatalogueCover('https://abc.supabase.co/storage/v1/object/public/game-covers/11111111-1111-1111-1111-111111111111/g.webp')).toBe(false);
+    expect(isCatalogueCover(null)).toBe(false);
   });
 });
 
