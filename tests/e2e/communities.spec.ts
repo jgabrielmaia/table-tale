@@ -412,6 +412,10 @@ test.describe('Comunidades', () => {
       await dialog.getByLabel('Jogadores (mín.)').fill('2');
       await dialog.getByLabel('Jogadores (máx.)').fill('4');
       await dialog.getByLabel('Duração (min)').fill('30');
+      await dialog.getByLabel(/Idade recomendada/).fill('8');
+      // A photo far larger than the bucket allows: previewed now, shrunk to 1600 px wide before upload.
+      await dialog.getByLabel('Escolher imagem').setInputFiles({ name: 'caixa.png', mimeType: 'image/png', buffer: makePng(2400, 1600, { noise: true }) });
+      await expect(dialog.getByRole('img', { name: 'Pré-visualização da imagem' })).toBeVisible();
       await dialog.getByLabel('Nova categoria').fill('Cartas');
       await dialog.getByLabel('Nova categoria').press('Enter');
       await dialog.getByLabel('Nova categoria').fill('Festa');
@@ -424,14 +428,85 @@ test.describe('Comunidades', () => {
       const link = page.getByRole('tabpanel').getByRole('link', { name: 'Jogo do Café' });
       await expect(link).toBeVisible();
       const game = backend.db.games.find((g) => g.slug === 'jogo-do-cafe')!;
-      expect(game).toMatchObject({ title: 'Jogo do Café', description: 'Um jogo de cartas para o fim de tarde.', min_players: 2, max_players: 4, duration_minutes: 30, categories: ['Cartas', 'Festa'], owner_id: PLAYER.id, bgg_id: null });
+      expect(game).toMatchObject({ title: 'Jogo do Café', description: 'Um jogo de cartas para o fim de tarde.', min_players: 2, max_players: 4, duration_minutes: 30, min_age: 8, categories: ['Cartas', 'Festa'], owner_id: PLAYER.id, bgg_id: null });
+      expect(game.cover_url).toMatch(new RegExp(`/game-covers/${PLAYER.id}/game-\\d+\\.webp$`));
+      expect(backend.uploads).toHaveLength(1);
+      expect(backend.uploads[0]).toMatchObject({ type: 'image/webp', width: 1600, height: 1067 });
+      expect(backend.uploads[0]!.bytes).toBeLessThanOrEqual(2 * 1024 * 1024);
       expect(backend.db.communityGames.some((g) => g.game_id === game.id && g.added_by === PLAYER.id)).toBe(true);
 
-      // O jogador é o dono: na ficha pode editar as categorias.
+      // O jogador é o dono de um jogo feito à mão: na ficha pode editá-lo todo.
       await link.click();
       await expect(page).toHaveURL(/\/games\/jogo-do-cafe$/);
       await expect(page.getByText('Cartas · Festa')).toBeVisible();
+      await expect(page.getByText('8+ anos')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Editar jogo' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Editar categorias' })).toHaveCount(0);
+    });
+
+    test('um título que já existe no catálogo oferece adicionar esse jogo em vez de o duplicar', async ({ page, backend }) => {
+      const community = backend.db.communities.find((c) => c.slug === 'clube-secreto-braga')!;
+      const before = backend.db.games.length;
+      await page.goto('communities/clube-secreto-braga');
+      await page.getByRole('tab', { name: 'Jogos' }).click();
+      await page.getByRole('button', { name: 'Novo jogo' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Adicionar um jogo novo' });
+
+      await dialog.getByLabel('Título').fill('  uno ');
+      await expect(dialog.getByText('"Uno" já está aqui.')).toBeVisible();
+      await expect(dialog.getByRole('button', { name: 'Adicionar esse' })).toHaveCount(0);
+      await dialog.getByLabel('Título').fill('DIXIT');
+      await expect(dialog.getByText('Já existe "Dixit" no catálogo.')).toBeVisible();
+      await expect(dialog.getByRole('button', { name: 'Adicionar jogo' })).toBeDisabled();
+      await dialog.getByRole('button', { name: 'Adicionar esse' }).click();
+
+      await expect(new AppShell(page).toast('Dixit adicionado.')).toBeVisible();
+      await expect(dialog).toBeHidden();
+      await expect(page.getByRole('tabpanel').getByRole('link', { name: 'Dixit' })).toBeVisible();
+      expect(backend.db.games).toHaveLength(before);
+      const dixit = backend.db.games.find((g) => g.slug === 'dixit')!;
+      expect(backend.db.communityGames.some((e) => e.community_id === community.id && e.game_id === dixit.id)).toBe(true);
+      expect(backend.calls(/rpc\/create_game/)).toHaveLength(0);
+    });
+
+    test('quem adicionou um jogo à mão edita-o na ficha; um jogo do BGG continua só com as categorias @responsive', async ({ page, backend }) => {
+      Object.assign(backend.db.games.find((g) => g.slug === 'vaalbara')!, { owner_id: PLAYER.id, bgg_id: null, categories: ['Prehistoric', 'Strategy'], min_age: null });
+      await page.goto('games/vaalbara');
+      await page.getByRole('button', { name: 'Editar jogo' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Editar jogo' });
+      await expect(dialog.getByLabel('Título')).toHaveValue('Vaalbara');
+      await expect(dialog.getByRole('listitem')).toHaveText(['Prehistoric', 'Strategy']);
+
+      await dialog.getByLabel('Título').fill('Vaalbara: Edição Caseira');
+      await dialog.getByRole('button', { name: 'Remover Strategy' }).click();
+      await dialog.getByLabel(/Idade recomendada/).fill('10');
+      await dialog.getByLabel('Duração (min)').fill('50');
+      await dialog.getByLabel('Escolher imagem').setInputFiles({ name: 'foto.png', mimeType: 'image/png', buffer: makePng(800, 600) });
+      await dialog.getByRole('button', { name: 'Guardar' }).click();
+
+      await expect(new AppShell(page).toast('Jogo atualizado.')).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Vaalbara: Edição Caseira');
+      await expect(page.getByText('10+ anos')).toBeVisible();
+      const game = backend.db.games.find((g) => g.slug === 'vaalbara')!;
+      expect(game).toMatchObject({ categories: ['Prehistoric'], min_age: 10, duration_minutes: 50 });
+      expect(game.cover_url).toMatch(new RegExp(`/game-covers/${PLAYER.id}/`));
+
+      // Imported from BGG: the owner only edits its categories.
+      Object.assign(backend.db.games.find((g) => g.slug === 'dixit')!, { owner_id: PLAYER.id, bgg_id: 39856 });
+      await page.goto('games/dixit');
       await expect(page.getByRole('button', { name: 'Editar categorias' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Editar jogo' })).toHaveCount(0);
+    });
+
+    test('um jogo com capa de licença aberta mostra o autor e a licença', async ({ page, backend }) => {
+      Object.assign(backend.db.games.find((g) => g.slug === 'dixit')!, {
+        cover_url: 'https://e2e.supabase.test/storage/v1/object/public/game-covers/catalogue/dixit.jpg',
+        cover_credit: 'yoppy · CC BY 2.0 · Wikimedia Commons',
+        cover_credit_url: 'https://commons.wikimedia.org/wiki/File:Dixit_game_0001.jpg',
+      });
+      await page.goto('games/dixit');
+      const credit = page.getByRole('link', { name: 'Imagem: yoppy · CC BY 2.0 · Wikimedia Commons' });
+      await expect(credit).toHaveAttribute('href', 'https://commons.wikimedia.org/wiki/File:Dixit_game_0001.jpg');
     });
 
     test('o formulário de jogo novo valida o título, os jogadores e a duração antes de enviar', async ({ page, backend }) => {
