@@ -69,6 +69,9 @@ export interface GameRow {
   bgg_weight: number | null;
   /** The person who added the game; only they may edit its categories. Null once their account is gone. */
   owner_id: string | null;
+  /** Author and licence of the cover photo, and where it comes from. */
+  cover_credit?: string | null;
+  cover_credit_url?: string | null;
   created_at: string;
   updated_at: string;
 }

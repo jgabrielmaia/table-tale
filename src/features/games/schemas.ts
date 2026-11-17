@@ -41,6 +41,7 @@ export const newGameSchema = z
     minPlayers: optionalInt(1, 99, 'val.playersLabel'),
     maxPlayers: optionalInt(1, 99, 'val.playersLabel'),
     durationMinutes: optionalInt(1, 1440, 'val.durationLabel'),
+    minAge: optionalInt(0, 21, 'val.ageLabel'),
   })
   .refine((v) => v.minPlayers === null || v.maxPlayers === null || v.minPlayers <= v.maxPlayers, {
     path: ['maxPlayers'],

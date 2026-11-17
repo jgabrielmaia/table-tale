@@ -402,7 +402,7 @@ function GamesPanel({ c, run }: { c: CommunityState; run: Run }) {
               {t('communities.addGame')}
             </Button>
           )}
-          <NewGameButton addTo={(gameId) => c.addGame.mutateAsync(gameId)} />
+          <NewGameButton addTo={(gameId) => c.addGame.mutateAsync(gameId)} alreadyHere={new Set(allEntries.map((e) => e.game.id))} />
         </div>
       )}
       {shelfOptions.length > 2 && <div className="community-shelf-picker"><Select label={t('communities.shelves.label')} value={shelfOwner} options={shelfOptions} onChange={(e) => setShelfOwner(e.target.value)} /></div>}

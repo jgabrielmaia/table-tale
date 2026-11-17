@@ -74,7 +74,7 @@ export function MyLibraryCard() {
         <Button variant="gold" disabled={!pick} loading={lib.add.isPending} onClick={() => void act(() => lib.add.mutateAsync(pick)).then(() => setPick(''))}>
           {t('communities.myLibraryAdd')}
         </Button>
-        <NewGameButton addTo={(gameId) => lib.add.mutateAsync(gameId)} />
+        <NewGameButton addTo={(gameId) => lib.add.mutateAsync(gameId)} alreadyHere={new Set(lib.entries.map((e) => e.gameId))} />
       </div>
       {lib.isLoading ? (
         <LoadingState variant="lines" count={2} />

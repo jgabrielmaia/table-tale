@@ -10,12 +10,20 @@ const message = (input: Record<string, unknown>) => {
 describe('newGameSchema', () => {
   it('only needs a title: everything else is optional and comes out empty', () => {
     const result = newGameSchema.parse({ title: '  Jogo do Café  ' });
-    expect(result).toEqual({ title: 'Jogo do Café', description: '', minPlayers: null, maxPlayers: null, durationMinutes: null });
+    expect(result).toEqual({ title: 'Jogo do Café', description: '', minPlayers: null, maxPlayers: null, durationMinutes: null, minAge: null });
   });
 
   it('turns the number fields into numbers and trims the description', () => {
     const result = newGameSchema.parse({ title: 'A', description: ' x ', minPlayers: '2', maxPlayers: '4', durationMinutes: '30' });
     expect(result).toMatchObject({ description: 'x', minPlayers: 2, maxPlayers: 4, durationMinutes: 30 });
+  });
+
+  it('takes an optional recommended age from 0 to 21', () => {
+    expect(newGameSchema.parse({ title: 'A', minAge: '8' }).minAge).toBe(8);
+    expect(parse({ minAge: '0' }).success).toBe(true);
+    expect(parse({ minAge: '22' }).success).toBe(false);
+    expect(parse({ minAge: '-1' }).success).toBe(false);
+    expect(parse({ minAge: '7.5' }).success).toBe(false);
   });
 
   it('refuses a blank or over-long title', () => {
