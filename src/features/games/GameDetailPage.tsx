@@ -20,7 +20,7 @@ import { errorMessage } from '@/lib/errors';
 import { statusLabel, formatDate, minutesText, playersText, todayIso } from '@/lib/format';
 import type { GameStatus } from '@/types/domain';
 import { GameCategoriesEditor } from './GameCategoriesEditor';
-import { NewGameModal } from './NewGameModal';
+import { GameInlineEdit } from './GameInlineEdit';
 import { suggestCategories } from './categories';
 import { relatedGames } from './filters';
 import type { SessionFormValues } from './schemas';
@@ -72,6 +72,27 @@ export function GameDetailPage() {
     );
   const related = relatedGames(game, allGames);
   const copies = game.owners.reduce((sum, o) => sum + o.copies, 0);
+  const ownerFacts = (
+    <>
+      <div>
+        <dt>{t('game.owner')}</dt>
+        <dd>
+          {game.owners.length ? (
+            game.owners.map((o) => (
+              <span key={o.userId} className="inline-flex items-center gap-2">
+                <PlayerAvatar playerId={o.userId} name={o.displayName} src={o.avatarUrl} size="xs" decorative />
+                {o.displayName}
+              </span>
+            ))
+          ) : (
+            t('game.noOwner')
+          )}
+        </dd>
+      </div>
+      <div><dt>{t('game.copies')}</dt><dd>{copies || '—'}</dd></div>
+      <div><dt>{t('game.condition')}</dt><dd>{game.owners[0] ? t(`condition.${game.owners[0].condition}`) : '—'}</dd></div>
+    </>
+  );
   const style = { '--accent': coverAccent(game.slug) } as CSSProperties;
   const timeFormatter = new Intl.DateTimeFormat(getLang() === 'pt' ? 'pt-PT' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
 
@@ -135,6 +156,16 @@ export function GameDetailPage() {
       <div className="detail-backdrop" style={style}>
         <div className="container section">
           <Link className="back-link" to="/games"><Icon name="back" />{t('common.backToGames')}</Link>
+          {editingGame && canEditGame ? (
+            <GameInlineEdit
+              game={rawGame!}
+              suggestions={suggestions}
+              catalogue={allGames}
+              extraFacts={ownerFacts}
+              onSave={saveGame}
+              onClose={() => setEditingGame(false)}
+            />
+          ) : (
           <article className="detail-grid" aria-labelledby="game-title">
             <figure className="detail-media">
               <GameCover slug={game.slug} title={game.title} coverUrl={game.coverUrl} loading="eager" />
@@ -163,23 +194,7 @@ export function GameDetailPage() {
                 <div><dt>{t('game.players')}</dt><dd>{playersText(game.minPlayers, game.maxPlayers)}</dd></div>
                 <div><dt>{t('game.avgDuration')}</dt><dd>{minutesText(game.durationMinutes)}</dd></div>
                 {game.minAge !== null && !game.bgg && <div><dt>{t('game.minAge')}</dt><dd>{t('game.minAgeValue', { n: game.minAge })}</dd></div>}
-                <div>
-                  <dt>{t('game.owner')}</dt>
-                  <dd>
-                    {game.owners.length ? (
-                      game.owners.map((o) => (
-                        <span key={o.userId} className="inline-flex items-center gap-2">
-                          <PlayerAvatar playerId={o.userId} name={o.displayName} src={o.avatarUrl} size="xs" decorative />
-                          {o.displayName}
-                        </span>
-                      ))
-                    ) : (
-                      t('game.noOwner')
-                    )}
-                  </dd>
-                </div>
-                <div><dt>{t('game.copies')}</dt><dd>{copies || '—'}</dd></div>
-                <div><dt>{t('game.condition')}</dt><dd>{game.owners[0] ? t(`condition.${game.owners[0].condition}`) : '—'}</dd></div>
+                {ownerFacts}
               </dl>
 
               {user ? (
@@ -210,6 +225,7 @@ export function GameDetailPage() {
               )}
             </div>
           </article>
+          )}
         </div>
       </div>
 
@@ -271,16 +287,6 @@ export function GameDetailPage() {
           {related.length ? <GameGrid games={related} compact label={t('game.related')} /> : <p className="muted">{t('game.noRelated')}</p>}
         </section>
       </div>
-      {canEditGame && (
-        <NewGameModal
-          open={editingGame}
-          game={rawGame!}
-          suggestions={suggestions}
-          catalogue={allGames}
-          onClose={() => setEditingGame(false)}
-          onSubmit={saveGame}
-        />
-      )}
       {isOwner && !canEditGame && (
         <GameCategoriesEditor
           open={editingCategories}

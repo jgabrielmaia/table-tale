@@ -473,18 +473,23 @@ test.describe('Comunidades', () => {
       Object.assign(backend.db.games.find((g) => g.slug === 'vaalbara')!, { owner_id: PLAYER.id, bgg_id: null, categories: ['Prehistoric', 'Strategy'], min_age: null });
       await page.goto('games/vaalbara');
       await page.getByRole('button', { name: 'Editar jogo' }).click();
-      const dialog = page.getByRole('dialog', { name: 'Editar jogo' });
-      await expect(dialog.getByLabel('Título')).toHaveValue('Vaalbara');
-      await expect(dialog.getByRole('listitem')).toHaveText(['Prehistoric', 'Strategy']);
+      // The page itself turns editable: no pop-up, the fields sit where the facts are.
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      const form = page.getByRole('form', { name: 'Editar jogo' });
+      await expect(form.getByLabel('Título')).toHaveValue('Vaalbara');
+      await expect(form.getByRole('listitem')).toHaveText(['Prehistoric', 'Strategy']);
+      await expect(form.getByRole('region', { name: 'Guardar alterações' })).toBeVisible();
 
-      await dialog.getByLabel('Título').fill('Vaalbara: Edição Caseira');
-      await dialog.getByRole('button', { name: 'Remover Strategy' }).click();
-      await dialog.getByLabel(/Idade recomendada/).fill('10');
-      await dialog.getByLabel('Duração (min)').fill('50');
-      await dialog.getByLabel('Escolher imagem').setInputFiles({ name: 'foto.png', mimeType: 'image/png', buffer: makePng(800, 600) });
-      await dialog.getByRole('button', { name: 'Guardar' }).click();
+      await form.getByLabel('Título').fill('Vaalbara: Edição Caseira');
+      await form.getByRole('button', { name: 'Remover Strategy' }).click();
+      await form.getByLabel(/Idade recomendada/).fill('10');
+      await form.getByLabel('Duração (min)').fill('50');
+      await form.getByLabel('Imagem', { exact: true }).setInputFiles({ name: 'foto.png', mimeType: 'image/png', buffer: makePng(800, 600) });
+      await expect(form.getByText('Alterações por guardar')).toBeVisible();
+      await form.getByRole('button', { name: 'Guardar' }).click();
 
       await expect(new AppShell(page).toast('Jogo atualizado.')).toBeVisible();
+      await expect(page.getByRole('form', { name: 'Editar jogo' })).toHaveCount(0);
       await expect(page.getByRole('heading', { level: 1 })).toHaveText('Vaalbara: Edição Caseira');
       await expect(page.getByText('10+ anos')).toBeVisible();
       const game = backend.db.games.find((g) => g.slug === 'vaalbara')!;
@@ -495,6 +500,53 @@ test.describe('Comunidades', () => {
       Object.assign(backend.db.games.find((g) => g.slug === 'dixit')!, { owner_id: PLAYER.id, bgg_id: 39856 });
       await page.goto('games/dixit');
       await expect(page.getByRole('button', { name: 'Editar categorias' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Editar jogo' })).toHaveCount(0);
+    });
+
+    test('cancelar a edição pergunta antes de descartar, e Esc e Ctrl+Enter funcionam @responsive', async ({ page, backend }) => {
+      Object.assign(backend.db.games.find((g) => g.slug === 'vaalbara')!, { owner_id: PLAYER.id, bgg_id: null });
+      await page.goto('games/vaalbara');
+      await page.getByRole('button', { name: 'Editar jogo' }).click();
+      const form = page.getByRole('form', { name: 'Editar jogo' });
+
+      // Nothing changed: Cancel closes without asking.
+      await form.getByRole('button', { name: 'Cancelar' }).click();
+      await expect(form).toHaveCount(0);
+
+      // Changed: Esc asks; dismissing keeps the edit, accepting discards it.
+      await page.getByRole('button', { name: 'Editar jogo' }).click();
+      await form.getByLabel('Título').fill('Outro nome');
+      page.once('dialog', (d) => void d.dismiss());
+      await page.keyboard.press('Escape');
+      await expect(form.getByLabel('Título')).toHaveValue('Outro nome');
+      page.once('dialog', (d) => void d.accept());
+      await page.keyboard.press('Escape');
+      await expect(form).toHaveCount(0);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Vaalbara');
+      expect(backend.calls(/update_game/)).toHaveLength(0);
+
+      // Ctrl+Enter saves from the keyboard.
+      await page.getByRole('button', { name: 'Editar jogo' }).click();
+      await form.getByLabel('Título').fill('Vaalbara 2');
+      await page.keyboard.press('Control+Enter');
+      await expect(new AppShell(page).toast('Jogo atualizado.')).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Vaalbara 2');
+    });
+
+    test('na edição na ficha, um título de outro jogo bloqueia guardar e o jogo dos outros não tem Editar', async ({ page, backend }) => {
+      Object.assign(backend.db.games.find((g) => g.slug === 'vaalbara')!, { owner_id: PLAYER.id, bgg_id: null });
+      await page.goto('games/vaalbara');
+      await page.getByRole('button', { name: 'Editar jogo' }).click();
+      const form = page.getByRole('form', { name: 'Editar jogo' });
+      await form.getByLabel('Título').fill('Dixit');
+      await expect(form.getByText('Já existe "Dixit" no catálogo.')).toBeVisible();
+      await expect(form.getByRole('button', { name: 'Guardar' })).toBeDisabled();
+      await form.getByLabel('Título').fill('Vaalbara');
+      await expect(form.getByRole('button', { name: 'Guardar' })).toBeEnabled();
+
+      Object.assign(backend.db.games.find((g) => g.slug === 'vaalbara')!, { owner_id: '00000000-0000-0000-0000-00000000dead' });
+      await page.goto('games/vaalbara');
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Editar jogo' })).toHaveCount(0);
     });
 
