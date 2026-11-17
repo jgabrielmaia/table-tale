@@ -12,7 +12,7 @@ import { LoginRequiredNotice } from '@/features/auth/LoginPage';
 import { useAuth } from '@/hooks/useAuth';
 import { useGame } from '@/hooks/useGame';
 import { useGameSessions } from '@/hooks/useGameSessions';
-import { useUpdateGameCategories, useUpdateGameState } from '@/hooks/useGames';
+import { useUpdateGame, useUpdateGameCategories, useUpdateGameState } from '@/hooks/useGames';
 import { getLang, localizeGame, useI18n } from '@/i18n';
 import { gameSeo, NOT_FOUND_SEO } from '@/seo/pages';
 import { usePageSeo } from '@/seo/RouteSeo';
@@ -20,6 +20,7 @@ import { errorMessage } from '@/lib/errors';
 import { statusLabel, formatDate, minutesText, playersText, todayIso } from '@/lib/format';
 import type { GameStatus } from '@/types/domain';
 import { GameCategoriesEditor } from './GameCategoriesEditor';
+import { NewGameModal } from './NewGameModal';
 import { suggestCategories } from './categories';
 import { relatedGames } from './filters';
 import type { SessionFormValues } from './schemas';
@@ -41,6 +42,8 @@ export function GameDetailPage() {
   const updateState = useUpdateGameState();
   const updateCategories = useUpdateGameCategories();
   const [editingCategories, setEditingCategories] = useState(false);
+  const [editingGame, setEditingGame] = useState(false);
+  const updateGame = useUpdateGame();
   const suggestions = useMemo(() => suggestCategories(allGames.map((g) => g.categories), rawGame?.categories ?? []), [allGames, rawGame]);
   const { notify } = useToast();
 
@@ -55,6 +58,13 @@ export function GameDetailPage() {
   }
 
   const isOwner = Boolean(user && game.ownerId === user.id);
+  // A game added by hand is the owner's to edit in full; a BGG import keeps BGG's data, so only its categories change.
+  const canEditGame = isOwner && game.bggId === null && Boolean(rawGame);
+  const saveGame = (values: Parameters<typeof updateGame.mutateAsync>[0]['values'], categories: string[], cover: File | null | undefined) =>
+    updateGame.mutateAsync({ game: rawGame!, values, categories, cover }).then(
+      () => notify(t('newGame.saved')),
+      (e) => { notify(errorMessage(e), { tone: 'error' }); throw e; },
+    );
   const saveCategories = (categories: string[]) =>
     updateCategories.mutateAsync({ gameId: game.id, categories }).then(
       () => notify(t('game.categories.saved')),
@@ -128,12 +138,21 @@ export function GameDetailPage() {
           <article className="detail-grid" aria-labelledby="game-title">
             <figure className="detail-media">
               <GameCover slug={game.slug} title={game.title} coverUrl={game.coverUrl} loading="eager" />
+              {game.coverUrl && game.coverCredit && (
+                <figcaption className="game-credit">
+                  {game.coverCreditUrl
+                    ? <a href={game.coverCreditUrl} target="_blank" rel="noopener noreferrer">{t('game.coverCredit', { credit: game.coverCredit })}</a>
+                    : t('game.coverCredit', { credit: game.coverCredit })}
+                </figcaption>
+              )}
             </figure>
             <div className="detail-info">
               {(game.categories.length > 0 || isOwner) && (
                 <div className="detail-eyebrow">
                   {game.categories.length > 0 && <p className="eyebrow">{game.categories.slice(0, 3).join(' · ')}</p>}
-                  {isOwner && (
+                  {canEditGame ? (
+                    <Button size="sm" variant="ghost" icon={<Icon name="edit" />} onClick={() => setEditingGame(true)}>{t('newGame.editButton')}</Button>
+                  ) : isOwner && (
                     <Button size="sm" variant="ghost" icon={<Icon name="edit" />} onClick={() => setEditingCategories(true)}>{t('game.categories.edit')}</Button>
                   )}
                 </div>
@@ -143,6 +162,7 @@ export function GameDetailPage() {
               <dl className="facts">
                 <div><dt>{t('game.players')}</dt><dd>{playersText(game.minPlayers, game.maxPlayers)}</dd></div>
                 <div><dt>{t('game.avgDuration')}</dt><dd>{minutesText(game.durationMinutes)}</dd></div>
+                {game.minAge !== null && !game.bgg && <div><dt>{t('game.minAge')}</dt><dd>{t('game.minAgeValue', { n: game.minAge })}</dd></div>}
                 <div>
                   <dt>{t('game.owner')}</dt>
                   <dd>
@@ -251,7 +271,17 @@ export function GameDetailPage() {
           {related.length ? <GameGrid games={related} compact label={t('game.related')} /> : <p className="muted">{t('game.noRelated')}</p>}
         </section>
       </div>
-      {isOwner && (
+      {canEditGame && (
+        <NewGameModal
+          open={editingGame}
+          game={rawGame!}
+          suggestions={suggestions}
+          catalogue={allGames}
+          onClose={() => setEditingGame(false)}
+          onSubmit={saveGame}
+        />
+      )}
+      {isOwner && !canEditGame && (
         <GameCategoriesEditor
           open={editingCategories}
           categories={game.categories}

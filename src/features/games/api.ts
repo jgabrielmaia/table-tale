@@ -3,11 +3,14 @@ import { AppError, unwrap } from '@/lib/errors';
 import { t } from '@/i18n';
 import type { GameRow, GameSessionRow, OwnershipCondition, ShelfHighlightRow, UserGameStatusRow } from '@/types/database';
 import type { Game, GameOwner, GameSession, GameStatus, GameUserState, ShelfHighlight } from '@/types/domain';
+import type { NewGameValues } from './schemas';
+import { shrinkErrorMessage, shrinkImage } from '@/lib/image';
+import { GAME_COVER_BUCKET, GAME_COVER_TARGET, GAME_COVER_TYPES, ownCoverPath } from './cover';
 import type { ShelfEntry } from './shelves';
 
 const LIST_COLUMNS =
   'id,title,slug,description,cover_url,min_players,max_players,duration_minutes,bgg_id,bgg_synced_at,categories,mechanics,' +
-  'year_published,min_age,bgg_rating,bgg_rating_count,bgg_rank,bgg_weight,owner_id';
+  'year_published,min_age,bgg_rating,bgg_rating_count,bgg_rank,bgg_weight,owner_id,cover_credit,cover_credit_url';
 const OWNERS = 'user_games(user_id,copy_number,condition,profiles(id,display_name,avatar_url))';
 const GAME_SELECT = `${LIST_COLUMNS},${OWNERS}`;
 /** The game page also loads the full BGG item (designers, artists, publishers...). */
@@ -48,6 +51,8 @@ export function mapGame(row: GameQueryRow): Game {
     categories: row.categories ?? [],
     mechanics: row.mechanics ?? [],
     ownerId: row.owner_id ?? null,
+    coverCredit: row.cover_credit ?? null,
+    coverCreditUrl: row.cover_credit_url ?? null,
     yearPublished: row.year_published,
     minAge: row.min_age,
     bggId: row.bgg_id,
@@ -85,6 +90,76 @@ export async function fetchGameBySlug(slug: string): Promise<Game | null> {
     t('games.err.game'),
   );
   return row ? mapGame(row as unknown as GameQueryRow) : null;
+}
+
+/** Shrinks and uploads a game cover to the player's own folder; returns its public URL and storage path. */
+async function uploadGameCover(userId: string, picked: File): Promise<{ url: string; path: string }> {
+  if (!GAME_COVER_TYPES[picked.type]) throw new AppError(t('edit.fileType'));
+  let file: File;
+  try {
+    file = await shrinkImage(picked, GAME_COVER_TARGET);
+  } catch (e) {
+    throw new AppError(shrinkErrorMessage(e));
+  }
+  const path = `${userId}/game-${Date.now()}.${GAME_COVER_TYPES[file.type]}`;
+  unwrap(await supabase.storage.from(GAME_COVER_BUCKET).upload(path, file, { contentType: file.type, upsert: false }), t('newGame.errUpload'));
+  return { url: supabase.storage.from(GAME_COVER_BUCKET).getPublicUrl(path).data.publicUrl, path };
+}
+
+// A leftover file only costs storage, so a failed clean-up never fails the action.
+async function removeGameCover(path: string | null) {
+  if (!path) return;
+  const { error } = await supabase.storage.from(GAME_COVER_BUCKET).remove([path]);
+  if (error) console.warn('game cover clean-up failed', error.message);
+}
+
+const gameArgs = (values: NewGameValues, categories: string[], coverUrl: string | null) => ({
+  p_title: values.title,
+  p_description: values.description,
+  p_min_players: values.minPlayers,
+  p_max_players: values.maxPlayers,
+  p_duration_minutes: values.durationMinutes,
+  p_categories: categories,
+  p_min_age: values.minAge,
+  p_cover_url: coverUrl,
+});
+
+/**
+ * A game added by hand, without BGG: the database makes the caller its owner and picks a free slug. The cover, if any,
+ * is shrunk and uploaded first (and removed again if the game can't be created).
+ */
+export async function createGame(userId: string, values: NewGameValues, categories: string[], cover: File | null): Promise<{ id: string; slug: string }> {
+  const uploaded = cover ? await uploadGameCover(userId, cover) : null;
+  const result = await supabase.rpc('create_game', gameArgs(values, categories, uploaded?.url ?? null));
+  if (result.error) await removeGameCover(uploaded?.path ?? null);
+  if (result.error?.code === '54000') throw new AppError(t('newGame.errLimit'), result.error);
+  const rows = unwrap(result, t('newGame.errCreate')) as { game_id: string; slug: string }[] | null;
+  const created = rows?.[0];
+  if (!created) throw new AppError(t('newGame.errCreate'));
+  return { id: created.game_id, slug: created.slug };
+}
+
+/**
+ * Saves a game the player added by hand. cover: a new File replaces the image, null removes it, undefined keeps it.
+ * The player's previous upload is removed once the game points elsewhere.
+ */
+export async function updateGame(
+  userId: string,
+  game: Pick<Game, 'id' | 'coverUrl'>,
+  values: NewGameValues,
+  categories: string[],
+  cover: File | null | undefined,
+): Promise<void> {
+  const uploaded = cover ? await uploadGameCover(userId, cover) : null;
+  const coverUrl = cover === undefined ? game.coverUrl : uploaded?.url ?? null;
+  const result = await supabase.rpc('update_game', { p_game: game.id, ...gameArgs(values, categories, coverUrl) });
+  if (result.error || result.data !== true) await removeGameCover(uploaded?.path ?? null);
+  const saved = unwrap(result, t('newGame.errSave')) as boolean | null;
+  if (saved !== true) throw new AppError(t('newGame.errNotOwner'));
+  if (coverUrl !== game.coverUrl && game.coverUrl) {
+    const { data: others } = await supabase.from('games').select('id').eq('cover_url', game.coverUrl).limit(1);
+    if (others && others.length === 0) await removeGameCover(ownCoverPath(game.coverUrl, userId));
+  }
 }
 
 /** Saves the game's categories. Row-level security lets only the game's owner through, which shows as no row updated. */

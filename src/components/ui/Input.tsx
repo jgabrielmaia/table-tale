@@ -64,6 +64,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
 export interface SelectOption {
   value: string;
   label: string;
+  /** For a placeholder row such as "Choose a game…": shown, but not a choice. */
+  disabled?: boolean;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement> & BaseProps & { options: SelectOption[] }>(function Select(
@@ -77,7 +79,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
       {(describedBy) => (
         <select ref={ref} id={inputId} aria-invalid={error ? true : undefined} aria-describedby={describedBy} {...rest}>
           {options.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value} disabled={o.disabled}>{o.label}</option>
           ))}
         </select>
       )}

@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchGameStates, fetchGames, saveGameState, updateGameCategories } from '@/features/games/api';
+import { createGame, fetchGameStates, fetchGames, saveGameState, updateGame, updateGameCategories } from '@/features/games/api';
+import type { NewGameValues } from '@/features/games/schemas';
 import { progressKeys, queryKeys } from '@/lib/queryKeys';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { t } from '@/i18n';
-import type { GameStatus, GameUserState, LibraryGame } from '@/types/domain';
+import type { Game, GameStatus, GameUserState, LibraryGame } from '@/types/domain';
 import { useAuth } from './useAuth';
 
 /** Catalogue merged with the signed-in user's status/favourites. */
@@ -35,6 +36,35 @@ export function useGames() {
     error: catalogue.error ?? states.error,
     refetch: () => Promise.all([catalogue.refetch(), states.refetch()]),
   };
+}
+
+/** Adds a game to the catalogue by hand (without BGG), with an optional cover; the caller becomes its owner. */
+export function useCreateGame() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: (vars: { values: NewGameValues; categories: string[]; cover: File | null }) => {
+      if (!user) throw new Error(t('newGame.needLogin'));
+      return createGame(user.id, vars.values, vars.categories, vars.cover);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.games }),
+  });
+}
+
+/** Saves a game the player added by hand (owner only) and refreshes every game list and page. */
+export function useUpdateGame() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: (vars: { game: Pick<Game, 'id' | 'coverUrl'>; values: NewGameValues; categories: string[]; cover: File | null | undefined }) => {
+      if (!user) throw new Error(t('newGame.needLogin'));
+      return updateGame(user.id, vars.game, vars.values, vars.categories, vars.cover);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.games });
+      void qc.invalidateQueries({ queryKey: ['community-games'] });
+    },
+  });
 }
 
 /** Saves a game's categories (owner only) and refreshes every game list and page. */

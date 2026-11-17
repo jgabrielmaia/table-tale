@@ -186,7 +186,9 @@ export interface SeedGame {
   max_players: number;
   duration_minutes: number;
   description: string;
-  cover: { tone: CoverTone; symbol: string; imageUrl?: string };
+  cover: { tone: CoverTone; symbol: string };
+  /** An openly licensed photo on Wikimedia Commons ("File:..."), copied into our storage by `npm run covers`. */
+  openCover?: string;
   copies: number;
 }
 
@@ -195,15 +197,13 @@ export const games: SeedGame[] = [
     slug: 'hitster', title: 'Hitster', categories: ['Card Game', 'Music'], mechanics: [], min_players: 2, max_players: 10, duration_minutes: 30, copies: 1,
     cover: {
       tone: 'dusk', symbol: 'music',
-      imageUrl: 'https://cdn.shopify.com/s/files/1/0990/3043/4098/files/1110100246_L_0_WEB_bcefdb9d-a499-4b48-bd6b-26724bd6ad02.png?v=1789390793',
     },
     description: 'Ouve uma música e coloca-a no sítio certo da tua linha do tempo. Acerta no ano e constrói a cronologia musical mais longa antes dos outros.',
   },
   {
-    slug: 'uno', title: 'Uno', categories: ['Card Game'], mechanics: [], min_players: 2, max_players: 10, duration_minutes: 30, copies: 1,
+    slug: 'uno', openCover: 'File:Uno.jpg', title: 'Uno', categories: ['Card Game'], mechanics: [], min_players: 2, max_players: 10, duration_minutes: 30, copies: 1,
     cover: {
       tone: 'ember', symbol: 'cards',
-      imageUrl: 'https://www.toysrus.pt/medias/?context=bWFzdGVyfHByb2R1Y3RfaW1hZ2VzfDQyMjk1fGltYWdlL2pwZWd8YUdZM0wyZ3lOUzh4TWpZd01EYzVNemt5TXpZeE5BfGNjM2M1Nzg1NmMxMzk4NzkyMjE1NjFjMDc0ZmU1NTA4NjNjYWIwNTU1MzFmZGExN2UyMGMyMGY1YmVlZGRkYjk',
     },
     description: 'Combina cores e números para te livrares de todas as cartas. Cartas de ação mudam o rumo da partida — e não te esqueças de dizer «Uno!».',
   },
@@ -211,23 +211,20 @@ export const games: SeedGame[] = [
     slug: 'tranquility', title: 'Tranquility', categories: ['Card Game'], mechanics: ['Cooperative Game'], min_players: 1, max_players: 5, duration_minutes: 20, copies: 1,
     cover: {
       tone: 'petrol', symbol: 'wave',
-      imageUrl: 'https://store.asmodee.com/cdn/shop/files/LKYTKYR01EN-image0_2000.jpg?v=1693924217',
     },
     description: 'Uma viagem cooperativa e silenciosa: ordenem cartas numeradas pelo mar até à ilha, sem poderem comunicar entre si.',
   },
   {
-    slug: 'cores-com-dicas', title: 'Cores com Dicas', categories: ['Party Game'], mechanics: [], min_players: 3, max_players: 10, duration_minutes: 30, copies: 1,
+    slug: 'cores-com-dicas', openCover: 'File:Hues and Cues.jpg', title: 'Cores com Dicas', categories: ['Party Game'], mechanics: [], min_players: 3, max_players: 10, duration_minutes: 30, copies: 1,
     cover: {
       tone: 'moss', symbol: 'palette',
-      imageUrl: 'https://theop.games/cdn/shop/files/HuesandCues_3DBT_NewSeal_Retailer_1.jpg?v=1748019830',
     },
     description: 'Dá uma dica de uma ou duas palavras para que os outros encontrem a tua cor num tabuleiro com centenas de tons.',
   },
   {
-    slug: 'dixit', title: 'Dixit', categories: ['Card Game', 'Party Game'], mechanics: [], min_players: 3, max_players: 6, duration_minutes: 30, copies: 1,
+    slug: 'dixit', openCover: 'File:Dixit game 0001.jpg', title: 'Dixit', categories: ['Card Game', 'Party Game'], mechanics: [], min_players: 3, max_players: 6, duration_minutes: 30, copies: 1,
     cover: {
       tone: 'dusk', symbol: 'star',
-      imageUrl: 'https://m.media-amazon.com/images/I/81pqnwgWurL._AC_SX425_.jpg',
     },
     description: 'Escolhe uma carta ilustrada e descreve-a com uma frase, palavra ou som. A dica não pode ser óbvia demais nem misteriosa demais.',
   },
@@ -235,7 +232,6 @@ export const games: SeedGame[] = [
     slug: 'coup', title: 'Coup', categories: ['Bluffing', 'Card Game'], mechanics: [], min_players: 2, max_players: 6, duration_minutes: 15, copies: 1,
     cover: {
       tone: 'ember', symbol: 'crown',
-      imageUrl: 'https://m.media-amazon.com/images/I/61UvGpwlI9L._AC_SX425_.jpg',
     },
     description: 'Intriga e blefe numa corte corrupta. Usa — ou finge usar — o poder das tuas personagens para eliminar a influência dos rivais.',
   },
@@ -243,7 +239,6 @@ export const games: SeedGame[] = [
     slug: 'vaalbara', title: 'Vaalbara', categories: ['Prehistoric'], mechanics: [], min_players: 2, max_players: 4, duration_minutes: 45, copies: 1,
     cover: {
       tone: 'moss', symbol: 'mountain',
-      imageUrl: 'https://www.hachetteboardgames.com/cdn/shop/products/shopify-vaalbara1.png?v=1664214227',
     },
     description: 'Jogo de estratégia inspirado em Vaalbara, o supercontinente primordial da Terra.',
   },
@@ -251,15 +246,13 @@ export const games: SeedGame[] = [
     slug: 'duelo-por-cardia', title: 'Duelo por Cardia', categories: ['Card Game', 'Fighting'], mechanics: [], min_players: 2, max_players: 2, duration_minutes: 15, copies: 1,
     cover: {
       tone: 'steel', symbol: 'shield',
-      imageUrl: 'https://www.hans-im-glueck.de/wp-content/uploads/2025/07/Cardia_Box_DE.png',
     },
     description: 'Duelo de cartas para dois jogadores: em cada ronda, ambos revelam um personagem e o mais forte vence — mas cada habilidade pode virar o resultado.',
   },
   {
-    slug: 'cartas-classico', title: 'Baralho Clássico', categories: ['Card Game'], mechanics: [], min_players: 1, max_players: 8, duration_minutes: 30, copies: 2,
+    slug: 'cartas-classico', openCover: 'File:Cards -Deck Playing.jpg', title: 'Baralho Clássico', categories: ['Card Game'], mechanics: [], min_players: 1, max_players: 8, duration_minutes: 30, copies: 2,
     cover: {
       tone: 'steel', symbol: 'cards',
-      imageUrl: 'https://gameplay.pt/19218-medium_default/olivo-playing-cards-baralho-de-cartas.jpg',
     },
     description: 'Baralho clássico de 52 cartas para sueca, paciência, bisca, poker e tantos outros jogos de sempre.',
   },

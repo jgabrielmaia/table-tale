@@ -74,6 +74,9 @@ export interface Game {
   mechanics: string[];
   /** Who added the game: the only one who can edit its categories. */
   ownerId: string | null;
+  /** Author and licence of the cover photo (openly licensed covers need it shown), and its source page. */
+  coverCredit: string | null;
+  coverCreditUrl: string | null;
   yearPublished: number | null;
   minAge: number | null;
   bggId: number | null;

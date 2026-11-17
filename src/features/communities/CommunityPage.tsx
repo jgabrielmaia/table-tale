@@ -8,6 +8,7 @@ import { BggCredit } from '@/components/bgg/BggCredit';
 import { GameFilters } from '@/components/games/GameFilters';
 import { GameGrid } from '@/components/games/GameGrid';
 import { EMPTY_FILTERS, filterGames, hasActiveFilters, type GameFilterValues } from '@/features/games/filters';
+import { NewGameButton } from '@/features/games/NewGameButton';
 import { activeSort, availableSorts, SORT_LABELS, sortShelfGames, type GamesSort } from '@/features/games/shelves';
 import { useGameCardActions } from '@/hooks/useGameCardActions';
 import { useGames } from '@/hooks/useGames';
@@ -382,21 +383,26 @@ function GamesPanel({ c, run }: { c: CommunityState; run: Run }) {
     <div>
       {manage && (
         <div className="library-add">
-          <Select
-            label={t('communities.addGameLabel')}
-            value={pick}
-            options={[{ value: '', label: t('communities.pickGame') }, ...options]}
-            onChange={(e) => setPick(e.target.value)}
-          />
+          {options.length > 0 && (
+            <Select
+              label={t('communities.addGameLabel')}
+              value={pick}
+              options={[{ value: '', label: t('communities.pickGame'), disabled: true }, ...options]}
+              onChange={(e) => setPick(e.target.value)}
+            />
+          )}
           {features.bgg && <ButtonLink to={`/games/import?community=${c.community.data?.slug ?? ''}`} variant="ghost">{t('bgg.link')}</ButtonLink>}
-          <Button
-            variant="gold"
-            disabled={!pick}
-            loading={c.addGame.isPending}
-            onClick={() => void run(() => c.addGame.mutateAsync(pick), t('communities.memberUpdated')).then(() => setPick(''))}
-          >
-            {t('communities.addGame')}
-          </Button>
+          {options.length > 0 && (
+            <Button
+              variant="gold"
+              disabled={!pick}
+              loading={c.addGame.isPending}
+              onClick={() => void run(() => c.addGame.mutateAsync(pick), t('communities.memberUpdated')).then(() => setPick(''))}
+            >
+              {t('communities.addGame')}
+            </Button>
+          )}
+          <NewGameButton addTo={(gameId) => c.addGame.mutateAsync(gameId)} alreadyHere={new Set(allEntries.map((e) => e.game.id))} />
         </div>
       )}
       {shelfOptions.length > 2 && <div className="community-shelf-picker"><Select label={t('communities.shelves.label')} value={shelfOwner} options={shelfOptions} onChange={(e) => setShelfOwner(e.target.value)} /></div>}
